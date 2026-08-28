@@ -1,0 +1,564 @@
+// Террикон Работа — модель данных (раздел 10 ядра).
+// Меняем схему здесь и накатываем миграцией. Руками таблицы в Supabase не трогаем:
+// интерфейс не знает про индексы, связи и откат, и через месяц нельзя повторить то же состояние.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// --- Перечисления ---
+
+enum SalaryPeriod {
+  MONTH
+  SHIFT
+  HOUR
+  PIECE
+}
+
+enum WorkFormat {
+  LOCAL
+  VAHTA
+  REMOTE
+}
+
+enum EmployerKind {
+  DIRECT
+  AGENCY
+  UNKNOWN
+}
+
+enum Experience {
+  NONE
+  UP_TO_1
+  FROM_1_TO_3
+  FROM_3
+}
+
+enum EmploymentType {
+  FULL
+  PART
+  SHIFT
+  TEMPORARY
+  REMOTE
+}
+
+enum Source {
+  VK
+  TELEGRAM
+  WEBSITE
+  MANUAL
+  EMPLOYER
+}
+
+enum ModerationStatus {
+  AUTO_OK
+  PENDING
+  APPROVED
+  REJECTED
+  BLOCKED
+}
+
+enum UserRole {
+  SEEKER
+  EMPLOYER
+  ADMIN
+}
+
+enum ApplicationStatus {
+  SENT
+  VIEWED
+  INVITED
+  REJECTED
+}
+
+enum ParsedPostStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ReportStatus {
+  NEW
+  REVIEWED
+  RESOLVED
+}
+
+enum EventType {
+  VACANCY_VIEW
+  VACANCY_LIST
+  SEARCH
+  FILTER_APPLY
+  APPLY_START
+  APPLY_SENT
+  FAVORITE_ADD
+  CONTACT_CLICK
+  MAP_OPEN
+  SOURCE_CLICK
+}
+
+enum DeviceClass {
+  MOBILE
+  DESKTOP
+}
+
+enum ContactVerdictKind {
+  TRUSTED
+  BLOCKED
+}
+
+// --- Основные таблицы ---
+
+model Vacancy {
+  id     String @id @default(cuid())
+  slug   String @unique
+  title  String
+
+  /// Как было в источнике. Для проверок и админки, не для карточки.
+  titleOriginal   String?
+  titleNormalized String
+
+  /// Оригинал поста. Пишется один раз и не меняется никогда.
+  /// Единственное, что позволит переобработать базу, когда правила станут лучше.
+  rawText String? @db.Text
+
+  /// Обработанное описание, которое видит пользователь. Закон 10: не длиннее 3000.
+  description         String  @db.VarChar(3000)
+  descriptionSections Json?
+  summaryLine         String?
+  completeness        Int     @default(0)
+  normalizerVersion   String
+
+  aiProcessed      Boolean @default(false)
+  aiModel          String?
+  aiPromptVersion  String?
+  aiConfidence     Int?
+  needsAiReview    Boolean @default(false)
+  needsHumanReview Boolean @default(false)
+
+  salaryFrom     Int?
+  salaryTo       Int?
+  salaryText     String?
+  salaryCurrency String        @default("RUB")
+  salaryPeriod   SalaryPeriod  @default(MONTH)
+
+  /// Город набора / город вакансии. Строка, не enum: список городов живёт в shared/geo.json.
+  citySlug     String
+  districtSlug String?
+  address      String?
+  latitude     Float?
+  longitude    Float?
+
+  /// LOCAL / VAHTA / REMOTE. У вахты два места: citySlug — откуда набирают, work* — где работа (Закон 17).
+  workFormat       WorkFormat   @default(LOCAL)
+  workLocationText String?
+  workCitySlug     String?
+  rotationPattern  String?
+  vahtaDays        Int?
+  housingProvided  Boolean      @default(false)
+  mealsProvided    Boolean      @default(false)
+  travelPaid       Boolean      @default(false)
+  advancePayment   Boolean      @default(false)
+  employerKind     EmployerKind @default(UNKNOWN)
+
+  sphere         String
+  professionSlug String?
+  /// Вахтовая ротация живёт в rotationPattern, не здесь.
+  schedule       String?
+  hoursPerDay    Int?
+  experience     Experience?
+  employmentType EmploymentType?
+
+  contactPhone    String?
+  contactTelegram String?
+  contactEmail    String?
+
+  source     Source
+  sourceName String?
+  sourceUrl  String?
+  externalId String
+
+  contentHash   String
+  duplicateOfId String?
+  duplicateOf   Vacancy?  @relation("VacancyDuplicates", fields: [duplicateOfId], references: [id], onDelete: SetNull)
+  duplicates    Vacancy[] @relation("VacancyDuplicates")
+
+  signature String
+  groupId   String?
+  group     VacancyGroup? @relation("VacancyGroupMembers", fields: [groupId], references: [id], onDelete: SetNull)
+
+  qualityScore     Int              @default(0)
+  trustScore       Int              @default(0)
+  trustFlags       Json             @default("[]")
+  moderationStatus ModerationStatus @default(PENDING)
+  reviewedAt       DateTime?
+  reviewedBy       String?
+
+  isActive    Boolean  @default(true)
+  publishedAt DateTime
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  viewsCount  Int      @default(0)
+
+  employerId String?
+  employer   Employer? @relation(fields: [employerId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  primaryOfGroups     VacancyGroup[]       @relation("GroupPrimary")
+  applications        Application[]
+  favorites           Favorite[]
+  reports             Report[]
+  moderationDecisions ModerationDecision[]
+  events              Event[]
+
+  @@unique([source, externalId])
+  @@index([citySlug])
+  @@index([isActive])
+  @@index([publishedAt])
+  @@index([sphere])
+  @@index([contentHash])
+  @@index([signature])
+  @@index([moderationStatus])
+  /// Главная выдача: город + активные + местные/вахта + свежесть.
+  @@index([citySlug, isActive, workFormat, publishedAt])
+}
+
+model Employer {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?  @db.Text
+  citySlug    String
+  sphere      String
+  isVerified  Boolean  @default(false)
+  /// Только внешняя ссылка, файлы в базе не храним (Закон 10).
+  logoUrl     String?
+  phone       String?
+  telegram    String?
+  email       String?
+  website     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  vacancies Vacancy[]
+  events    Event[]
+  stats     EmployerStatDaily[]
+}
+
+model Category {
+  id           String @id @default(cuid())
+  slug         String @unique
+  name         String
+  icon         String
+  order        Int
+  vacancyCount Int    @default(0)
+}
+
+model Profession {
+  id       String   @id @default(cuid())
+  slug     String   @unique
+  name     String
+  sphere   String
+  synonyms String[] @default([])
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  role          UserRole @default(SEEKER)
+  phone         String?
+  citySlug      String
+  preferredMode String   @default("lite")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  applications Application[]
+  favorites    Favorite[]
+}
+
+model Application {
+  id        String            @id @default(cuid())
+  userId    String
+  vacancyId String
+  message   String?           @db.Text
+  status    ApplicationStatus @default(SENT)
+  createdAt DateTime          @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vacancy Vacancy @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, vacancyId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  vacancyId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vacancy Vacancy @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, vacancyId])
+}
+
+model TelegramUser {
+  id             String    @id @default(cuid())
+  chatId         String    @unique
+  citySlug       String
+  keywords       String[]  @default([])
+  spheres        String[]  @default([])
+  isActive       Boolean   @default(true)
+  lastNotifiedAt DateTime?
+  createdAt      DateTime  @default(now())
+}
+
+model ParsedPost {
+  id           String           @id @default(cuid())
+  source       Source
+  externalId   String
+  rawText      String           @db.Text
+  sourceUrl    String?
+  detectedCity String?
+  filterScore  Int
+  filterReasons Json
+  status       ParsedPostStatus @default(PENDING)
+  createdAt    DateTime         @default(now())
+
+  @@unique([source, externalId])
+  @@index([status, createdAt])
+}
+
+model ParserRun {
+  id                String    @id @default(cuid())
+  parser            String
+  startedAt         DateTime
+  finishedAt        DateTime?
+  postsSeen         Int       @default(0)
+  postsAccepted     Int       @default(0)
+  postsRejected     Int       @default(0)
+  vacanciesCreated  Int       @default(0)
+  vacanciesUpdated  Int       @default(0)
+  errorsCount       Int       @default(0)
+}
+
+model Report {
+  id        String       @id @default(cuid())
+  vacancyId String
+  reason    String
+  comment   String?      @db.Text
+  status    ReportStatus @default(NEW)
+  createdAt DateTime     @default(now())
+
+  vacancy Vacancy @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+
+  @@index([status, createdAt])
+}
+
+model CityWaitlist {
+  id        String   @id @default(cuid())
+  citySlug  String
+  contact   String
+  createdAt DateTime @default(now())
+
+  @@index([citySlug])
+}
+
+model GeocodeCache {
+  id        String   @id @default(cuid())
+  query     String   @unique
+  lat       Float
+  lng       Float
+  provider  String
+  createdAt DateTime @default(now())
+}
+
+model VacancyGroup {
+  id                  String   @id @default(cuid())
+  signature           String   @unique
+  primaryVacancyId    String
+  postingsCount       Int      @default(1)
+  sourcesCount        Int      @default(1)
+  distinctPhonesCount Int      @default(1)
+  firstSeenAt         DateTime
+  lastSeenAt          DateTime
+
+  primaryVacancy Vacancy   @relation("GroupPrimary", fields: [primaryVacancyId], references: [id], onDelete: Restrict)
+  vacancies      Vacancy[] @relation("VacancyGroupMembers")
+}
+
+model ContactVerdict {
+  id             String             @id @default(cuid())
+  contact        String             @unique
+  verdict        ContactVerdictKind
+  reason         String
+  decidedAt      DateTime           @default(now())
+  vacanciesCount Int                @default(0)
+}
+
+model ModerationDecision {
+  id             String   @id @default(cuid())
+  vacancyId      String
+  decision       String
+  triggeredRules Json
+  comment        String?  @db.Text
+  decidedAt      DateTime @default(now())
+
+  vacancy Vacancy @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+
+  @@index([vacancyId, decidedAt])
+}
+
+model NormalizationSample {
+  id                String   @id @default(cuid())
+  sourceText        String   @db.Text
+  expectedTitle     String
+  expectedSections  Json?
+  expectedFields    Json
+  correctedBy       String
+  normalizerVersion String
+  createdAt         DateTime @default(now())
+}
+
+model AiUsage {
+  id              String   @id @default(cuid())
+  date            DateTime @db.Date
+  provider        String
+  model           String
+  taskType        String
+  calls           Int      @default(0)
+  inputChars      Int      @default(0)
+  outputChars     Int      @default(0)
+  costEstimate    Float    @default(0)
+  rejectedByCheck Int      @default(0)
+  cacheHits       Int      @default(0)
+
+  @@unique([date, provider, model, taskType])
+}
+
+model AiCache {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  result    Json
+  model     String
+  createdAt DateTime @default(now())
+}
+
+// --- Статистика (раздел 10.3). Заводим сразу: события нельзя собрать за прошедшее время. ---
+
+model Event {
+  id             String      @id @default(cuid())
+  type           EventType
+  vacancyId      String?
+  employerId     String?
+  citySlug       String
+  districtSlug   String?
+  sphere         String?
+  professionSlug String?
+  /// Обрезанный запрос, только для частотного анализа. Не полный поисковый лог.
+  queryText      String?     @db.VarChar(120)
+  /// Случайное значение на 24 часа. Не userId и не IP (Закон 14).
+  sessionHash    String
+  deviceClass    DeviceClass
+  qualityMode    String
+  createdAt      DateTime    @default(now())
+
+  vacancy  Vacancy?  @relation(fields: [vacancyId], references: [id], onDelete: SetNull)
+  employer Employer? @relation(fields: [employerId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([type, createdAt])
+  @@index([citySlug, createdAt])
+}
+
+model StatDaily {
+  id                    String   @id @default(cuid())
+  date                  DateTime @db.Date
+  citySlug              String
+  /// '*' означает «все» — так уникальный ключ работает без пустых значений.
+  sphere                String
+  professionSlug        String
+  vacanciesActive       Int      @default(0)
+  vacanciesNew          Int      @default(0)
+  vacanciesClosed       Int      @default(0)
+  views                 Int      @default(0)
+  listViews             Int      @default(0)
+  searches              Int      @default(0)
+  applications          Int      @default(0)
+  favorites             Int      @default(0)
+  contactClicks         Int      @default(0)
+  salaryP25             Int?
+  salaryP50             Int?
+  salaryP75             Int?
+  salaryCount           Int      @default(0)
+  noSalaryCount         Int      @default(0)
+  medianDaysToFirstApply Int?
+  medianLifetimeDays    Int?
+
+  @@unique([date, citySlug, sphere, professionSlug])
+}
+
+model EmployerStatDaily {
+  id               String   @id @default(cuid())
+  date             DateTime @db.Date
+  employerId        String
+  /// Id вакансии или '*' — сводка по всем вакансиям работодателя за день (как в StatDaily).
+  vacancyId         String
+  listViews         Int      @default(0)
+  views             Int      @default(0)
+  applications      Int      @default(0)
+  favorites         Int      @default(0)
+  contactClicks     Int      @default(0)
+  avgPositionInList Float?
+
+  employer Employer @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  @@unique([date, employerId, vacancyId])
+}
+
+model MarketSnapshotMonthly {
+  id               String   @id @default(cuid())
+  month            DateTime @db.Date
+  citySlug         String
+  sphere           String
+  professionSlug   String
+  salaryP25        Int?
+  salaryP50        Int?
+  salaryP75        Int?
+  vacanciesCount   Int      @default(0)
+  deficitIndex     Float?
+  competitionIndex Float?
+  noSalaryShare    Float?
+  sampleSize       Int      @default(0)
+
+  @@unique([month, citySlug, sphere, professionSlug])
+}
+
+model StatsRun {
+  id              String    @id @default(cuid())
+  date            DateTime  @db.Date
+  startedAt       DateTime
+  finishedAt      DateTime?
+  eventsProcessed Int       @default(0)
+  rowsWritten     Int       @default(0)
+  errors          Int       @default(0)
+}
+
+model SearchQueryStat {
+  id              String   @id @default(cuid())
+  month           DateTime @db.Date
+  citySlug        String
+  queryNormalized String
+  count           Int      @default(0)
+  resultsAvgCount Float    @default(0)
+
+  @@unique([month, citySlug, queryNormalized])
+}

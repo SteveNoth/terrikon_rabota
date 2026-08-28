@@ -1,12 +1,12 @@
 # PROGRESS — Террикон Работа
 
-Последнее обновление: 2026-08-28
+Последнее обновление: 2026-08-29
 
 ## Где я сейчас
-- Текущий этап: 3
-- Последний завершённый этап: 3
-- Последний коммит: этапы 2 и 3 на ветке `stage-02-design-system`
-- Ветка этапа: `stage-02-design-system`
+- Текущий этап: 4
+- Последний завершённый этап: 4
+- Последний коммит: Этап 4 — Prisma, миграция и сиды (ветка `stage-04-database`)
+- Ветка этапа: `stage-04-database`
 
 ## Что уже работает
 - Установлены Node.js, Python, Git, Cursor
@@ -21,8 +21,10 @@
 - `/donetsk` показывает заглушку с падежами; `/lugansk` — 404 со списком доступных городов
 - Селектор города — форма GET (без JavaScript) и мгновенный переход с JavaScript
 - Шапка, футер, нижнее меню; слот под кнопку поддержки проекта пока пустой
+- Prisma 6.19.3: схема по разделу 10, миграция `init` накатана на Supabase, сиды 12 местных + 3 вахты, клиент `src/lib/adapters/db.ts`
 - `npm run build` проходит
 - Живой сайт: https://terrikon-rabota.vercel.app
+- База Supabase: проект `terrikon-rabota`, регион Frankfurt (`eu-central-1`)
 
 ## Технические факты проекта (ИИ, читай это!)
 - Node.js: v24.20.0
@@ -32,7 +34,7 @@
 - class-variance-authority: 0.7.1
 - clsx: 2.1.1
 - tailwind-merge: 3.6.0
-- Prisma: —
+- Prisma: 6.19.3 (не 7: URL в schema.prisma, клиент `@prisma/client`)
 - Пакетный менеджер: npm (v11.19.0)
 - Python: 3.14.6
 - Git: 2.55.0.windows.5
@@ -42,14 +44,16 @@
 - URL сайта на Vercel: https://terrikon-rabota.vercel.app
 - Команда Vercel: terrikon
 - Проект Vercel: terrikon-rabota
-- Проект Supabase: —
+- Проект Supabase: terrikon-rabota (ref ptbtyfvszliqagnvpocf, регион eu-central-1)
 - Cookie города: `tr_city`
 - Источник городов: `shared/geo.json` (читают и TypeScript, и Python)
+- Prisma seed: `npx prisma db seed` (tsx prisma/seed.ts)
 
 ## Решения, которые нельзя менять
 - Стек выбран бесплатный (см. docs/DECISIONS.md)
 - Tailwind CSS v4 (установлен create-next-app; Этап 2 делать в варианте для v4, не для v3)
 - Города не пишутся строкой в `src/` — только через `shared/geo.json` (Закон 3)
+- Prisma 6.x, не 7 (см. docs/DECISIONS.md)
 
 ## Открытые вопросы / долги
 - GitHub ещё не подключён к проекту Vercel: `git push` пока сам сайт не обновляет. Нужно один раз связать репозиторий в панели Vercel (шаги в docs/SETUP-LOG.md).
