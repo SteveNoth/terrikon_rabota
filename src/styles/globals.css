@@ -1,0 +1,154 @@
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./modes.css";
+
+/* Связка с Tailwind CSS v4: утилиты ссылаются на наши токены, а не на HEX.
+   Поэтому смена --t-* в modes.css и ползунками сразу меняет классы вроде bg-brand. */
+@theme {
+  --font-sans: var(--t-font-sans);
+  --font-display: var(--t-font-display);
+  --default-font-family: var(--t-font-sans);
+  --default-transition-duration: var(--t-motion-normal);
+  --default-transition-timing-function: var(--t-motion-ease);
+
+  --color-bg: var(--t-color-bg);
+  --color-surface: var(--t-color-surface);
+  --color-surface-muted: var(--t-color-surface-muted);
+  --color-surface-inverse: var(--t-color-surface-inverse);
+  --color-text: var(--t-color-text);
+  --color-muted: var(--t-color-text-muted);
+  --color-text-inverse: var(--t-color-text-inverse);
+  --color-border: var(--t-color-border);
+  --color-border-strong: var(--t-color-border-strong);
+  --color-brand: var(--t-color-brand);
+  --color-brand-hover: var(--t-color-brand-hover);
+  --color-brand-text: var(--t-color-brand-text);
+  --color-accent: var(--t-color-accent);
+  --color-accent-hover: var(--t-color-accent-hover);
+  --color-accent-text: var(--t-color-accent-text);
+  --color-success: var(--t-color-success);
+  --color-danger: var(--t-color-danger);
+  --color-warning: var(--t-color-warning);
+  --color-info: var(--t-color-info);
+  --color-focus: var(--t-color-focus);
+  --color-chart-1: var(--t-chart-1);
+  --color-chart-2: var(--t-chart-2);
+  --color-chart-3: var(--t-chart-3);
+  --color-chart-4: var(--t-chart-4);
+  --color-chart-5: var(--t-chart-5);
+  --color-chart-6: var(--t-chart-6);
+  --color-chart-7: var(--t-chart-7);
+  --color-chart-8: var(--t-chart-8);
+  --color-chart-grid: var(--t-chart-grid);
+  --color-chart-axis: var(--t-chart-axis);
+  --color-chart-highlight: var(--t-chart-highlight);
+  --color-chart-empty: var(--t-chart-empty);
+
+  --radius-sm: var(--t-radius-sm);
+  --radius-md: var(--t-radius-md);
+  --radius-lg: var(--t-radius-lg);
+  --radius-pill: var(--t-radius-pill);
+
+  --shadow-1: var(--t-shadow-1);
+  --shadow-2: var(--t-shadow-2);
+  --shadow-3: var(--t-shadow-3);
+
+  --text-xs: var(--t-text-xs);
+  --text-xs--line-height: var(--t-leading-normal);
+  --text-sm: var(--t-text-sm);
+  --text-sm--line-height: var(--t-leading-normal);
+  --text-md: var(--t-text-md);
+  --text-md--line-height: var(--t-leading-normal);
+  --text-base: var(--t-text-md);
+  --text-base--line-height: var(--t-leading-normal);
+  --text-lg: var(--t-text-lg);
+  --text-lg--line-height: var(--t-leading-normal);
+  --text-xl: var(--t-text-xl);
+  --text-xl--line-height: var(--t-leading-tight);
+  --text-2xl: var(--t-text-2xl);
+  --text-2xl--line-height: var(--t-leading-tight);
+  --text-3xl: var(--t-text-3xl);
+  --text-3xl--line-height: var(--t-leading-tight);
+
+  --leading-tight: var(--t-leading-tight);
+  --leading-normal: var(--t-leading-normal);
+
+  --spacing: var(--t-space-unit);
+  --spacing-1: var(--t-space-1);
+  --spacing-2: var(--t-space-2);
+  --spacing-3: var(--t-space-3);
+  --spacing-4: var(--t-space-4);
+  --spacing-5: var(--t-space-5);
+  --spacing-6: var(--t-space-6);
+  --spacing-7: var(--t-space-7);
+  --spacing-8: var(--t-space-8);
+
+  --duration-fast: var(--t-motion-fast);
+  --duration-normal: var(--t-motion-normal);
+  --ease-standard: var(--t-motion-ease);
+
+  --min-height-tap: var(--t-tap-min);
+  --min-width-tap: var(--t-tap-min);
+  --width-tap: var(--t-tap-min);
+  --height-tap: var(--t-tap-min);
+  --height-header: var(--t-header-height);
+  --height-bottomnav: var(--t-bottomnav-height);
+  --spacing-header: var(--t-header-height);
+  --spacing-bottomnav: var(--t-bottomnav-height);
+  --max-width-container: var(--t-container-max);
+}
+
+/* Базовый сброс: всё считается от края до края, шрифт и цвета — из токенов. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-height: 100%;
+  }
+
+  body {
+    min-height: 100%;
+    margin: 0;
+    background-color: var(--t-color-bg);
+    color: var(--t-color-text);
+    font-family: var(--t-font-sans);
+    font-size: var(--t-font-size-base);
+    line-height: var(--t-leading-normal);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--t-color-focus);
+    outline-offset: 2px;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  button,
+  [type="button"],
+  [type="submit"],
+  [type="reset"],
+  [type="file"],
+  select,
+  textarea,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]) {
+    min-height: var(--t-tap-min);
+  }
+}
+
+/* Спиннер крутится через токен длительности, а не через встроенный animate-spin. */
+@keyframes tr-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+.tr-spin {
+  animation: tr-spin var(--t-motion-normal) linear infinite;
+}

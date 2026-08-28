@@ -1,0 +1,151 @@
+:root {
+  /* ── СЛОЙ 1: ПАЛИТРА ─────────────────────────────── */
+  /* Сырые цвета. В компонентах не используются — только через смысловые токены ниже. */
+
+  /* Тёмно-синий (бренд, «терриконовый» вечерний) */
+  --p-navy-50: #f2f5f9;
+  --p-navy-100: #e2e9f1;
+  --p-navy-200: #c6d3e3;
+  --p-navy-300: #9fb4cd;
+  --p-navy-400: #7190b3;
+  --p-navy-500: #4f6f97;
+  --p-navy-600: #37567c;
+  --p-navy-700: #284a6d;
+  --p-navy-800: #1e3a5f;
+  --p-navy-900: #152941;
+  --p-navy-950: #0d1a2b;
+
+  /* Оранжевый (акцент, «огонь/закат над терриконом») */
+  --p-amber-50: #fef6ef;
+  --p-amber-100: #fdeadb;
+  --p-amber-200: #fbd3b3;
+  --p-amber-300: #f8b98a;
+  --p-amber-400: #f4a261;
+  --p-amber-500: #ef8a3c;
+  --p-amber-600: #dd6f22;
+  --p-amber-700: #b8551b;
+  --p-amber-800: #93441a;
+
+  /* Нейтральные */
+  --p-gray-0: #ffffff;
+  --p-gray-50: #f8f9fa;
+  --p-gray-100: #f1f3f5;
+  --p-gray-200: #e6e8eb;
+  --p-gray-300: #d3d7dc;
+  --p-gray-400: #a8b0ba;
+  --p-gray-500: #78818d;
+  --p-gray-600: #5b636e;
+  --p-gray-700: #434a54;
+  --p-gray-800: #2b3038;
+  --p-gray-900: #16191d;
+
+  /* Статусы */
+  --p-green-500: #2f9e6b;
+  --p-red-500: #d1495b;
+  --p-yellow-500: #d99100;
+  --p-blue-500: #3d7ea6;
+
+  /* ── ГЛОБАЛЬНЫЕ РЫЧАГИ ───────────────────────────── */
+  /* Поменяй одно число — изменится вся геометрия сайта. */
+  --t-radius-base: 10px; /* «скругление всего» */
+  --t-space-unit: 4px; /* шаг сетки отступов */
+  --t-font-size-base: 16px; /* база типографики */
+  --t-motion-base: 180ms; /* базовая скорость анимаций */
+  --t-shadow-strength: 1; /* множитель силы теней: 0 = теней нет вообще */
+  --t-border-width: 1px;
+
+  /* ── СЛОЙ 2: СМЫСЛОВЫЕ ТОКЕНЫ ────────────────────── */
+  /* Компонент говорит «бренд» и «поверхность», а не конкретный цвет. */
+
+  /* Поверхности и текст */
+  --t-color-bg: var(--p-gray-50);
+  --t-color-surface: var(--p-gray-0);
+  --t-color-surface-muted: var(--p-gray-100);
+  --t-color-surface-inverse: var(--p-navy-800);
+  --t-color-text: var(--p-navy-900);
+  --t-color-text-muted: var(--p-gray-600);
+  --t-color-text-inverse: var(--p-gray-0);
+  --t-color-border: var(--p-gray-200);
+  --t-color-border-strong: var(--p-gray-300);
+
+  /* Бренд и акцент */
+  --t-color-brand: var(--p-navy-800);
+  --t-color-brand-hover: var(--p-navy-700);
+  --t-color-brand-text: var(--p-gray-0);
+  --t-color-accent: var(--p-amber-400);
+  --t-color-accent-hover: var(--p-amber-500);
+  --t-color-accent-text: var(--p-navy-900);
+
+  /* Состояния */
+  --t-color-success: var(--p-green-500);
+  --t-color-danger: var(--p-red-500);
+  --t-color-warning: var(--p-yellow-500);
+  --t-color-info: var(--p-blue-500);
+  --t-color-focus: var(--p-amber-500);
+
+  /* Палитра диаграмм. Ни один график не выбирает цвет сам:
+     перекрасить всю статистику проекта = поправить эти восемь строк.
+     Порядок важен — он же порядок использования, чтобы соседние
+     диаграммы не оказались одного цвета. */
+  --t-chart-1: var(--p-navy-700);
+  --t-chart-2: var(--p-amber-400);
+  --t-chart-3: var(--p-blue-500);
+  --t-chart-4: var(--p-green-500);
+  --t-chart-5: var(--p-red-500);
+  --t-chart-6: var(--p-navy-500);
+  --t-chart-7: var(--p-yellow-500);
+  --t-chart-8: var(--p-gray-500);
+  --t-chart-grid: var(--p-gray-200); /* линии сетки — всегда тише данных */
+  --t-chart-axis: var(--p-gray-400);
+  --t-chart-highlight: var(--t-color-accent); /* «вы здесь» на шкале рынка */
+  --t-chart-empty: var(--p-gray-200); /* «мало данных» */
+
+  /* Скругления — все производные от рычага --t-radius-base */
+  --t-radius-sm: calc(var(--t-radius-base) * 0.5);
+  --t-radius-md: var(--t-radius-base);
+  --t-radius-lg: calc(var(--t-radius-base) * 1.6);
+  --t-radius-pill: 999px;
+
+  /* Отступы — все производные от рычага --t-space-unit */
+  --t-space-1: calc(var(--t-space-unit) * 1); /*  4px */
+  --t-space-2: calc(var(--t-space-unit) * 2); /*  8px */
+  --t-space-3: calc(var(--t-space-unit) * 3); /* 12px */
+  --t-space-4: calc(var(--t-space-unit) * 4); /* 16px */
+  --t-space-5: calc(var(--t-space-unit) * 6); /* 24px */
+  --t-space-6: calc(var(--t-space-unit) * 8); /* 32px */
+  --t-space-7: calc(var(--t-space-unit) * 12); /* 48px */
+  --t-space-8: calc(var(--t-space-unit) * 16); /* 64px */
+
+  /* Тени — все умножаются на рычаг силы --t-shadow-strength */
+  --t-shadow-1:
+    0 1px 2px rgb(21 41 65 / calc(0.06 * var(--t-shadow-strength))),
+    0 1px 3px rgb(21 41 65 / calc(0.08 * var(--t-shadow-strength)));
+  --t-shadow-2:
+    0 2px 4px rgb(21 41 65 / calc(0.06 * var(--t-shadow-strength))),
+    0 4px 12px rgb(21 41 65 / calc(0.10 * var(--t-shadow-strength)));
+  --t-shadow-3: 0 8px 24px rgb(21 41 65 / calc(0.14 * var(--t-shadow-strength)));
+
+  /* Типографика */
+  --t-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --t-font-display: var(--t-font-sans); /* в режиме Full подменяется на брендовый шрифт */
+  --t-text-xs: calc(var(--t-font-size-base) * 0.75);
+  --t-text-sm: calc(var(--t-font-size-base) * 0.875);
+  --t-text-md: var(--t-font-size-base);
+  --t-text-lg: calc(var(--t-font-size-base) * 1.125);
+  --t-text-xl: calc(var(--t-font-size-base) * 1.375);
+  --t-text-2xl: calc(var(--t-font-size-base) * 1.75);
+  --t-text-3xl: calc(var(--t-font-size-base) * 2.25);
+  --t-leading-tight: 1.2;
+  --t-leading-normal: 1.55;
+
+  /* Движение */
+  --t-motion-fast: calc(var(--t-motion-base) * 0.6);
+  --t-motion-normal: var(--t-motion-base);
+  --t-motion-ease: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* Компоновка и удобство нажатия на телефоне */
+  --t-container-max: 1200px;
+  --t-tap-min: 44px; /* минимальный размер кликабельного элемента */
+  --t-header-height: 56px;
+  --t-bottomnav-height: 56px;
+}
