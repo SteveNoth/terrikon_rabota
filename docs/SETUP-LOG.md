@@ -32,3 +32,20 @@ npm -v           → 11.19.0
 python --version → Python 3.14.6
 git --version    → git version 2.55.0.windows.5
 ```
+
+## 2026-08-28 — Этап 1: скелет Next.js
+
+- Команда: `npx create-next-app@latest terrikon-rabota` (файлы перенесены в корень репозитория, чтобы сайт и `docs/` жили вместе)
+- Next.js: 16.3.3
+- Tailwind CSS: 4.3.3 (мажорная версия 4)
+- React: 19.2.8
+- Ветка этапа: `stage-01-skeleton`
+- `.env.local` есть на диске и в `.gitignore` (в GitHub не попадает)
+- `.env.example` — список переменных без секретов, попадает в git
+
+## 2026-08-28 — Этап 1: деплой на Vercel
+
+- Сайт: _(адрес появится после импорта репозитория)_
+- Репозиторий: https://github.com/SteveNoth/terrikon_rabota
+- Production-ветка: `master`
+- Переменные окружения на первом деплое: не задавали (страница-заглушка их не читает)
