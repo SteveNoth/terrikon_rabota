@@ -45,7 +45,18 @@ git --version    → git version 2.55.0.windows.5
 
 ## 2026-08-28 — Этап 1: деплой на Vercel
 
-- Сайт: _(адрес появится после импорта репозитория)_
+- Команда Vercel: `terrikon` (вход через аккаунт `stevenoth` / GitHub SteveNoth)
+- Проект Vercel: `terrikon-rabota`
+- Адрес сайта: https://terrikon-rabota.vercel.app
+- Деплой сделан через Vercel CLI (`npx vercel --yes --prod`) из папки проекта
 - Репозиторий: https://github.com/SteveNoth/terrikon_rabota
-- Production-ветка: `master`
+- Production-ветка GitHub: `master`
 - Переменные окружения на первом деплое: не задавали (страница-заглушка их не читает)
+- Где потом вводить переменные: Vercel → проект `terrikon-rabota` → Settings → Environment Variables. Для первого деплоя не нужны.
+- ⚠️ GitHub-репозиторий пока не привязан к проекту Vercel (ошибка `Failed to connect SteveNoth/terrikon_rabota`). Из-за этого `git push` сам сайт ещё не обновляет. Что нажать руками:
+  1. Открыть https://vercel.com/terrikon/terrikon-rabota/settings/git
+  2. Нажать **Connect Git Repository** (подключить git-репозиторий)
+  3. Если Vercel попросит доступ к GitHub — **Install** / **Authorize** приложение Vercel для аккаунта SteveNoth
+  4. Выбрать репозиторий `SteveNoth/terrikon_rabota`
+  5. Ветка для продакшена (живой сайт): `master`
+  6. После этого каждый `git push` в `master` сам пересоберёт https://terrikon-rabota.vercel.app
