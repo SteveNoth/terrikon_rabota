@@ -1,4 +1,5 @@
 import { VacancyCard } from "@/components/vacancy/VacancyCard";
+import { OfflineCapture } from "@/components/offline/OfflineCapture";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/format/cn";
@@ -34,13 +35,16 @@ export function HomeLatest({
           description="Как только появятся объявления, они отобразятся здесь."
         />
       ) : (
-        <ul className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <>
+          <OfflineCapture vacancies={vacancies} />
+          <ul className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {vacancies.map((vacancy) => (
             <li key={vacancy.id} className="min-w-0">
               <VacancyCard vacancy={vacancy} features={features} />
             </li>
           ))}
-        </ul>
+          </ul>
+        </>
       )}
     </section>
   );

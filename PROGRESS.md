@@ -1,12 +1,12 @@
 # PROGRESS — Террикон Работа
 
-Последнее обновление: 2026-08-29
+Последнее обновление: 2026-08-30
 
 ## Где я сейчас
-- Текущий этап: 10
-- Последний завершённый этап: 10
+- Текущий этап: 12
+- Последний завершённый этап: 12
 - Последний коммит: Этап 9 — карточка вакансии (ветка `stage-09-job-card`)
-- Ветка этапа: `stage-10-ultra-lite`
+- Ветка этапа: `stage-12-images`
 
 ## Что уже работает
 - Установлены Node.js, Python, Git, Cursor
@@ -30,7 +30,7 @@
 - Режимы качества Full / Lite / Ultra: решение на сервере до HTML (`?mode=`, cookie `tr_mode` / `tr_res`, `Save-Data`, env). Матрица `FEATURES` — единственное место «что включено». Переключатель работает без JavaScript. Понижение сразу, повышение при следующем переходе.
 - Главная города `/gorlovka`: hero с падежом `loc` из geo, поиск GET без JavaScript (`/?city=&q=` → `/[city]/jobs?q=`), теги профессий из `shared/professions.json` по популярности в городе, 6 карточек из базы, 8 сфер со счётчиком из кэша, «Как это работает», планы `soon`/`planned` на `/about#plans`
 - Карточка `src/components/vacancy/VacancyCard.tsx`: ссылка на `/[city]/job/[slug]`. Полнота по `features.descriptionPreview` / `features.images` (Full — 2 строки сводки; Lite — без сводки; Ultra — название, место, зарплата, дата)
-- Страница `/[city]/job/[slug]`: первый экран (название, зарплата, работодатель, место, факты, дата/свежесть). Вахта: «Работа: …» крупнее «Набор из …», затем схема смен и условия. Контакты выше описания (`tel:`, `https://t.me/`, `mailto:`), телефон с CSS-защитой от простого копирования. Описание из `VacancyView`: разделы или абзацы, HTML источника всегда вычищен. Источник + «Открыть оригинал» + при автообработке `<details>Показать оригинал</details>`. Нет данных — нет строки. «Что уточнить у работодателя» из `missingInfo`. «О работодателе». Кнопки: отклик → `/login`, избранное локально, поделиться, жалоба → `Report`. Похожие — 3 той же сферы и города. Карта: Full/Lite кнопка (ресурс по клику), Ultra — адрес + `geo:`. Событие `VACANCY_VIEW` без задержки страницы
+- Страница `/[city]/job/[slug]`: первый экран (название, зарплата, работодатель, место, факты, дата/свежесть). Вахта: «Работа: …» крупнее «Набор из …», затем схема смен и условия. Контакты выше описания (`tel:`, `https://t.me/`, `mailto:`), телефон с CSS-защитой от простого копирования. Описание из `VacancyView`: разделы или абзацы, HTML источника всегда вычищен. Источник + «Открыть оригинал» + при автообработке `<details>Показать оригинал</details>`. Нет данных — нет строки. «Что уточнить у работодателя» из `missingInfo`. «О работодателе». Кнопки: отклик → `/login` (онлайн) или очередь (офлайн), избранное в IndexedDB, поделиться, жалоба → `Report`. Похожие — 3 той же сферы и города. Карта: Full/Lite кнопка (ресурс по клику), Ultra — адрес + `geo:`. Событие `VACANCY_VIEW` без задержки страницы
 - `src/lib/vacancy/view.ts` — контракт `VacancyView`. Компонент описания не получает `rawText`
 - `/api/events` — `sendBeacon` в Full/Lite. Ultra пишет просмотр через `after()`. Cookie сессии `tr_sid` на 24 часа. Без IP и строки браузера. Не чаще раза в 30 минут на пару сессия+вакансия
 - `/api/reports` — форма жалобы без JavaScript, в причинах «Похоже на мошенничество», ссылка на `/safety`. Сайт не называет объявление мошенническим
@@ -38,11 +38,11 @@
 - ISR: `export const revalidate = 600` на главной. Из-за заголовка режима страница в сборке остаётся динамической; свежие вакансии, счётчики сфер и популярные профессии кэшируются адаптером на 10 минут
 - Замер первой загрузки Full/Lite (gzip, production `next start`, скрипт `node scripts/measure-home.mjs`): HTML ~9–10 КБ, CSS ~6 КБ, шрифт 0, спрайт только Full/Lite. JS ~192 КБ — каркас Next.js (бюджеты 8.5 для Lite этим каркасом всё ещё не закрыты)
 - Ultra Lite — отдельный тонкий путь: middleware при режиме `ultra` переписывает запрос на `/u/...`, адрес в браузере не меняется (`x-ultra-path`). HTML собирается строками в `src/ultra/`, без React и без `<script>`. Прямой заход на `/u/...` вне ultra уводит на публичный адрес
-- Тонкие страницы: главная города, `/[city]/jobs` и `/[city]/vahta` (GET-фильтры, сортировка ссылками, нумерованная пагинация, `?filters=1`), карточка (`toVacancyView`, оригинал в `<details>Показать оригинал</details>`, телефон CSS-обфускацией, `geo:` вместо карты, просмотр через `after()`), заглушка soon + POST `intent=notify-city`, `/about`, `/about/lite`, `/safety`, `/login`, ошибки. Данные — те же `src/lib/repo`
+- Тонкие страницы: главная города, `/[city]/jobs` и `/[city]/vahta` (GET-фильтры, сортировка ссылками, нумерованная пагинация, `?filters=1`), карточка (`toVacancyView`, оригинал в `<details>Показать оригинал</details>`, телефон CSS-обфускацией, `geo:` вместо карты, просмотр через `after()`), заглушка soon + POST `intent=notify-city`, `/about`, `/about/lite`, `/safety`, `/login`, `/offline`, ошибки. Данные — те же `src/lib/repo`
 - Критический CSS Ultra: подмножество тех же `--t-*` из `src/styles/tokens.css` + оверлеи из `modes.css`, ~8 КБ несжатых, встроен в HTML. Второй палитры нет
 - Переключение версий: в Ultra футер/низ «Полная версия» / «Полная» → `?mode=full`; в Full/Lite футер «Экономная версия» → `?mode=ultra` и ссылка на `/about/lite`
 - `Cache-Control`: главная/about/списки — `private, max-age=60, stale-while-revalidate=300`; карточка/логин/ошибки — `private, no-store`. `Vary: Cookie, Save-Data`
-- Замер Ultra (gzip, `npm run measure:ultra`): `/gorlovka?mode=ultra` HTML 5.04 КБ, CSS 7.99 КБ, JS 0, 1 запрос, до первой карточки на 50 Кбит/с + 1.2 с RTT ≈ **1.78 с**; список `/gorlovka/jobs?mode=ultra` HTML 5.83 КБ, то же CSS/JS, ≈ **1.75 с**. Бюджеты 8.5 Ultra (≤ 40 КБ, HTML ≤ 25, CSS ≤ 8, JS 0, ≤ 3 запроса) закрыты
+- Замер Ultra (gzip, `npm run measure:ultra`, прод `next start` после Этапа 11): `/gorlovka?mode=ultra` HTML 5.21 КБ, CSS 7.96 КБ несжатых, JS 0, 1 запрос, до первой карточки на 50 Кбит/с + 1.2 с RTT ≈ **1.80 с**; список `/gorlovka/jobs?mode=ultra` HTML 5.99 КБ, ≈ **1.77 с**. Бюджеты 8.5 Ultra закрыты (ссылка «Без интернета» в футере чуть увеличила HTML, лимиты не пробиты)
 - Список `/[city]/jobs`: только `workFormat=LOCAL` (Закон 17 / 11.16). Вкладка «Вахта · N» рядом с заголовком ведёт на `/[city]/vahta`. В общем списке вахт нет
 - `/[city]/vahta`: отдельная посадочная («вахта из Горловки»), свои фильтры (место работы из geo, смена, ротация, проживание, питание, проезд, напрямую от работодателя), предупреждение и ссылка на `/safety`. В карточке «Работа: …» раньше и заметнее «Набор: город»
 - `/safety` «Как не попасться при поиске работы»: региональные примеры; ссылки из раздела вахт, карточки и футера
@@ -52,6 +52,17 @@
 - Донецк (`soon`): `CityDevelopmentPlaceholder` вместо списка, фильтры остаются
 - Пустой результат: `EmptyState` + сброс + переход в вахту/местные, если там есть объявления
 - Производительность списка: один `findMany` (take/skip) + отдельный `count` по тому же where. План: `node scripts/bench-vacancies.mjs` — индекс `Vacancy_citySlug_isActive_workFormat_publishedAt_idx`. На 12 строках list+count ~0.2 мс; на 5000 — list ~0.1 мс, count ~4 мс, затем cleanup `bench-*`. HTTP с дома до Франкфурта — дорога, не SQL
+- Offline (Этап 11): `public/sw.js` — оболочка cache-first с обновлением в фоне, HTML и `/api/vacancies` network-first, ошибки не кэшируются, `CACHE_VERSION` сносит старые коробки. Регистрация только в production. Кнопка «Обновить приложение», если ждёт новая версия
+- IndexedDB (`idb`, `src/lib/offline/db.ts`): vacancies (100), favorites, dicts, searches (5), queue. Потолок 5 МБ — вытесняем самое старое
+- Очередь: отклик и избранное без сети → `POST /api/offline/actions` при появлении сети, один раз на сессию+вакансию. Баннер «Отклик отправлен»
+- `OfflineBanner`: «Нет сети. Показываем сохранённые вакансии от 14:20» + «Обновить»; вид «Вы снова в сети»
+- `/offline` — что доступно без сети, ссылки на сохранённое и избранное. Ultra — текст без IndexedDB (0 JS)
+- PWA: `public/manifest.webmanifest` + иконки из `public/icons/app.svg` (`npm run icons:pwa`). Сайт можно установить на телефон. Тяжёлых надстроек нет
+- Этап 12: `SmartImage` смотрит на `features.images` (adaptive / thumb / none). Логотип работодателя — внешняя ссылка, файлы не храним. Нет ссылки, чужой домен или ошибка загрузки — буквенный аватар из токенов (инициалы без кавычек и «ООО»), без `<img>` в Ultra. Сиды Wikimedia — превью 40px (стандартные ширины, иначе 400)
+- Внешние картинки только с allowlist в `src/lib/images/remote.ts` / `next.config.ts` (ВК, Telegram, hhcdn, Wikimedia для сидов)
+- Спрайт `public/icons/sprite.svg?v=4`: ВК, сайт, карта, предупреждение, поделиться, флажок. Ultra по-прежнему отдаёт текстовый символ и спрайт не качает
+- Логотип «Террикон Работа» — inline SVG (террикон + название), цвет из токена, без файла-картинки
+- Favicon в шапке Full/Lite — `public/icons/app.svg`; PNG 192/512 остаются в манифесте для установки
 - `npm run build` проходит
 - Живой сайт: https://terrikon-rabota.vercel.app — 2026-08-29 повторно выложен через Vercel CLI (не через GitHub). На сайте уже список и карточки, не заглушка Этапа 1
 - База Supabase: проект `terrikon-rabota`, регион Frankfurt (`eu-central-1`)
@@ -67,6 +78,7 @@
 - tailwind-merge: 3.6.0
 - Prisma: 6.19.3 (не 7: URL в schema.prisma, клиент `@prisma/client`)
 - zod: 3.25.76
+- idb: 8.0.3 (IndexedDB на клиенте, Этап 11)
 - Пакетный менеджер: npm (v11.19.0)
 - Python: 3.14.6
 - Git: 2.55.0.windows.5
@@ -92,6 +104,11 @@
 - Кэш списков выдачи: нет (адрес — источник правды). На главной кэшируются свежие 6 карточек, счётчики сфер/профессий и справочники — 10 минут. Счётчики «местные / вахта» на вкладках — 10 минут
 - Бюджет `/api/vacancies`: ≤ 400 мс при 12 и ≤ 600 мс при 5000, когда функция и база в одном регионе (`fra1`). С домашнего ПК до Франкфурта Prisma RTT ~1.5–2 с, HTTP `/api/vacancies` ~2.7–3.5 с — это дорога. Сам SQL: `node scripts/bench-vacancies.mjs` (EXPLAIN ANALYZE + `--load` на 5000 с автоочисткой)
 - Как смотреть план: `node scripts/bench-vacancies.mjs` или в SQL Editor Supabase `EXPLAIN (ANALYZE, BUFFERS)` того же SELECT. В плане должен быть `Vacancy_citySlug_isActive_workFormat_publishedAt_idx` — он режет вахты и местные (Закон 17)
+- Service worker: `public/sw.js`, константа `CACHE_VERSION` (`tr-offline-v1`). Регистрация: `src/components/offline/ServiceWorkerRegistrar.tsx`, только `NODE_ENV=production`. `sw.js` не кэшируется (`Cache-Control: max-age=0, must-revalidate`)
+- Офлайн-хранилище: IndexedDB `terrikon-offline`, лимит 5 МБ. Очередь шлёт на `/api/offline/actions` (не кэшируется)
+- Иконки PWA: источник `public/icons/app.svg`, пересборка `npm run icons:pwa` (`scripts/generate-pwa-icons.mjs`)
+- Картинки: `src/lib/images/remote.ts` — allowlist доменов для `next/image`; `SmartImage` в `src/components/ui/SmartImage.tsx`; спрайт `/icons/sprite.svg?v=4`
+- Логотип шапки: inline SVG `src/components/brand/TerriconLogo.tsx` / `logo-svg.ts` (531 байт)
 
 ## Решения, которые нельзя менять
 - Стек выбран бесплатный (см. docs/DECISIONS.md)
@@ -99,9 +116,12 @@
 - Города не пишутся строкой в `src/` — только через `shared/geo.json` (Закон 3)
 - Prisma 6.x, не 7 (см. docs/DECISIONS.md)
 - Серверные функции Vercel живут в `fra1`, рядом с Supabase (см. docs/DECISIONS.md)
+- HTML в service worker — network-first, в кэш только статус 200; SW только в production (см. docs/DECISIONS.md)
 
 ## Открытые вопросы / долги
 - GitHub ещё не подключён к проекту Vercel: `git push` пока сам сайт не обновляет. 2026-08-29 сайт обновили через CLI; шаги привязки репозитория — в docs/SETUP-LOG.md. После связи регион `fra1` из `vercel.json` применится сам.
 - Next.js 16 предупреждает, что `middleware.ts` устарел в пользу `proxy.ts`. Файл оставлен как `src/middleware.ts`, потому что так написано в ядре и на следующих этапах его дополняем.
 - Бюджеты 8.5 для **Lite** по JS/запросам/итогу пока не закрыты каркасом Next.js (~192 КБ на Full/Lite). Ultra закрыт тонким путём Этапа 10.
 - «Показать ещё» на сидах не видно: 12 местных при Full/Lite по 20 на страницу — одна страница. На Ultra (10 на страницу) есть `?page=2`. Проверка докидывания — после большего набора или с `?pageSize=` через API.
+- Кабинет соискателя (Этап 21) ещё не пишет `Application`/`Favorite` в аккаунт. Офлайн-очередь Этапа 11 фиксирует факт доставки событием `APPLY_SENT` / `FAVORITE_ADD` один раз на сессию и вакансию.
+- Service worker в `next dev` не ставится. Проверка офлайна — через `npm run build` и `npm start` (или прод на Vercel).

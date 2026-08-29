@@ -1,6 +1,7 @@
 "use client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/format/cn";
 import { useState } from "react";
 
@@ -24,6 +25,7 @@ export function VacancyMapReveal({
         className={cn(buttonVariants({ variant: "outline" }))}
         onClick={() => setOpen(true)}
       >
+        <Icon name="map" size="sm" decorative />
         Показать на карте
       </button>
     );

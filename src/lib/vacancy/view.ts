@@ -62,8 +62,10 @@ export type VacancyView = {
     name: string;
     description: string | null;
     isVerified: boolean;
+    logoUrl: string | null;
     vacanciesHref: string;
   } | null;
+  source: Source;
   citySlug: string;
   cityName: string;
   districtName: string | null;
@@ -293,9 +295,11 @@ export function toVacancyView(record: VacancyRecord): VacancyView {
           name: record.employer.name,
           description: record.employer.description?.trim() || null,
           isVerified: record.employer.isVerified,
+          logoUrl: record.employer.logoUrl,
           vacanciesHref: employerVacanciesHref(record.citySlug, record.employer.slug, isVahta),
         }
       : null,
+    source: record.source as Source,
     citySlug: record.citySlug,
     cityName: cityLabel(record.citySlug),
     districtName: districtName(record.citySlug, record.districtSlug),

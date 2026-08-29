@@ -46,6 +46,9 @@ export function Footer({
           <Link href="/safety" className="text-brand underline-offset-2 hover:underline">
             Как не попасться при поиске работы
           </Link>
+          <Link href="/offline" className="text-brand underline-offset-2 hover:underline">
+            Без интернета
+          </Link>
           <a
             href={TELEGRAM_CHANNEL_URL}
             className="inline-flex items-center gap-2 text-brand underline-offset-2 hover:underline"

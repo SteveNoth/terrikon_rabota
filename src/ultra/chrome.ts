@@ -4,9 +4,8 @@ import {
   isQualityPreference,
   type QualityPreference,
 } from "@/lib/quality/types";
+import { TERRICON_LOGO_SVG } from "@/components/brand/logo-svg";
 import { attr, esc } from "@/ultra/html";
-
-const MARK = `<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M7 25 14 13l4 6 4-8 7 14Z" fill="currentColor" opacity=".3"/><path d="M3 25 13 9l4 7 4-9 10 18Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle class="mark-sun" cx="21" cy="7.2" r="1.7"/><path d="M2 26h28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
 
 const QUALITY_OPTIONS: { value: QualityPreference; label: string }[] = [
   { value: "auto", label: "Авто" },
@@ -85,7 +84,7 @@ export function renderChrome({
   return `<div class="site">
 <header class="header">
 <div class="header-inner">
-<a class="brand" href="${attr(homeHref)}">${MARK}<span>Террикон Работа</span></a>
+<a class="brand" href="${attr(homeHref)}" aria-label="Террикон Работа">${TERRICON_LOGO_SVG}</a>
 <a class="tg" href="${attr(TELEGRAM_CHANNEL_URL)}" rel="noopener noreferrer">${esc(telegramChannelTitle())}</a>
 <div class="tools">
 ${cityForm("u-city-header", citySlug, active, soon)}
@@ -96,10 +95,11 @@ ${qualityForm("u-quality-header", formAction, selected, true)}
 <main>${body}</main>
 <footer class="footer">
 <div class="footer-inner">
-<a class="brand" href="${attr(homeHref)}">${MARK}<span>Террикон Работа</span></a>
+<a class="brand" href="${attr(homeHref)}" aria-label="Террикон Работа">${TERRICON_LOGO_SVG}</a>
 ${cityForm("u-city-footer", citySlug, active, soon)}
 <div class="footer-links">
 <a href="/safety">Как не попасться при поиске работы</a>
+<a href="/offline">Без интернета</a>
 <a href="${attr(TELEGRAM_CHANNEL_URL)}" rel="noopener noreferrer">${esc(telegramChannelTitle())}</a>
 <a href="/about">О проекте</a>
 <a href="/about/lite">Почему сайт лёгкий</a>

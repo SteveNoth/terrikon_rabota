@@ -5,6 +5,8 @@ import { cn } from "@/lib/format/cn";
 import { useQuality } from "@/lib/quality/QualityProvider";
 import { usesIconSprite } from "@/lib/quality/features";
 
+export const ICON_SPRITE_HREF = "/icons/sprite.svg?v=4";
+
 export const ICON_NAMES = [
   "search",
   "filter",
@@ -23,6 +25,12 @@ export const ICON_NAMES = [
   "home",
   "profile",
   "telegram",
+  "vk",
+  "website",
+  "map",
+  "warning",
+  "share",
+  "flag",
   "sphere-production",
   "sphere-construction",
   "sphere-trade",
@@ -55,6 +63,12 @@ export const ICON_LABELS: Record<IconName, string> = {
   home: "Главная",
   profile: "Профиль",
   telegram: "Telegram",
+  vk: "ВКонтакте",
+  website: "Сайт",
+  map: "Карта",
+  warning: "Внимание",
+  share: "Поделиться",
+  flag: "Пожаловаться",
   "sphere-production": "Производство",
   "sphere-construction": "Стройка",
   "sphere-trade": "Торговля",
@@ -85,6 +99,12 @@ export const ICON_GLYPHS: Record<IconName, string> = {
   home: "⌂",
   profile: "☺",
   telegram: "✈",
+  vk: "VK",
+  website: "◎",
+  map: "▦",
+  warning: "!",
+  share: "↗",
+  flag: "⚑",
   "sphere-production": "⚙",
   "sphere-construction": "⚒",
   "sphere-trade": "⇄",
@@ -130,7 +150,7 @@ export function Icon({ name, size, className, title, decorative = false }: IconP
     >
       {sprite ? (
         <svg className="size-full" focusable="false" aria-hidden="true">
-          <use href={`/icons/sprite.svg?v=3#icon-${name}`} />
+          <use href={`${ICON_SPRITE_HREF}#icon-${name}`} />
         </svg>
       ) : (
         ICON_GLYPHS[name]

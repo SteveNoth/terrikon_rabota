@@ -1,5 +1,6 @@
 import { PhoneLink } from "@/components/vacancy/PhoneLink";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/format/cn";
 import type { VacancyView } from "@/lib/vacancy/view";
 
@@ -27,6 +28,7 @@ export function VacancyContacts({
             rel="noopener noreferrer"
             className={cn(buttonVariants({ variant: "outline" }), "min-w-0 justify-start")}
           >
+            <Icon name="telegram" size="sm" decorative />
             Telegram {telegramLabel}
           </a>
         ) : null}

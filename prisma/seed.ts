@@ -254,6 +254,8 @@ async function main(): Promise<void> {
       isVerified: true,
       phone: "+79491234501",
       website: "https://example.com/mehzavod",
+      // Wikimedia принимает только стандартные ширины превью (40, не 64): https://w.wiki/GHai
+      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Example.svg/40px-Example.svg.png",
     },
   });
 
@@ -267,6 +269,7 @@ async function main(): Promise<void> {
       isVerified: false,
       phone: "+79491234502",
       telegram: "central_market_hr",
+      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/40px-PNG_transparency_demonstration_1.png",
     },
   });
 
@@ -280,6 +283,7 @@ async function main(): Promise<void> {
       isVerified: false,
       phone: "+79491234503",
       telegram: "sever_nabor",
+      logoUrl: "https://upload.wikimedia.org/wikipedia/commons/missing-employer-logo.png",
     },
   });
 

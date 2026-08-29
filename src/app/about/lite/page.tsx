@@ -62,6 +62,21 @@ export default function AboutLitePage() {
           </p>
         </section>
 
+        <section className="flex min-w-0 flex-col gap-3">
+          <h2 className="font-display text-xl font-medium">Без интернета — уже открытые страницы</h2>
+          <p>
+            Полная версия ставит в браузер маленькую программу (service worker): она запоминает
+            оболочку сайта и последние вакансии. В метро страница открывается из этой памяти. Экономная
+            версия без JavaScript сама память не пишет, но уже загруженный HTML браузер может показать
+            повторно. Подробности — на странице «Без интернета».
+          </p>
+          <p>
+            <Link href="/offline" className="text-brand underline-offset-2 hover:underline">
+              Что доступно без сети
+            </Link>
+          </p>
+        </section>
+
         <p className="flex min-w-0 flex-wrap gap-3">
           <Link href={`/${city.slug}/jobs`} className={cn(buttonVariants({ variant: "primary" }))}>
             К вакансиям

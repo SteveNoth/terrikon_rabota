@@ -5,6 +5,7 @@ import { JobsSort } from "@/components/jobs/JobsSort";
 import { JobsTabs } from "@/components/jobs/JobsTabs";
 import { VacanciesFeed } from "@/components/jobs/VacanciesFeed";
 import { VacancyList } from "@/components/jobs/VacancyList";
+import { OfflineCapture } from "@/components/offline/OfflineCapture";
 import { VahtaWarning } from "@/components/jobs/VahtaWarning";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Icon } from "@/components/ui/icon";
@@ -165,6 +166,27 @@ export async function JobsListing({
 
   return (
     <div className="mx-auto flex max-w-container min-w-0 flex-col gap-4 px-4 py-6">
+      <OfflineCapture
+        search={
+          filtered
+            ? {
+                id: `${citySlug}:${section}:${filterQuery}`,
+                query: query.q ?? "",
+                citySlug,
+                href: jobsHref(citySlug, section, query),
+              }
+            : undefined
+        }
+        dicts={{
+          cities: [...active, ...soon],
+          spheres: spheres.map((item) => ({ slug: item.slug, name: item.name })),
+          professions: professions.map((item) => ({
+            slug: item.slug,
+            name: item.name,
+            sphere: item.sphere,
+          })),
+        }}
+      />
       <header className="flex min-w-0 flex-col gap-3">
         <h1 className="font-display text-2xl font-medium">{title}</h1>
         <JobsTabs

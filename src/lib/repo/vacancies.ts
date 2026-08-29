@@ -84,6 +84,7 @@ export type VacancyListItem = {
     slug: string;
     name: string;
     isVerified: boolean;
+    logoUrl: string | null;
   } | null;
 };
 
@@ -112,6 +113,7 @@ export type VacancyRecord = VacancyListItem & {
     slug: string;
     name: string;
     isVerified: boolean;
+    logoUrl: string | null;
     description: string | null;
   } | null;
   group: {
@@ -163,6 +165,7 @@ const listSelect = {
       slug: true,
       name: true,
       isVerified: true,
+      logoUrl: true,
     },
   },
 } satisfies Prisma.VacancySelect;
@@ -194,6 +197,7 @@ const detailSelect = {
       slug: true,
       name: true,
       isVerified: true,
+      logoUrl: true,
       description: true,
     },
   },

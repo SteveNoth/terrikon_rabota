@@ -3,6 +3,7 @@ import { getSimilarVacancies, getVacancyBySlug } from "@/lib/repo/vacancies";
 import { REPORT_REASONS } from "@/lib/vacancy/reports";
 import { toVacancyView, vacancyMetaDescription, vacancyMetaTitle, type VacancyView } from "@/lib/vacancy/view";
 import { renderVacancyCard } from "@/ultra/card";
+import { renderLetterAvatar } from "@/ultra/avatar";
 import { attr, esc, safeHttpUrl } from "@/ultra/html";
 
 function paragraphs(items: string[]): string {
@@ -173,7 +174,7 @@ ${view.summaryLine ? `<p class="muted">${esc(view.summaryLine)}</p>` : ""}
 <p class="salary">${esc(view.salary)}</p>
 ${
   view.employer
-    ? `<p>${esc(view.employer.name)}${view.employer.isVerified ? ` <span class="ok">Проверено</span>` : ""}</p>`
+    ? `<p class="employer">${renderLetterAvatar(view.employer.name)}<span>${esc(view.employer.name)}${view.employer.isVerified ? ` <span class="ok">Проверено</span>` : ""}</span></p>`
     : ""
 }
 ${vahtaBlock}
@@ -190,7 +191,7 @@ ${
   view.employer
     ? section(
         "О работодателе",
-        `<p class="salary">${esc(view.employer.name)}${view.employer.isVerified ? ` <span class="ok">Проверено</span>` : ""}</p>
+        `<p class="employer salary">${renderLetterAvatar(view.employer.name)}<span>${esc(view.employer.name)}${view.employer.isVerified ? ` <span class="ok">Проверено</span>` : ""}</span></p>
 ${view.employer.description ? `<p class="muted">${esc(view.employer.description)}</p>` : ""}
 <p><a href="${attr(view.employer.vacanciesHref)}">Все вакансии этого работодателя</a></p>`,
       )

@@ -10,6 +10,9 @@ import {
 } from "@/components/ui/mode-provider";
 import { Alert } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
+import { SmartImage } from "@/components/ui/SmartImage";
+import { TerriconLogo } from "@/components/brand/TerriconLogo";
+import { FEATURES } from "@/lib/quality/features";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -381,6 +384,30 @@ export function UiGuide() {
             <Avatar name="Иван Коваль" size="md" />
             <Avatar name="Пётр" size="lg" />
             <Avatar name="Мария Лебедева" />
+          </div>
+        </Section>
+
+
+        <Section title="SmartImage">
+          <p className="text-sm text-muted">
+            Full — картинка. Lite — маленькое превью. Ultra — буквы, без тега img.
+            Сломанная ссылка тоже даёт аватар, не «битую картинку».
+          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <TerriconLogo />
+            <SmartImage
+              name="ООО Горловский механический завод"
+              src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Example.svg/40px-Example.svg.png"
+              images={FEATURES[mode].images}
+              size="lg"
+            />
+            <SmartImage
+              name="Сломанный логотип"
+              src="https://upload.wikimedia.org/wikipedia/commons/missing-employer-logo.png"
+              images={FEATURES[mode].images}
+              size="md"
+            />
+            <SmartImage name="Без ссылки" images={FEATURES[mode].images} size="md" />
           </div>
         </Section>
 

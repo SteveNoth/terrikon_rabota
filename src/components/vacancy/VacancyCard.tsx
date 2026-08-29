@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/format/cn";
 import { formatDate } from "@/lib/format/date";
 import { formatMoney } from "@/lib/format/money";
@@ -73,6 +74,7 @@ export function VacancyCard({
     vacancy.workFormat === "VAHTA" ? vacancy.rotationPattern : vacancy.schedule;
 
   const href = vacancyPath(vacancy.citySlug, vacancy.slug);
+  const employer = vacancy.employer;
 
   return (
     <article className="min-w-0">
@@ -85,19 +87,31 @@ export function VacancyCard({
           className="flex h-full min-w-0 flex-col gap-2"
           padding={compact ? "sm" : "md"}
         >
-          <h3 className="break-words font-medium text-lg leading-tight">{vacancy.title}</h3>
+          <div className="flex min-w-0 items-start gap-3">
+            {employer ? (
+              <SmartImage
+                src={employer.logoUrl}
+                name={employer.name}
+                images={features.images}
+                size="md"
+              />
+            ) : null}
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <h3 className="break-words font-medium text-lg leading-tight">{vacancy.title}</h3>
 
-          {compact || !vacancy.employer ? null : (
-            <p className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-muted">
-              <span className="break-words text-text">{vacancy.employer.name}</span>
-              {vacancy.employer.isVerified ? (
-                <Badge tone="success" className="inline-flex items-center gap-1">
-                  <Icon name="check" size="sm" decorative />
-                  Проверено
-                </Badge>
-              ) : null}
-            </p>
-          )}
+              {compact || !employer ? null : (
+                <p className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-muted">
+                  <span className="break-words text-text">{employer.name}</span>
+                  {employer.isVerified ? (
+                    <Badge tone="success" className="inline-flex items-center gap-1">
+                      <Icon name="check" size="sm" decorative />
+                      Проверено
+                    </Badge>
+                  ) : null}
+                </p>
+              )}
+            </div>
+          </div>
 
           <Place vacancy={vacancy} compact={compact} />
 

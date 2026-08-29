@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { ModeProvider } from "@/components/ui/mode-provider";
+import { ServiceWorkerRegistrar } from "@/components/offline/ServiceWorkerRegistrar";
 import { QualityProvider } from "@/lib/quality/QualityProvider";
 import { FEATURES } from "@/lib/quality/features";
 import { defaultQualityMode } from "@/lib/quality/server";
@@ -15,6 +16,17 @@ import "@/styles/globals.css";
 export const metadata: Metadata = {
   title: "Террикон Работа",
   description: "Региональный агрегатор вакансий",
+  manifest: "/manifest.webmanifest",
+  applicationName: "Террикон Работа",
+  appleWebApp: {
+    capable: true,
+    title: "Террикон Работа",
+    statusBarStyle: "default",
+  },
+  icons: {
+    icon: [{ url: "/icons/app.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 async function readQuality() {
@@ -50,7 +62,10 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <BrandFont enabled={features.brandFont} />
         <QualityProvider initialMode={mode} preference={preference}>
-          <ModeProvider>{children}</ModeProvider>
+          <ModeProvider>
+            <ServiceWorkerRegistrar />
+            {children}
+          </ModeProvider>
         </QualityProvider>
       </body>
     </html>

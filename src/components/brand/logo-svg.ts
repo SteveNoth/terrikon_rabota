@@ -1,0 +1,3 @@
+/** Inline SVG логотипа: силуэт террикона + название. Без файла-картинки, цвет из currentColor. */
+export const TERRICON_LOGO_SVG =
+  '<svg viewBox="0 0 168 32" aria-hidden="true" focusable="false"><path d="M7 25 14 13l4 6 4-8 7 14Z" fill="currentColor" opacity=".3"/><path d="M3 25 13 9l4 7 4-9 10 18Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle class="mark-sun" cx="21" cy="7.2" r="1.7"/><path d="M2 26h28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><text x="36" y="21" fill="currentColor" font-size="13" font-weight="600" font-family="inherit">Террикон Работа</text></svg>';

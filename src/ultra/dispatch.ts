@@ -10,6 +10,7 @@ import { renderGenericMissing, renderNotFound, renderServerError } from "@/ultra
 import { renderCityHome } from "@/ultra/render/home";
 import { renderJobsPage } from "@/ultra/render/jobs";
 import { renderLogin } from "@/ultra/render/login";
+import { renderOffline } from "@/ultra/render/offline";
 import { renderSafety } from "@/ultra/render/safety";
 import { renderCityStub } from "@/ultra/render/stub";
 import { renderVacancyPage } from "@/ultra/render/vacancy";
@@ -66,6 +67,9 @@ export async function dispatchUltra(input: {
     }
     if (parts[0] === "safety" && parts.length === 1) {
       return { ...renderSafety(citySlug), citySlug, status: 200, cache: "page" };
+    }
+    if (parts[0] === "offline" && parts.length === 1) {
+      return { ...renderOffline(citySlug), citySlug, status: 200, cache: "page" };
     }
     if (parts[0] === "login" && parts.length === 1) {
       return {

@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
+import { SmartImage } from "@/components/ui/SmartImage";
 import type { VacancyView } from "@/lib/vacancy/view";
 import Link from "next/link";
 
@@ -7,7 +8,8 @@ export function VacancyEmployer({ employer }: { employer: NonNullable<VacancyVie
   return (
     <section className="flex min-w-0 flex-col gap-3">
       <h2 className="font-display text-xl font-medium">О работодателе</h2>
-      <p className="flex min-w-0 flex-wrap items-center gap-2">
+      <p className="flex min-w-0 flex-wrap items-center gap-3">
+        <SmartImage src={employer.logoUrl} name={employer.name} size="lg" />
         <span className="min-w-0 break-words font-medium">{employer.name}</span>
         {employer.isVerified ? (
           <Badge tone="success" className="inline-flex items-center gap-1">

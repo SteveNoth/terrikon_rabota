@@ -29,6 +29,11 @@ export function renderAboutLite(): { title: string; description: string; body: s
 <p>Если появился Wi-Fi или устойчивый 4G, внизу страницы есть ссылка «Полная версия». Там картинки, карта и удобства. Если связь снова просядет — вернитесь сюда ссылкой «Экономная версия».</p>
 </section>
 
+<section class="stack tight">
+<h2>Без интернета</h2>
+<p>Полная версия запоминает уже открытые страницы. Экономная страница JavaScript не грузит и память сама не пишет — но то, что браузер уже скачал, он может показать снова. <a href="/offline">Что доступно без сети</a></p>
+</section>
+
 <p><a class="btn btn-primary" href="/${city.slug}/jobs">К вакансиям</a> <a class="btn btn-outline" href="?mode=full">Полная версия</a></p>
 <p class="muted small">Сейчас открыта экономная версия. Она рассчитана на 2G и экономию трафика.</p>
 </article>`;

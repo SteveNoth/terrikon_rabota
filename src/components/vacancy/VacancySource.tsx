@@ -1,6 +1,10 @@
+import { Icon } from "@/components/ui/icon";
+import { sourceIconName } from "@/lib/format/source";
+import type { Source } from "@prisma/client";
 import type { VacancyDuplicateGroupView } from "@/lib/vacancy/view";
 
 export function VacancySource({
+  source,
   sourceLabel,
   originalHref,
   postedByEmployer,
@@ -8,6 +12,7 @@ export function VacancySource({
   originalText,
   duplicateGroup,
 }: {
+  source: Source;
   sourceLabel: string;
   originalHref: string | null;
   postedByEmployer: boolean;
@@ -18,16 +23,18 @@ export function VacancySource({
   return (
     <section className="flex min-w-0 flex-col gap-3 text-sm">
       <h2 className="font-display text-xl font-medium">Источник</h2>
-      <p className="min-w-0 break-words text-md">
-        {postedByEmployer ? "Размещено работодателем" : sourceLabel}
+      <p className="flex min-w-0 flex-wrap items-center gap-2 text-md">
+        {postedByEmployer ? null : <Icon name={sourceIconName(source)} size="sm" decorative />}
+        <span className="min-w-0 break-words">{postedByEmployer ? "Размещено работодателем" : sourceLabel}</span>
       </p>
       {originalHref ? (
         <p>
           <a
             href={originalHref}
             rel="noopener noreferrer"
-            className="text-brand underline-offset-2 hover:underline"
+            className="inline-flex items-center gap-2 text-brand underline-offset-2 hover:underline"
           >
+            <Icon name="website" size="sm" decorative />
             Открыть оригинал
           </a>
         </p>

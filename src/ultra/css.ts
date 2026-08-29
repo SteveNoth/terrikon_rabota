@@ -132,7 +132,7 @@ main{flex:1}
 .header{position:sticky;top:0;z-index:2;border-bottom-width:var(--t-border-width)}
 .header-inner,.footer-inner{display:flex;flex-wrap:wrap;align-items:center;gap:var(--t-space-3);padding:var(--t-space-2) var(--t-space-4);max-width:var(--t-container-max);margin:0 auto;width:100%}
 .brand{display:flex;align-items:center;gap:var(--t-space-2);color:var(--t-color-brand);font-family:var(--t-font-display);font-size:var(--t-text-xl);font-weight:600;text-decoration:none}
-.brand svg{width:2rem;height:2rem}
+.brand svg{height:2rem;width:auto}
 .mark-sun{fill:var(--t-color-accent)}
 .city-form,.tools{display:flex;flex:1;min-width:0;gap:var(--t-space-2);align-items:center}
 .tools{flex:1 1 100%;flex-wrap:nowrap}
@@ -176,6 +176,16 @@ main{flex:1}
 .warn{border-color:var(--t-color-warning)}
 .note{font-size:var(--t-text-sm);color:var(--t-color-text-muted)}
 .salary{font-weight:500}
+.employer{display:flex;align-items:center;gap:var(--t-space-2);flex-wrap:wrap}
+.avatar{display:inline-flex;align-items:center;justify-content:center;width:2rem;height:2rem;border-radius:var(--t-radius-pill);font-size:var(--t-text-xs);font-weight:500;text-transform:uppercase;flex-shrink:0}
+.avatar-0{background:var(--t-color-brand);color:var(--t-color-brand-text)}
+.avatar-1{background:var(--t-color-accent);color:var(--t-color-accent-text)}
+.avatar-2{background:var(--t-color-success);color:var(--t-color-text-inverse)}
+.avatar-3{background:var(--t-color-info);color:var(--t-color-text-inverse)}
+.avatar-4{background:var(--t-color-warning);color:var(--t-color-accent-text)}
+.avatar-5{background:var(--t-color-danger);color:var(--t-color-text-inverse)}
+.avatar-6{background:var(--t-color-surface-inverse);color:var(--t-color-text-inverse)}
+.avatar-7{background:var(--t-chart-6);color:var(--t-color-text-inverse)}
 .ok{color:var(--t-color-success)}
 .filters{display:none;padding:var(--t-space-4)}
 .results{flex:1}

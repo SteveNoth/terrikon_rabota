@@ -76,6 +76,7 @@ export function documentPage({
 <title>${esc(title)}</title>
 <meta name="description" content="${attr(description)}">
 <link rel="canonical" href="${attr(canonical)}">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E">
 <style>${css}</style>
 </head>
 <body>

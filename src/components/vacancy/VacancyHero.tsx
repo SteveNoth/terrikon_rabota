@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
+import { SmartImage } from "@/components/ui/SmartImage";
 import type { VacancyFact, VacancyVahtaView, VacancyView } from "@/lib/vacancy/view";
 
 function FactRow({ label, value }: VacancyFact) {
@@ -63,6 +64,7 @@ export function VacancyHero({ view }: { view: VacancyView }) {
 
       {view.employer ? (
         <p className="flex min-w-0 flex-wrap items-center gap-2 text-md">
+          <SmartImage src={view.employer.logoUrl} name={view.employer.name} size="md" />
           <span className="min-w-0 break-words">{view.employer.name}</span>
           {view.employer.isVerified ? (
             <Badge tone="success" className="inline-flex items-center gap-1">

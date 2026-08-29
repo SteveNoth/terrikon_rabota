@@ -1,5 +1,7 @@
+import { OfflineCapture } from "@/components/offline/OfflineCapture";
 import { VacancyActions } from "@/components/vacancy/VacancyActions";
 import { VacancyCard } from "@/components/vacancy/VacancyCard";
+import { offlineVacancyFromView } from "@/lib/offline/vacancy";
 import { VacancyContacts } from "@/components/vacancy/VacancyContacts";
 import { VacancyDescription } from "@/components/vacancy/VacancyDescription";
 import { VacancyEmployer } from "@/components/vacancy/VacancyEmployer";
@@ -25,8 +27,11 @@ export function VacancyPage({
   shareUrl: string;
   reportStatus?: "ok" | "error";
 }) {
+  const snapshot = offlineVacancyFromView(view);
+
   return (
     <article className="mx-auto flex w-full max-w-container min-w-0 flex-col gap-8 px-4 py-8">
+      <OfflineCapture records={[snapshot]} vacancies={similar} />
       <p className="text-sm">
         <Link href={`/${view.citySlug}/jobs`} className="text-brand underline-offset-2 hover:underline">
           К вакансиям
@@ -47,6 +52,7 @@ export function VacancyPage({
         shareUrl={shareUrl}
         shareTitle={view.title}
         vacancyId={view.id}
+        snapshot={snapshot}
       />
       <VacancyContacts
         phone={view.phone}
@@ -60,6 +66,7 @@ export function VacancyPage({
         descriptionParagraphs={view.descriptionParagraphs}
       />
       <VacancySource
+        source={view.source}
         sourceLabel={view.sourceLabel}
         originalHref={view.originalHref}
         postedByEmployer={view.postedByEmployer}

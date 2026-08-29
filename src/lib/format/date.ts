@@ -53,3 +53,26 @@ export function formatDate(value: Date | string, now = new Date()): string {
   const { d, m, y } = ymd(date);
   return `${pad2(d)}.${pad2(m)}.${y}`;
 }
+
+/** «14:20» по Москве — для баннера «сохранённые вакансии от …». */
+export function formatTimeShort(value: Date | string, now = new Date()): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const time = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: MOSCOW,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+  const diff = calendarDaysAgo(date, now);
+  if (diff === 0) {
+    return time;
+  }
+  if (diff === 1) {
+    return `вчера, ${time}`;
+  }
+  const { d, m, y } = ymd(date);
+  return `${pad2(d)}.${pad2(m)}.${y}, ${time}`;
+}

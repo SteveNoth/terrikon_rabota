@@ -20,8 +20,8 @@ export function BottomNav({ citySlug }: { citySlug: string }) {
   const items: NavItem[] = [
     { id: "home", label: "Главная", icon: "home", href: `/${citySlug}` },
     { id: "search", label: "Поиск", icon: "search", href: `/${citySlug}/jobs` },
-    { id: "map", label: "Карта", icon: "location" },
-    { id: "saved", label: "Избранное", icon: "star" },
+    { id: "map", label: "Карта", icon: "map" },
+    { id: "saved", label: "Избранное", icon: "star", href: "/offline#favorites" },
     { id: "profile", label: "Профиль", icon: "profile" },
   ];
 
@@ -35,15 +35,16 @@ export function BottomNav({ citySlug }: { citySlug: string }) {
       </div>
       <ul className="grid h-bottomnav grid-cols-6">
         {items.map((item) => {
-          const current = item.href
+          const hrefPath = item.href ? item.href.split("#")[0] : undefined;
+          const current = hrefPath
             ? item.id === "home"
-              ? pathname === item.href
+              ? pathname === hrefPath
               : item.id === "search"
-                ? pathname === item.href ||
-                  pathname.startsWith(`${item.href}/`) ||
+                ? pathname === hrefPath ||
+                  pathname.startsWith(`${hrefPath}/`) ||
                   pathname === `/${citySlug}/vahta` ||
                   pathname.startsWith(`/${citySlug}/vahta/`)
-                : pathname === item.href || pathname.startsWith(`${item.href}/`)
+                : pathname === hrefPath || pathname.startsWith(`${hrefPath}/`)
             : false;
           const className = cn(
             "flex h-full min-h-tap flex-col items-center justify-center gap-1 px-1 text-xs",

@@ -1,6 +1,7 @@
 "use client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { Icon } from "@/components/ui/icon";
 import { cn } from "@/lib/format/cn";
 import { useState, type MouseEvent } from "react";
 
@@ -35,6 +36,7 @@ export function ShareButton({ url, title }: { url: string; title: string }) {
       onClick={onClick}
       className={cn(buttonVariants({ variant: "outline" }))}
     >
+      <Icon name="share" size="sm" decorative />
       {copied ? "Ссылка скопирована" : "Поделиться"}
     </a>
   );
