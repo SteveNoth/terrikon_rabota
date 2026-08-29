@@ -27,6 +27,13 @@ function withCityCookie(response: NextResponse, slug: string, request: NextReque
 
 export function middleware(request: NextRequest) {
   const url = request.nextUrl;
+
+  // API само читает ?city= как фильтр. Иначе /api/vacancies?city=gorlovka
+  // уехало бы редиректом на страницу города.
+  if (url.pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
   const selected = url.searchParams.get("city");
 
   if (selected && isSelectableCity(selected)) {
@@ -52,5 +59,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/((?!_next/static|_next/image|favicon.ico|icons/).*)"],
+  matcher: ["/", "/((?!_next/static|_next/image|favicon.ico|icons/|api/).*)"],
 };
