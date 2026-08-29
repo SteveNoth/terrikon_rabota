@@ -5,6 +5,7 @@ export const CITY_COOKIE = "tr_city";
 export type GeoFile = typeof geoJson;
 export type GeoCityJson = GeoFile["cities"][number];
 export type GeoDistrictJson = GeoCityJson["districts"][number];
+export type GeoDestinationJson = GeoFile["externalDestinations"][number];
 export type NameCase = keyof GeoCityJson["name"];
 
 declare const citySlugBrand: unique symbol;
@@ -35,6 +36,13 @@ export type City = {
 export type CityOption = {
   slug: CitySlug;
   name: string;
+};
+
+/** Место работы вахты вне покрытия сайта. Не город проекта: нет страниц и селектора. */
+export type ExternalDestination = {
+  slug: string;
+  name: string;
+  aliases: string[];
 };
 
 const CITY_STATUSES: readonly CityStatus[] = ["active", "soon", "planned"];
@@ -240,6 +248,22 @@ export function getCitySelectGroups(): { active: CityOption[]; soon: CityOption[
 
 export function cityStaticParams(): { city: CitySlug }[] {
   return getSelectableCities().map((city) => ({ city: city.slug }));
+}
+
+const DESTINATIONS: ExternalDestination[] = geoJson.externalDestinations.map((item) => ({
+  slug: item.slug,
+  name: item.name,
+  aliases: [...item.aliases],
+}));
+
+const DESTINATIONS_BY_SLUG = new Map(DESTINATIONS.map((item) => [item.slug, item]));
+
+export function listExternalDestinations(): ExternalDestination[] {
+  return DESTINATIONS;
+}
+
+export function getExternalDestination(slug: string): ExternalDestination | undefined {
+  return DESTINATIONS_BY_SLUG.get(slug);
 }
 
 type _JsonSlug = GeoCityJson["slug"];

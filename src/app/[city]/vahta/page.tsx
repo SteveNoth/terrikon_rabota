@@ -18,15 +18,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { city: slug } = await params;
   if (!isSelectableCity(slug)) {
-    return { title: "Вакансии" };
+    return { title: "Вахта" };
   }
   return {
-    title: `Вакансии ${cityName(slug, "gen")} | Террикон Работа`,
-    description: `Местная работа в ${cityName(slug, "loc")}. Вахта собрана отдельно.`,
+    title: `Вахта из ${cityName(slug, "gen")} | Террикон Работа`,
+    description: `Вахтовые вакансии, набор из ${cityName(slug, "gen")}. Место работы — не здесь.`,
   };
 }
 
-export default async function CityJobsPage({
+export default async function CityVahtaPage({
   params,
   searchParams,
 }: {
@@ -38,5 +38,5 @@ export default async function CityJobsPage({
     notFound();
   }
 
-  return <JobsListing citySlug={slug} section="jobs" searchParams={await searchParams} />;
+  return <JobsListing citySlug={slug} section="vahta" searchParams={await searchParams} />;
 }

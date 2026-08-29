@@ -396,7 +396,17 @@ export function UiGuide() {
         </Section>
 
         <Section title="Pagination">
-          <Pagination page={2} pageCount={5} hrefForPage={(page) => `#p-${page}`} />
+          <Pagination
+            page={2}
+            pageCount={5}
+            prevHref="#p-1"
+            nextHref="#p-3"
+            pages={[1, 2, 3, 4, 5].map((item) => ({
+              page: item,
+              href: `#p-${item}`,
+              current: item === 2,
+            }))}
+          />
         </Section>
 
         <Section title="Icon">

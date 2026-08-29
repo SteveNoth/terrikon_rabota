@@ -38,7 +38,12 @@ export function BottomNav({ citySlug }: { citySlug: string }) {
           const current = item.href
             ? item.id === "home"
               ? pathname === item.href
-              : pathname === item.href || pathname.startsWith(`${item.href}/`)
+              : item.id === "search"
+                ? pathname === item.href ||
+                  pathname.startsWith(`${item.href}/`) ||
+                  pathname === `/${citySlug}/vahta` ||
+                  pathname.startsWith(`/${citySlug}/vahta/`)
+                : pathname === item.href || pathname.startsWith(`${item.href}/`)
             : false;
           const className = cn(
             "flex h-full min-h-tap flex-col items-center justify-center gap-1 px-1 text-xs",

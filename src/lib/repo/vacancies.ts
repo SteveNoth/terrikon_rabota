@@ -1,4 +1,5 @@
 import {
+  EmployerKind,
   EmploymentType,
   Experience,
   ModerationStatus,
@@ -9,6 +10,7 @@ import {
 } from "@prisma/client";
 import { wrap } from "@/lib/adapters/cache";
 import { prisma } from "@/lib/adapters/db";
+import { getExternalDestination } from "@/lib/geo";
 import { repoError } from "@/lib/repo/errors";
 
 /** Сколько карточек на страницу, если в адресе ничего нет. Как в режиме Full/Lite. */
@@ -39,6 +41,17 @@ export type ListVacanciesParams = {
   pageSize?: number;
   /** По умолчанию только местные (Закон 17). Вахты — отдельным запросом. */
   workFormat?: WorkFormat;
+  publishedDays?: number;
+  hasSalary?: boolean;
+  verifiedOnly?: boolean;
+  source?: Source;
+  destination?: string;
+  vahtaDays?: number;
+  rotation?: string;
+  housing?: boolean;
+  meals?: boolean;
+  travel?: boolean;
+  direct?: boolean;
 };
 
 export type VacancyListItem = {
@@ -159,6 +172,36 @@ function publishedWhere(): Prisma.VacancyWhereInput {
   };
 }
 
+/**
+ * Этап 15 соберёт дубли в группы. Счётчик и выдача считают группу один раз,
+ * а не каждое размещение (раздел 11.17): одна вахта из восьми групп — одна вакансия.
+ *
+ * Пока групп нет, у всех `groupId` пустой, и условие совпадает с «все опубликованные».
+ * Когда появятся группы, менять нужно только эту функцию: главная запись группы
+ * или вакансия без группы. `listVacancies` и `count` берут её из одного `where`.
+ */
+function listingUnitWhere(): Prisma.VacancyWhereInput {
+  return {
+    OR: [{ groupId: null }, { primaryOfGroups: { some: {} } }],
+  };
+}
+
+function destinationWhere(slug: string): Prisma.VacancyWhereInput | null {
+  const dest = getExternalDestination(slug);
+  if (!dest) {
+    return null;
+  }
+  const needles = [...new Set([dest.name, dest.slug, ...dest.aliases].map((item) => item.trim()).filter(Boolean))];
+  return {
+    OR: [
+      { workCitySlug: dest.slug },
+      ...needles.map((needle) => ({
+        workLocationText: { contains: needle, mode: "insensitive" as const },
+      })),
+    ],
+  };
+}
+
 function clampTake(requested: number | undefined, fallback: number, max: number): number {
   if (requested == null || !Number.isFinite(requested) || requested < 1) {
     return fallback;
@@ -195,55 +238,98 @@ function orderBy(sort: VacancySort | undefined): Prisma.VacancyOrderByWithRelati
 }
 
 function buildListWhere(params: ListVacanciesParams): Prisma.VacancyWhereInput {
-  const where: Prisma.VacancyWhereInput = {
-    ...publishedWhere(),
-    citySlug: params.citySlug,
-    workFormat: params.workFormat ?? WorkFormat.LOCAL,
-  };
+  const and: Prisma.VacancyWhereInput[] = [listingUnitWhere()];
 
   if (params.sphere) {
-    where.sphere = params.sphere;
+    and.push({ sphere: params.sphere });
   }
   if (params.professionSlug) {
-    where.professionSlug = params.professionSlug;
+    and.push({ professionSlug: params.professionSlug });
   }
   if (params.schedule) {
-    where.schedule = params.schedule;
+    and.push({ schedule: params.schedule });
   }
   if (params.experience) {
-    where.experience = params.experience;
+    and.push({ experience: params.experience });
   }
   if (params.employmentType) {
-    where.employmentType = params.employmentType;
+    and.push({ employmentType: params.employmentType });
   }
   if (params.districtSlug) {
-    where.districtSlug = params.districtSlug;
+    and.push({ districtSlug: params.districtSlug });
   }
   if (params.salaryFrom != null) {
-    where.AND = [
-      {
-        OR: [
-          { salaryFrom: { gte: params.salaryFrom } },
-          { AND: [{ salaryFrom: null }, { salaryTo: { gte: params.salaryFrom } }] },
-        ],
-      },
-    ];
+    and.push({
+      OR: [
+        { salaryFrom: { gte: params.salaryFrom } },
+        { AND: [{ salaryFrom: null }, { salaryTo: { gte: params.salaryFrom } }] },
+      ],
+    });
   }
+  if (params.hasSalary) {
+    and.push({
+      OR: [{ salaryFrom: { not: null } }, { salaryTo: { not: null } }],
+    });
+  }
+  if (params.verifiedOnly) {
+    and.push({ employer: { isVerified: true } });
+  }
+  if (params.source) {
+    and.push({ source: params.source });
+  }
+  if (params.publishedDays) {
+    const since = new Date(Date.now() - params.publishedDays * 24 * 60 * 60 * 1000);
+    and.push({ publishedAt: { gte: since } });
+  }
+  if (params.destination) {
+    const dest = destinationWhere(params.destination);
+    if (dest) {
+      and.push(dest);
+    }
+  }
+  if (params.vahtaDays != null) {
+    and.push({ vahtaDays: params.vahtaDays });
+  }
+  if (params.rotation) {
+    and.push({ rotationPattern: params.rotation });
+  }
+  if (params.housing) {
+    and.push({ housingProvided: true });
+  }
+  if (params.meals) {
+    and.push({ mealsProvided: true });
+  }
+  if (params.travel) {
+    and.push({ travelPaid: true });
+  }
+  if (params.direct) {
+    and.push({ employerKind: EmployerKind.DIRECT });
+  }
+
   const q = params.q?.trim();
   if (q) {
-    const search: Prisma.VacancyWhereInput = {
+    and.push({
       OR: [
         { title: { contains: q, mode: "insensitive" } },
         { titleNormalized: { contains: q, mode: "insensitive" } },
         { summaryLine: { contains: q, mode: "insensitive" } },
       ],
-    };
-    where.AND = [...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []), search];
+    });
   }
 
-  return where;
+  return {
+    ...publishedWhere(),
+    citySlug: params.citySlug,
+    workFormat: params.workFormat ?? WorkFormat.LOCAL,
+    AND: and,
+  };
 }
 
+/**
+ * Один findMany с take/skip плюс отдельный count по тому же where.
+ * Составной индекс (citySlug, isActive, workFormat, publishedAt) обслуживает
+ * разделение вахт и местных. Как смотреть план: `node scripts/bench-vacancies.mjs`.
+ */
 export async function listVacancies(params: ListVacanciesParams): Promise<ListVacanciesResult> {
   const page = clampPage(params.page);
   const pageSize = clampTake(params.pageSize, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
@@ -251,20 +337,16 @@ export async function listVacancies(params: ListVacanciesParams): Promise<ListVa
   const where = buildListWhere(params);
 
   try {
-    const vacancies = await prisma.vacancy.findMany({
-      where,
-      select: listSelect,
-      orderBy: orderBy(params.sort),
-      skip,
-      take: pageSize,
-    });
-
-    // Короткая первая страница: число строк и есть total, второй запрос не нужен.
-    // На пуле Supabase каждый лишний round-trip легко съедает бюджет 400 мс.
-    const total =
-      skip === 0 && vacancies.length < pageSize
-        ? vacancies.length
-        : await prisma.vacancy.count({ where });
+    const [vacancies, total] = await Promise.all([
+      prisma.vacancy.findMany({
+        where,
+        select: listSelect,
+        orderBy: orderBy(params.sort),
+        skip,
+        take: pageSize,
+      }),
+      prisma.vacancy.count({ where }),
+    ]);
 
     return {
       vacancies,
@@ -337,6 +419,7 @@ export async function getLatestVacancies(
       prisma.vacancy.findMany({
         where: {
           ...publishedWhere(),
+          ...listingUnitWhere(),
           citySlug,
           workFormat: WorkFormat.LOCAL,
         },
@@ -350,20 +433,28 @@ export async function getLatestVacancies(
   }
 }
 
-export async function countVacanciesByCity(citySlug: string): Promise<number> {
+export async function countVacanciesByFormat(
+  citySlug: string,
+  workFormat: WorkFormat,
+): Promise<number> {
   try {
-    return await wrap(`counts:city:${citySlug}`, HOME_TTL_SECONDS, () =>
+    return await wrap(`counts:format:${citySlug}:${workFormat}`, HOME_TTL_SECONDS, () =>
       prisma.vacancy.count({
         where: {
           ...publishedWhere(),
+          ...listingUnitWhere(),
           citySlug,
-          workFormat: WorkFormat.LOCAL,
+          workFormat,
         },
       }),
     );
   } catch (cause) {
-    throw repoError("посчитать вакансии города", cause);
+    throw repoError("посчитать вакансии формата", cause);
   }
+}
+
+export async function countVacanciesByCity(citySlug: string): Promise<number> {
+  return countVacanciesByFormat(citySlug, WorkFormat.LOCAL);
 }
 
 export type SphereCount = {
@@ -388,6 +479,7 @@ export async function countVacanciesByProfession(
         by: ["professionSlug"],
         where: {
           ...publishedWhere(),
+          ...listingUnitWhere(),
           citySlug,
           workFormat: WorkFormat.LOCAL,
           professionSlug: { not: null },
@@ -418,6 +510,7 @@ export async function countVacanciesBySphere(citySlug: string): Promise<SphereCo
         by: ["sphere"],
         where: {
           ...publishedWhere(),
+          ...listingUnitWhere(),
           citySlug,
           workFormat: WorkFormat.LOCAL,
         },

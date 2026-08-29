@@ -20,3 +20,10 @@ export function plural(n: number, one: string, few: string, many: string): strin
 export function pluralVacancies(count: number): string {
   return `${count} ${plural(count, "вакансия", "вакансии", "вакансий")}`;
 }
+
+/** «Найдена 1 вакансия», «Найдено 47 вакансий». */
+export function foundVacancies(count: number): string {
+  const noun = plural(count, "вакансия", "вакансии", "вакансий");
+  const verb = plural(count, "Найдена", "Найдено", "Найдено");
+  return `${verb} ${count} ${noun}`;
+}

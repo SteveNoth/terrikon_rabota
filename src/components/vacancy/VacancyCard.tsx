@@ -8,6 +8,7 @@ import { formatSource } from "@/lib/format/source";
 import { cityName, districtName, isCitySlug } from "@/lib/geo";
 import type { QualityFeatures } from "@/lib/quality/types";
 import type { VacancyListItem } from "@/lib/repo/vacancies";
+import Link from "next/link";
 
 function isoDate(value: Date | string): string | undefined {
   const date = value instanceof Date ? value : new Date(value);
@@ -21,21 +22,40 @@ function cityLabel(slug: string): string {
   return isCitySlug(slug) ? cityName(slug, "nom") : slug;
 }
 
-function placeLine(vacancy: VacancyListItem): string {
+function Place({ vacancy, compact }: { vacancy: VacancyListItem; compact: boolean }) {
   const city = cityLabel(vacancy.citySlug);
   const district = districtName(vacancy.citySlug, vacancy.districtSlug);
-  if (vacancy.workFormat === "VAHTA" && vacancy.workLocationText) {
-    return `${vacancy.workLocationText} · набор: ${city}`;
+
+  if (vacancy.workFormat === "VAHTA") {
+    const work = vacancy.workLocationText?.trim() || "место работы не указано";
+    return (
+      <div className="flex min-w-0 flex-col gap-1">
+        <p className="flex min-w-0 items-start gap-2 text-md font-medium text-text">
+          {compact ? null : <Icon name="location" size="sm" decorative />}
+          <span className="min-w-0 break-words">Работа: {work}</span>
+        </p>
+        <p className={cn("text-sm text-muted", compact ? undefined : "pl-6")}>Набор: {city}</p>
+      </div>
+    );
   }
-  return district ? `${city} · ${district}` : city;
+
+  const place = district ? `${city} · ${district}` : city;
+  return (
+    <p className="flex min-w-0 items-start gap-2 text-sm text-muted">
+      {compact ? null : <Icon name="location" size="sm" decorative />}
+      <span className="min-w-0 break-words">{place}</span>
+    </p>
+  );
 }
 
 export function VacancyCard({
   vacancy,
   features,
+  safetyLink = false,
 }: {
   vacancy: VacancyListItem;
   features: Pick<QualityFeatures, "descriptionPreview" | "images">;
+  safetyLink?: boolean;
 }) {
   const compact = features.images === "none" && features.descriptionPreview === 0;
   const previewLines = features.descriptionPreview;
@@ -45,7 +65,8 @@ export function VacancyCard({
   const published = formatDate(vacancy.publishedAt);
   const publishedIso = isoDate(vacancy.publishedAt);
   const source = formatSource(vacancy.source, vacancy.sourceName);
-  const place = placeLine(vacancy);
+  const rhythm =
+    vacancy.workFormat === "VAHTA" ? vacancy.rotationPattern : vacancy.schedule;
 
   return (
     <article className="min-w-0">
@@ -64,20 +85,17 @@ export function VacancyCard({
           </p>
         )}
 
-        <p className="flex min-w-0 items-start gap-2 text-sm text-muted">
-          {compact ? null : <Icon name="location" size="sm" decorative />}
-          <span className="min-w-0 break-words">{place}</span>
-        </p>
+        <Place vacancy={vacancy} compact={compact} />
 
         <p className="flex min-w-0 items-start gap-2 text-md font-medium">
           {compact ? null : <Icon name="wallet" size="sm" decorative />}
           <span className="min-w-0 break-words">{salary}</span>
         </p>
 
-        {compact || !vacancy.schedule ? null : (
+        {compact || !rhythm ? null : (
           <p className="flex min-w-0 items-start gap-2 text-sm text-muted">
             <Icon name="clock" size="sm" decorative />
-            <span className="min-w-0 break-words">{vacancy.schedule}</span>
+            <span className="min-w-0 break-words">{rhythm}</span>
           </p>
         )}
 
@@ -100,6 +118,14 @@ export function VacancyCard({
               <span className="min-w-0 break-words">{source}</span>
             </>
           )}
+          {safetyLink ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <Link href="/safety" className="text-brand underline-offset-2 hover:underline">
+                Как не попасться
+              </Link>
+            </>
+          ) : null}
         </p>
       </Card>
     </article>

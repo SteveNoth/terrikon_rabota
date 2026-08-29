@@ -31,6 +31,7 @@ export function EmptyState({
   title,
   description,
   action,
+  children,
   ...props
 }: EmptyStateProps) {
   return (
@@ -38,6 +39,7 @@ export function EmptyState({
       <Icon name={icon} size="lg" decorative />
       <p className="text-lg font-medium">{title}</p>
       {description ? <p className="max-w-container text-md text-muted">{description}</p> : null}
+      {children}
       {action}
     </div>
   );

@@ -50,9 +50,11 @@ function TerriconSilhouette() {
 export function CityDevelopmentPlaceholder({
   citySlug,
   notified = false,
+  heading = "page",
 }: {
   citySlug: CitySlug;
   notified?: boolean;
+  heading?: "page" | "section";
 }) {
   const city = getCity(citySlug);
   if (!city) {
@@ -60,14 +62,15 @@ export function CityDevelopmentPlaceholder({
   }
 
   const fallback = getDefaultCity();
+  const Title = heading === "section" ? "h2" : "h1";
 
   return (
     <Card className="mx-auto flex max-w-container flex-col items-center gap-4 text-center" padding="lg">
       <TerriconSilhouette />
       <p className="text-sm text-muted">В процессе разработки</p>
-      <h1 className="font-display text-2xl font-medium">
+      <Title className="font-display text-2xl font-medium">
         Скоро откроемся в {cityName(city.slug, "loc")}
-      </h1>
+      </Title>
       <p className="max-w-md text-md text-muted">
         Мы уже настраиваем сбор вакансий {cityName(city.slug, "gen")}. Оставь адрес — сообщим,
         когда откроем.

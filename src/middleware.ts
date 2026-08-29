@@ -1,5 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { CITY_COOKIE, getDefaultCity, isSelectableCity } from "@/lib/geo";
+import {
+  encodeSearchCookie,
+  hasStoredFilters,
+  jobsSectionFromPath,
+  queryForCookie,
+  SEARCH_COOKIE,
+  SEARCH_COOKIE_MAX_AGE,
+} from "@/lib/jobs/search-cookie";
 import { resolveMode } from "@/lib/quality/server";
 import {
   MODE_COOKIE,
@@ -75,6 +83,49 @@ function passQuality(request: NextRequest): NextResponse {
   return applyQuality(response, request, resolved);
 }
 
+function cookieOptions(maxAge: number) {
+  return {
+    path: "/",
+    maxAge,
+    sameSite: "lax" as const,
+    httpOnly: true,
+    secure: cookieSecure(),
+  };
+}
+
+function withLastSearch(request: NextRequest, response: NextResponse): NextResponse {
+  const url = request.nextUrl;
+  const section = jobsSectionFromPath(url.pathname);
+  if (!section) {
+    return response;
+  }
+  const city = url.pathname.split("/").filter(Boolean)[0];
+  if (!city || !isSelectableCity(city)) {
+    return response;
+  }
+
+  if (url.searchParams.get("reset") === "1") {
+    const target = url.clone();
+    target.search = "";
+    const redirect = NextResponse.redirect(target);
+    redirect.cookies.set(SEARCH_COOKIE, "", cookieOptions(0));
+    return applyQuality(withCityCookie(redirect, city, request), request);
+  }
+
+  if (hasStoredFilters(url.searchParams)) {
+    const query = queryForCookie(url.searchParams);
+    if (query) {
+      response.cookies.set(
+        SEARCH_COOKIE,
+        encodeSearchCookie(city, section, query),
+        cookieOptions(SEARCH_COOKIE_MAX_AGE),
+      );
+    }
+  }
+
+  return response;
+}
+
 export function middleware(request: NextRequest) {
   const url = request.nextUrl;
 
@@ -88,8 +139,14 @@ export function middleware(request: NextRequest) {
 
   if (selected && isSelectableCity(selected)) {
     const target = url.clone();
-    const isSearch = url.searchParams.has("q");
-    target.pathname = isSearch ? `/${selected}/jobs` : `/${selected}`;
+    const section = jobsSectionFromPath(url.pathname);
+    if (section) {
+      target.pathname = `/${selected}/${section}`;
+    } else if (hasStoredFilters(url.searchParams)) {
+      target.pathname = `/${selected}/jobs`;
+    } else {
+      target.pathname = `/${selected}`;
+    }
     target.searchParams.delete("city");
     return applyQuality(
       withCityCookie(NextResponse.redirect(target), selected, request),
@@ -106,7 +163,7 @@ export function middleware(request: NextRequest) {
 
   const segment = url.pathname.split("/").filter(Boolean)[0];
   if (segment && isSelectableCity(segment)) {
-    return withCityCookie(passQuality(request), segment, request);
+    return withLastSearch(request, withCityCookie(passQuality(request), segment, request));
   }
 
   return passQuality(request);

@@ -1,6 +1,6 @@
 import type { Source } from "@prisma/client";
 
-const SOURCE_LABEL: Record<Source, string> = {
+export const SOURCE_LABEL: Record<Source, string> = {
   VK: "ВКонтакте",
   TELEGRAM: "Telegram",
   WEBSITE: "Сайт",

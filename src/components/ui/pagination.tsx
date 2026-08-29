@@ -17,63 +17,93 @@ const paginationVariants = cva("flex flex-wrap items-center gap-2", {
   defaultVariants: { align: "center" },
 });
 
+export type PaginationPageLink = {
+  page: number;
+  href: string;
+  current?: boolean;
+};
+
 export type PaginationProps = HTMLAttributes<HTMLElement> &
   VariantProps<typeof paginationVariants> & {
     page: number;
     pageCount: number;
-    hrefForPage: (page: number) => string;
+    prevHref?: string | null;
+    nextHref?: string | null;
+    pages?: PaginationPageLink[];
+    /** Только «назад / вперёд» — для Full/Lite рядом с «Показать ещё». */
+    compact?: boolean;
   };
 
+/**
+ * Пагинация — обычные ссылки, а не кнопки с JavaScript.
+ * Поисковик ходит по HTML: он открывает <a href="?page=2">, а «подгрузить ещё»
+ * из скрипта не видит. Без этих ссылок вторая страница списка не попадёт в индекс.
+ *
+ * href приходит строкой: клиентскому компоненту нельзя передавать функцию со сервера.
+ */
 export function Pagination({
   className,
   align,
   page,
   pageCount,
-  hrefForPage,
+  prevHref,
+  nextHref,
+  pages = [],
+  compact = false,
   ...props
 }: PaginationProps) {
-  const prev = Math.max(1, page - 1);
-  const next = Math.min(pageCount, page + 1);
-  const pages = Array.from({ length: pageCount }, (_, index) => index + 1);
+  if (pageCount <= 1) {
+    return null;
+  }
 
   return (
     <nav aria-label="Страницы" className={cn(paginationVariants({ align }), className)} {...props}>
-      <a
-        href={hrefForPage(prev)}
-        aria-label="Предыдущая страница"
-        aria-disabled={page <= 1}
-        className={cn(
-          buttonVariants({ variant: "outline", size: "sm" }),
-          page <= 1 && "pointer-events-none opacity-60",
-        )}
-      >
-        <Icon name="chevron-left" size="sm" decorative />
-      </a>
-      {pages.map((item) => (
+      {prevHref ? (
         <a
-          key={item}
-          href={hrefForPage(item)}
-          aria-label={`Страница ${item}`}
-          aria-current={item === page ? "page" : undefined}
-          className={buttonVariants({
-            variant: item === page ? "primary" : "outline",
-            size: "sm",
-          })}
+          href={prevHref}
+          rel="prev"
+          aria-label="Предыдущая страница"
+          className={buttonVariants({ variant: "outline", size: "sm" })}
         >
-          {item}
+          <Icon name="chevron-left" size="sm" decorative />
+          Назад
         </a>
-      ))}
-      <a
-        href={hrefForPage(next)}
-        aria-label="Следующая страница"
-        aria-disabled={page >= pageCount}
-        className={cn(
-          buttonVariants({ variant: "outline", size: "sm" }),
-          page >= pageCount && "pointer-events-none opacity-60",
-        )}
-      >
-        <Icon name="chevron-right" size="sm" decorative />
-      </a>
+      ) : null}
+
+      {compact
+        ? null
+        : pages.map((item, index) =>
+            item.page < 0 ? (
+              <span key={`gap-${index}`} className="px-1 text-muted" aria-hidden="true">
+                …
+              </span>
+            ) : (
+              <a
+                key={item.page}
+                href={item.href}
+                aria-label={`Страница ${item.page}`}
+                aria-current={item.current ? "page" : undefined}
+                className={buttonVariants({
+                  variant: item.current ? "primary" : "outline",
+                  size: "sm",
+                })}
+              >
+                {item.page}
+              </a>
+            ),
+          )}
+
+      {nextHref ? (
+        <a
+          href={nextHref}
+          rel="next"
+          aria-label="Следующая страница"
+          className={buttonVariants({ variant: "outline", size: "sm" })}
+        >
+          Вперёд
+          <Icon name="chevron-right" size="sm" decorative />
+        </a>
+      ) : null}
     </nav>
   );
 }

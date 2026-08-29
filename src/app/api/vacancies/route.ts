@@ -1,3 +1,4 @@
+import { WorkFormat, type Source } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { getCity } from "@/lib/geo";
 import { listVacancies } from "@/lib/repo/vacancies";
@@ -38,7 +39,9 @@ export async function GET(request: Request) {
           vacancies: [],
           total: 0,
           page: query.page,
+          pageSize: query.pageSize,
           pages: 0,
+          workFormat: query.workFormat,
           cityStatus: city.status,
           cityInDevelopment: true,
           message: CITY_IN_DEVELOPMENT_MESSAGE,
@@ -67,6 +70,18 @@ export async function GET(request: Request) {
       sort: query.sort,
       page: query.page,
       pageSize: query.pageSize,
+      workFormat: query.workFormat as WorkFormat,
+      publishedDays: query.publishedDays,
+      hasSalary: query.hasSalary,
+      verifiedOnly: query.verifiedOnly,
+      source: query.source as Source | undefined,
+      destination: query.destination,
+      vahtaDays: query.vahtaDays,
+      rotation: query.rotation,
+      housing: query.housing,
+      meals: query.meals,
+      travel: query.travel,
+      direct: query.direct,
     });
 
     const elapsed = Math.round(performance.now() - started);
@@ -75,7 +90,9 @@ export async function GET(request: Request) {
         vacancies: result.vacancies,
         total: result.total,
         page: result.page,
+        pageSize: result.pageSize,
         pages: result.pages,
+        workFormat: query.workFormat,
         cityStatus: city.status,
         cityInDevelopment: false,
         message: null,
