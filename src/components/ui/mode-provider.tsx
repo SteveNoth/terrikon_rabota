@@ -9,9 +9,10 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useQuality } from "@/lib/quality/QualityProvider";
+import { type QualityMode } from "@/lib/quality/types";
 
-export const QUALITY_MODES = ["full", "lite", "ultra"] as const;
-export type QualityMode = (typeof QUALITY_MODES)[number];
+export { QUALITY_MODES, type QualityMode } from "@/lib/quality/types";
 
 export const COLOR_THEMES = ["light", "dark"] as const;
 export type ColorTheme = (typeof COLOR_THEMES)[number];
@@ -26,33 +27,28 @@ type ModeContextValue = {
 const ModeContext = createContext<ModeContextValue | null>(null);
 
 export function ModeProvider({
-  initialMode,
   initialTheme = "light",
   children,
 }: {
-  initialMode: QualityMode;
+  initialMode?: QualityMode;
   initialTheme?: ColorTheme;
   children: ReactNode;
 }) {
-  const [mode, setModeState] = useState<QualityMode>(initialMode);
+  const quality = useQuality();
   const [theme, setThemeState] = useState<ColorTheme>(initialTheme);
 
   useEffect(() => {
-    document.documentElement.dataset.mode = mode;
     document.documentElement.dataset.theme = theme;
-  }, [mode, theme]);
+  }, [theme]);
 
-  const setMode = useCallback((next: QualityMode) => {
-    setModeState(next);
-  }, []);
-
+  const setMode = quality.previewMode;
   const setTheme = useCallback((next: ColorTheme) => {
     setThemeState(next);
   }, []);
 
   const value = useMemo(
-    () => ({ mode, theme, setMode, setTheme }),
-    [mode, theme, setMode, setTheme],
+    () => ({ mode: quality.mode, theme, setMode, setTheme }),
+    [quality.mode, theme, setMode, setTheme],
   );
 
   return <ModeContext.Provider value={value}>{children}</ModeContext.Provider>;

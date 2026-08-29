@@ -148,4 +148,5 @@
   --t-tap-min: 44px; /* минимальный размер кликабельного элемента */
   --t-header-height: 56px;
   --t-bottomnav-height: 56px;
+  --t-qualitybar-height: 104px; /* переключатель качества над нижним меню */
 }

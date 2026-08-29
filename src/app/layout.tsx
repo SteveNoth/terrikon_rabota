@@ -1,6 +1,15 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { ModeProvider, type QualityMode } from "@/components/ui/mode-provider";
+import { headers } from "next/headers";
+import { ModeProvider } from "@/components/ui/mode-provider";
+import { QualityProvider } from "@/lib/quality/QualityProvider";
+import { FEATURES } from "@/lib/quality/features";
+import { defaultQualityMode } from "@/lib/quality/server";
+import {
+  isQualityMode,
+  isQualityPreference,
+  MODE_HEADER,
+  PREFERENCE_HEADER,
+} from "@/lib/quality/types";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -8,32 +17,41 @@ export const metadata: Metadata = {
   description: "Региональный агрегатор вакансий",
 };
 
-function isQualityMode(value: string | undefined): value is QualityMode {
-  return value === "full" || value === "lite" || value === "ultra";
+async function readQuality() {
+  const jar = await headers();
+  const modeHeader = jar.get(MODE_HEADER);
+  const preferenceHeader = jar.get(PREFERENCE_HEADER);
+
+  return {
+    mode: isQualityMode(modeHeader) ? modeHeader : defaultQualityMode(),
+    preference: isQualityPreference(preferenceHeader) ? preferenceHeader : "auto",
+  };
 }
 
-async function readQualityMode(): Promise<QualityMode> {
-  const jar = await cookies();
-  const fromCookie = jar.get("tr_mode")?.value;
-  if (isQualityMode(fromCookie)) {
-    return fromCookie;
+/**
+ * Брендовый шрифт подключается только если матрица это разрешила.
+ * Сейчас файла ещё нет — в DOM не попадает ни одной ссылки на woff2.
+ * Lite/Ultra сюда не заходят: features.brandFont === false.
+ */
+function BrandFont({ enabled }: { enabled: boolean }) {
+  if (!enabled) {
+    return null;
   }
-
-  const fromEnv = process.env.NEXT_PUBLIC_DEFAULT_QUALITY_MODE;
-  if (isQualityMode(fromEnv)) {
-    return fromEnv;
-  }
-
-  return "lite";
+  return null;
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const mode = await readQualityMode();
+  const { mode, preference } = await readQuality();
+  const features = FEATURES[mode];
 
   return (
     <html lang="ru" data-mode={mode} data-theme="light" suppressHydrationWarning>
+      {/* data-mode на <html>, не на <body>: modes.css и все токены читаются от корня документа. */}
       <body>
-        <ModeProvider initialMode={mode}>{children}</ModeProvider>
+        <BrandFont enabled={features.brandFont} />
+        <QualityProvider initialMode={mode} preference={preference}>
+          <ModeProvider>{children}</ModeProvider>
+        </QualityProvider>
       </body>
     </html>
   );

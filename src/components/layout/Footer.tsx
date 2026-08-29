@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Divider } from "@/components/ui/divider";
 import { CitySelect } from "@/components/layout/CitySelect";
 import { LayoutSlot } from "@/components/layout/LayoutSlot";
+import { QualitySwitcher } from "@/components/quality/QualitySwitcher";
 import type { CityOption } from "@/lib/geo";
 
 export function Footer({
@@ -40,6 +41,9 @@ export function Footer({
           </div>
         </div>
         <Divider />
+        <div className="max-w-md min-w-0">
+          <QualitySwitcher id="tr-quality-footer" />
+        </div>
         <p className="text-sm text-muted">Региональный агрегатор вакансий</p>
       </div>
     </footer>

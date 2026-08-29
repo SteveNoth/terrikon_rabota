@@ -89,12 +89,15 @@
 
   --min-height-tap: var(--t-tap-min);
   --min-width-tap: var(--t-tap-min);
+  --min-height-header: var(--t-header-height);
   --width-tap: var(--t-tap-min);
   --height-tap: var(--t-tap-min);
   --height-header: var(--t-header-height);
   --height-bottomnav: var(--t-bottomnav-height);
+  --height-qualitybar: var(--t-qualitybar-height);
   --spacing-header: var(--t-header-height);
   --spacing-bottomnav: var(--t-bottomnav-height);
+  --spacing-bottomnav-plus: calc(var(--t-bottomnav-height) + var(--t-qualitybar-height));
   --max-width-container: var(--t-container-max);
 }
 

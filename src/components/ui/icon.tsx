@@ -2,7 +2,8 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/format/cn";
-import { useUiMode } from "@/components/ui/mode-provider";
+import { useQuality } from "@/lib/quality/QualityProvider";
+import { usesIconSprite } from "@/lib/quality/features";
 
 export const ICON_NAMES = [
   "search",
@@ -29,6 +30,8 @@ export const ICON_NAMES = [
   "sphere-education",
   "sphere-it",
   "sphere-services",
+  "sphere-food",
+  "sphere-security",
 ] as const;
 
 export type IconName = (typeof ICON_NAMES)[number];
@@ -58,6 +61,8 @@ export const ICON_LABELS: Record<IconName, string> = {
   "sphere-education": "Образование",
   "sphere-it": "IT",
   "sphere-services": "Услуги",
+  "sphere-food": "Общепит",
+  "sphere-security": "Охрана",
 };
 
 export const ICON_GLYPHS: Record<IconName, string> = {
@@ -78,13 +83,15 @@ export const ICON_GLYPHS: Record<IconName, string> = {
   home: "⌂",
   profile: "☺",
   "sphere-production": "⚙",
-  "sphere-construction": "△",
+  "sphere-construction": "⚒",
   "sphere-trade": "⇄",
-  "sphere-transport": "▷",
+  "sphere-transport": "⛟",
   "sphere-medicine": "✚",
   "sphere-education": "▤",
   "sphere-it": "</>",
-  "sphere-services": "✦",
+  "sphere-services": "⌁",
+  "sphere-food": "♨",
+  "sphere-security": "⛨",
 };
 
 const iconVariants = cva("inline-flex shrink-0 items-center justify-center text-current", {
@@ -106,10 +113,10 @@ export type IconProps = VariantProps<typeof iconVariants> & {
 };
 
 export function Icon({ name, size, className, title, decorative = false }: IconProps) {
-  const { mode } = useUiMode();
+  const { features } = useQuality();
   const label = title ?? ICON_LABELS[name];
   const classes = cn(iconVariants({ size }), className);
-  const ultra = mode === "ultra";
+  const sprite = usesIconSprite(features);
 
   return (
     <span
@@ -118,12 +125,12 @@ export function Icon({ name, size, className, title, decorative = false }: IconP
       role={decorative ? undefined : "img"}
       aria-label={decorative ? undefined : label}
     >
-      {ultra ? (
-        ICON_GLYPHS[name]
-      ) : (
+      {sprite ? (
         <svg className="size-full" focusable="false" aria-hidden="true">
-          <use href={`/icons/sprite.svg#icon-${name}`} />
+          <use href={`/icons/sprite.svg?v=2#icon-${name}`} />
         </svg>
+      ) : (
+        ICON_GLYPHS[name]
       )}
     </span>
   );

@@ -17,7 +17,9 @@ export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 50;
 const MAX_LATEST = 24;
 const MAX_SIMILAR = 8;
-const COUNT_TTL_SECONDS = 60;
+/** Счётчики и «свежие» на главной: 10 минут, как ISR страницы. Список выдачи не кэшируем. */
+const HOME_TTL_SECONDS = 10 * 60;
+export const HOME_LATEST_LIMIT = 6;
 
 export type VacancySort = "date" | "salary" | "salary_desc" | "salary_asc" | "quality";
 
@@ -326,21 +328,23 @@ export async function getSimilarVacancies(
 
 export async function getLatestVacancies(
   citySlug: string,
-  limit = 6,
+  limit = HOME_LATEST_LIMIT,
 ): Promise<VacancyListItem[]> {
-  const take = clampTake(limit, 6, MAX_LATEST);
+  const take = clampTake(limit, HOME_LATEST_LIMIT, MAX_LATEST);
 
   try {
-    return await prisma.vacancy.findMany({
-      where: {
-        ...publishedWhere(),
-        citySlug,
-        workFormat: WorkFormat.LOCAL,
-      },
-      select: listSelect,
-      orderBy: [{ publishedAt: "desc" }, { qualityScore: "desc" }],
-      take,
-    });
+    return await wrap(`home:latest:${citySlug}:${take}`, HOME_TTL_SECONDS, () =>
+      prisma.vacancy.findMany({
+        where: {
+          ...publishedWhere(),
+          citySlug,
+          workFormat: WorkFormat.LOCAL,
+        },
+        select: listSelect,
+        orderBy: [{ publishedAt: "desc" }, { qualityScore: "desc" }],
+        take,
+      }),
+    );
   } catch (cause) {
     throw repoError("загрузить свежие вакансии", cause);
   }
@@ -348,7 +352,7 @@ export async function getLatestVacancies(
 
 export async function countVacanciesByCity(citySlug: string): Promise<number> {
   try {
-    return await wrap(`counts:city:${citySlug}`, COUNT_TTL_SECONDS, () =>
+    return await wrap(`counts:city:${citySlug}`, HOME_TTL_SECONDS, () =>
       prisma.vacancy.count({
         where: {
           ...publishedWhere(),
@@ -367,9 +371,49 @@ export type SphereCount = {
   count: number;
 };
 
+export type ProfessionCount = {
+  professionSlug: string;
+  count: number;
+};
+
+export async function countVacanciesByProfession(
+  citySlug: string,
+  limit = 8,
+): Promise<ProfessionCount[]> {
+  const take = clampTake(limit, 8, 24);
+
+  try {
+    return await wrap(`counts:profession:${citySlug}:${take}`, HOME_TTL_SECONDS, async () => {
+      const groups = await prisma.vacancy.groupBy({
+        by: ["professionSlug"],
+        where: {
+          ...publishedWhere(),
+          citySlug,
+          workFormat: WorkFormat.LOCAL,
+          professionSlug: { not: null },
+        },
+        _count: { _all: true },
+      });
+
+      return groups
+        .filter((group): group is { professionSlug: string; _count: { _all: number } } =>
+          Boolean(group.professionSlug),
+        )
+        .map((group) => ({
+          professionSlug: group.professionSlug,
+          count: group._count._all,
+        }))
+        .sort((a, b) => b.count - a.count || a.professionSlug.localeCompare(b.professionSlug))
+        .slice(0, take);
+    });
+  } catch (cause) {
+    throw repoError("посчитать вакансии по профессиям", cause);
+  }
+}
+
 export async function countVacanciesBySphere(citySlug: string): Promise<SphereCount[]> {
   try {
-    return await wrap(`counts:sphere:${citySlug}`, COUNT_TTL_SECONDS, async () => {
+    return await wrap(`counts:sphere:${citySlug}`, HOME_TTL_SECONDS, async () => {
       const groups = await prisma.vacancy.groupBy({
         by: ["sphere"],
         where: {

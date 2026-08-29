@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { NotifyOpenForm } from "@/components/geo/NotifyOpenForm";
-import { useUiMode } from "@/components/ui/mode-provider";
+import { IfMode } from "@/components/quality/IfMode";
 import {
   cityName,
   getCity,
@@ -14,36 +14,36 @@ import {
 import { cn } from "@/lib/format/cn";
 
 function TerriconSilhouette() {
-  const { mode } = useUiMode();
-
-  if (mode === "ultra") {
-    return (
+  return (
+    <IfMode
+      feature="images"
+      is="none"
+      fallback={
+        <svg
+          viewBox="0 0 80 56"
+          className="size-16 text-brand motion-safe:transition-opacity duration-normal"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <path
+            d="M8 48 L28 18 L40 32 L52 12 L72 48 Z"
+            className="fill-current opacity-30"
+          />
+          <path
+            d="M12 48 L32 22 L40 34 L50 16 L68 48 Z"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
+          <path d="M4 50 H76" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      }
+    >
       <span className="text-3xl text-brand" aria-hidden="true">
         ▲
       </span>
-    );
-  }
-
-  return (
-    <svg
-      viewBox="0 0 80 56"
-      className="size-16 text-brand motion-safe:transition-opacity duration-normal"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path
-        d="M8 48 L28 18 L40 32 L52 12 L72 48 Z"
-        className="fill-current opacity-30"
-      />
-      <path
-        d="M12 48 L32 22 L40 34 L50 16 L68 48 Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-      <path d="M4 50 H76" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
+    </IfMode>
   );
 }
 

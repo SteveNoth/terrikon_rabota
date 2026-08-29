@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { LayoutSlot } from "@/components/layout/LayoutSlot";
+import { QualitySwitcher } from "@/components/quality/QualitySwitcher";
 import { cn } from "@/lib/format/cn";
 
 type NavItem = {
@@ -29,6 +30,9 @@ export function BottomNav({ citySlug }: { citySlug: string }) {
       className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface md:hidden"
       aria-label="Основное меню"
     >
+      <div className="border-b border-border px-3 py-2">
+        <QualitySwitcher id="tr-quality-nav" compact />
+      </div>
       <ul className="grid h-bottomnav grid-cols-6">
         {items.map((item) => {
           const current = item.href

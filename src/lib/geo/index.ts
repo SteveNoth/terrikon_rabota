@@ -170,12 +170,23 @@ export function getSelectableCities(): City[] {
   return byPriority(CITIES.filter((city) => city.status === "active" || city.status === "soon"));
 }
 
+export function getSoonCities(): City[] {
+  return byPriority(CITIES.filter((city) => city.status === "soon"));
+}
+
 export function getPlannedCities(): City[] {
   return byPriority(CITIES.filter((city) => city.status === "planned"));
 }
 
 export function getDistricts(slug: string): District[] {
   return getCity(slug)?.districts ?? [];
+}
+
+export function districtName(citySlug: string, districtSlug: string | null | undefined): string | null {
+  if (!districtSlug) {
+    return null;
+  }
+  return getDistricts(citySlug).find((district) => district.slug === districtSlug)?.name ?? districtSlug;
 }
 
 export function getDefaultCity(): City {

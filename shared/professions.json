@@ -1,0 +1,106 @@
+{
+  "spheres": [
+    { "slug": "stroitelstvo", "name": "Строительство", "icon": "sphere-construction" },
+    { "slug": "transport", "name": "Транспорт", "icon": "sphere-transport" },
+    { "slug": "torgovlya", "name": "Торговля", "icon": "sphere-trade" },
+    { "slug": "proizvodstvo", "name": "Производство", "icon": "sphere-production" },
+    { "slug": "meditsina", "name": "Медицина", "icon": "sphere-medicine" },
+    { "slug": "obrazovanie", "name": "Образование", "icon": "sphere-education" },
+    { "slug": "obschepit", "name": "Общепит", "icon": "sphere-food" },
+    { "slug": "bezopasnost", "name": "Охрана", "icon": "sphere-security" },
+    { "slug": "it", "name": "IT", "icon": "sphere-it" },
+    { "slug": "uslugi", "name": "Услуги", "icon": "sphere-services" }
+  ],
+  "items": [
+    {
+      "slug": "svarshchik",
+      "name": "Сварщик",
+      "sphere": "stroitelstvo",
+      "synonyms": ["сварной", "электросварщик", "газосварщик", "свар-к"]
+    },
+    {
+      "slug": "voditel-c",
+      "name": "Водитель категории C",
+      "sphere": "transport",
+      "synonyms": ["вод. кат. с", "водитель камаза", "водитель категории с"]
+    },
+    {
+      "slug": "prodavets",
+      "name": "Продавец",
+      "sphere": "torgovlya",
+      "synonyms": ["продавец-консультант", "кассир-продавец"]
+    },
+    {
+      "slug": "buhgalter",
+      "name": "Бухгалтер",
+      "sphere": "torgovlya",
+      "synonyms": ["главбух", "учётчик"]
+    },
+    {
+      "slug": "raznorabochiy",
+      "name": "Разнорабочий",
+      "sphere": "stroitelstvo",
+      "synonyms": ["подсобник", "разнорабочий на стройку"]
+    },
+    {
+      "slug": "medsestra",
+      "name": "Медсестра",
+      "sphere": "meditsina",
+      "synonyms": ["медбрат", "медицинская сестра"]
+    },
+    {
+      "slug": "uchitel-matematiki",
+      "name": "Учитель математики",
+      "sphere": "obrazovanie",
+      "synonyms": ["математик в школу", "учитель математики"]
+    },
+    {
+      "slug": "elektrik",
+      "name": "Электрик",
+      "sphere": "stroitelstvo",
+      "synonyms": ["электромонтёр", "электромонтажник"]
+    },
+    {
+      "slug": "povar",
+      "name": "Повар",
+      "sphere": "obschepit",
+      "synonyms": ["повар горячего цеха", "кашевар"]
+    },
+    {
+      "slug": "ohrannik",
+      "name": "Охранник",
+      "sphere": "bezopasnost",
+      "synonyms": ["сторож", "вахтёр"]
+    },
+    {
+      "slug": "operator-stanka",
+      "name": "Оператор станка",
+      "sphere": "proizvodstvo",
+      "synonyms": ["станочник", "оператор чпу"]
+    },
+    {
+      "slug": "kurer",
+      "name": "Курьер",
+      "sphere": "transport",
+      "synonyms": ["доставщик", "курьер пеший"]
+    },
+    {
+      "slug": "tokar",
+      "name": "Токарь",
+      "sphere": "proizvodstvo",
+      "synonyms": ["токарь-универсал"]
+    },
+    {
+      "slug": "shtukatur",
+      "name": "Штукатур",
+      "sphere": "stroitelstvo",
+      "synonyms": ["штукатур-маляр"]
+    },
+    {
+      "slug": "kladovshchik",
+      "name": "Кладовщик",
+      "sphere": "transport",
+      "synonyms": ["кладовщик-комплектовщик"]
+    }
+  ]
+}
