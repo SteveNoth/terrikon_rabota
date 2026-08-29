@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { cn } from "@/lib/format/cn";
 import { NotifyOpenForm } from "@/components/geo/NotifyOpenForm";
 import { IfMode } from "@/components/quality/IfMode";
 import {

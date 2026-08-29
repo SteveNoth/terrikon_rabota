@@ -59,6 +59,17 @@ export function Footer({
         <div className="max-w-md min-w-0">
           <QualitySwitcher id="tr-quality-footer" />
         </div>
+        <p className="text-sm">
+          <a href="?mode=ultra" className="text-brand underline-offset-2 hover:underline">
+            Экономная версия
+          </a>
+          <span className="text-muted"> — без картинок и скриптов, открывается на 2G</span>
+        </p>
+        <p className="text-sm">
+          <Link href="/about/lite" className="text-brand underline-offset-2 hover:underline">
+            Почему наш сайт работает там, где другие нет
+          </Link>
+        </p>
         <p className="text-sm text-muted">Региональный агрегатор вакансий</p>
       </div>
     </footer>

@@ -14,6 +14,7 @@ import {
   MODE_COOKIE_MAX_AGE,
   MODE_HEADER,
   PREFERENCE_HEADER,
+  ULTRA_PATH_HEADER,
 } from "@/lib/quality/types";
 import { SESSION_COOKIE, SESSION_HEADER, SESSION_MAX_AGE, isSessionHash } from "@/lib/stats/session";
 
@@ -148,6 +149,51 @@ function withLastSearch(request: NextRequest, response: NextResponse): NextRespo
   return response;
 }
 
+function shouldRewriteToUltra(pathname: string): boolean {
+  if (pathname === "/u" || pathname.startsWith("/u/")) {
+    return false;
+  }
+  if (pathname.startsWith("/dev")) {
+    return false;
+  }
+  if (pathname.startsWith("/api/")) {
+    return false;
+  }
+  return true;
+}
+
+function ultraPath(pathname: string): string {
+  return pathname === "/" ? "/u" : `/u${pathname}`;
+}
+
+function publicFromUltra(pathname: string): string {
+  if (pathname === "/u") {
+    return "/";
+  }
+  if (pathname.startsWith("/u/")) {
+    return pathname.slice(2);
+  }
+  return pathname;
+}
+
+function qualityRequestHeaders(
+  request: NextRequest,
+  resolved: ReturnType<typeof resolveMode>,
+  session: { hash: string },
+  extra?: Record<string, string>,
+): Headers {
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(MODE_HEADER, resolved.mode);
+  requestHeaders.set(PREFERENCE_HEADER, resolved.preference);
+  requestHeaders.set(SESSION_HEADER, session.hash);
+  if (extra) {
+    for (const [key, value] of Object.entries(extra)) {
+      requestHeaders.set(key, value);
+    }
+  }
+  return requestHeaders;
+}
+
 export function middleware(request: NextRequest) {
   const url = request.nextUrl;
 
@@ -181,6 +227,33 @@ export function middleware(request: NextRequest) {
     const target = url.clone();
     target.pathname = `/${city}`;
     return applyQuality(withCityCookie(NextResponse.redirect(target), city, request), request);
+  }
+
+  const resolved = resolveMode(request);
+
+  if (resolved.mode === "ultra" && shouldRewriteToUltra(url.pathname)) {
+    const session = resolveSession(request);
+    const dest = url.clone();
+    dest.pathname = ultraPath(url.pathname);
+    const response = NextResponse.rewrite(dest, {
+      request: {
+        headers: qualityRequestHeaders(request, resolved, session, {
+          [ULTRA_PATH_HEADER]: url.pathname,
+        }),
+      },
+    });
+    const segment = url.pathname.split("/").filter(Boolean)[0];
+    let next = withSession(applyQuality(response, request, resolved), session);
+    if (segment && isSelectableCity(segment)) {
+      next = withLastSearch(request, withCityCookie(next, segment, request));
+    }
+    return next;
+  }
+
+  if ((url.pathname === "/u" || url.pathname.startsWith("/u/")) && resolved.mode !== "ultra") {
+    const dest = url.clone();
+    dest.pathname = publicFromUltra(url.pathname);
+    return applyQuality(NextResponse.redirect(dest), request, resolved);
   }
 
   const segment = url.pathname.split("/").filter(Boolean)[0];

@@ -22,6 +22,11 @@ export default function AboutPage() {
             Террикон Работа собирает вакансии одного региона в одном месте: местную работу отдельно
             от вахты, без платы за просмотр контактов.
           </p>
+          <p>
+            <Link href="/about/lite" className="text-brand underline-offset-2 hover:underline">
+              Почему наш сайт работает там, где другие нет
+            </Link>
+          </p>
         </header>
 
         <section id="plans" className="flex min-w-0 scroll-mt-header flex-col gap-4">

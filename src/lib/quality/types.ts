@@ -32,6 +32,8 @@ export const RESULT_COOKIE = "tr_res";
 /** Middleware считает режим и кладёт его сюда — layout читает до HTML. */
 export const MODE_HEADER = "x-quality-mode";
 export const PREFERENCE_HEADER = "x-quality-preference";
+/** Публичный путь до внутреннего rewrite на `/u/...`. Адрес в браузере не меняется. */
+export const ULTRA_PATH_HEADER = "x-ultra-path";
 
 export const RESULT_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 export const MODE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;

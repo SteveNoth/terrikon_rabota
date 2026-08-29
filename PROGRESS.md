@@ -3,10 +3,10 @@
 Последнее обновление: 2026-08-29
 
 ## Где я сейчас
-- Текущий этап: 9
-- Последний завершённый этап: 9
+- Текущий этап: 10
+- Последний завершённый этап: 10
 - Последний коммит: Этап 9 — карточка вакансии (ветка `stage-09-job-card`)
-- Ветка этапа: `stage-09-job-card`
+- Ветка этапа: `stage-10-ultra-lite`
 
 ## Что уже работает
 - Установлены Node.js, Python, Git, Cursor
@@ -36,7 +36,13 @@
 - `/api/reports` — форма жалобы без JavaScript, в причинах «Похоже на мошенничество», ссылка на `/safety`. Сайт не называет объявление мошенническим
 - `/login` — заглушка: смотреть можно без аккаунта, отклик позже
 - ISR: `export const revalidate = 600` на главной. Из-за заголовка режима страница в сборке остаётся динамической; свежие вакансии, счётчики сфер и популярные профессии кэшируются адаптером на 10 минут
-- Замер первой загрузки (gzip, production `next start`, скрипт `node scripts/measure-home.mjs`): HTML ~9–10 КБ, CSS ~6 КБ, шрифт 0, спрайт только Full/Lite. JS ~192 КБ — каркас Next.js, тонкий путь Ultra (0 КБ JS) — Этап 10
+- Замер первой загрузки Full/Lite (gzip, production `next start`, скрипт `node scripts/measure-home.mjs`): HTML ~9–10 КБ, CSS ~6 КБ, шрифт 0, спрайт только Full/Lite. JS ~192 КБ — каркас Next.js (бюджеты 8.5 для Lite этим каркасом всё ещё не закрыты)
+- Ultra Lite — отдельный тонкий путь: middleware при режиме `ultra` переписывает запрос на `/u/...`, адрес в браузере не меняется (`x-ultra-path`). HTML собирается строками в `src/ultra/`, без React и без `<script>`. Прямой заход на `/u/...` вне ultra уводит на публичный адрес
+- Тонкие страницы: главная города, `/[city]/jobs` и `/[city]/vahta` (GET-фильтры, сортировка ссылками, нумерованная пагинация, `?filters=1`), карточка (`toVacancyView`, оригинал в `<details>Показать оригинал</details>`, телефон CSS-обфускацией, `geo:` вместо карты, просмотр через `after()`), заглушка soon + POST `intent=notify-city`, `/about`, `/about/lite`, `/safety`, `/login`, ошибки. Данные — те же `src/lib/repo`
+- Критический CSS Ultra: подмножество тех же `--t-*` из `src/styles/tokens.css` + оверлеи из `modes.css`, ~8 КБ несжатых, встроен в HTML. Второй палитры нет
+- Переключение версий: в Ultra футер/низ «Полная версия» / «Полная» → `?mode=full`; в Full/Lite футер «Экономная версия» → `?mode=ultra` и ссылка на `/about/lite`
+- `Cache-Control`: главная/about/списки — `private, max-age=60, stale-while-revalidate=300`; карточка/логин/ошибки — `private, no-store`. `Vary: Cookie, Save-Data`
+- Замер Ultra (gzip, `npm run measure:ultra`): `/gorlovka?mode=ultra` HTML 5.04 КБ, CSS 7.99 КБ, JS 0, 1 запрос, до первой карточки на 50 Кбит/с + 1.2 с RTT ≈ **1.78 с**; список `/gorlovka/jobs?mode=ultra` HTML 5.83 КБ, то же CSS/JS, ≈ **1.75 с**. Бюджеты 8.5 Ultra (≤ 40 КБ, HTML ≤ 25, CSS ≤ 8, JS 0, ≤ 3 запроса) закрыты
 - Список `/[city]/jobs`: только `workFormat=LOCAL` (Закон 17 / 11.16). Вкладка «Вахта · N» рядом с заголовком ведёт на `/[city]/vahta`. В общем списке вахт нет
 - `/[city]/vahta`: отдельная посадочная («вахта из Горловки»), свои фильтры (место работы из geo, смена, ротация, проживание, питание, проезд, напрямую от работодателя), предупреждение и ссылка на `/safety`. В карточке «Работа: …» раньше и заметнее «Набор: город»
 - `/safety` «Как не попасться при поиске работы»: региональные примеры; ссылки из раздела вахт, карточки и футера
@@ -75,9 +81,11 @@
 - Cookie города: `tr_city`
 - Cookie последнего поиска: `tr_search` (`v1|city|jobs|query`), 30 дней, httpOnly, пишет middleware при фильтрах на `/[city]/jobs` и `/[city]/vahta`; `?reset=1` чистит cookie и редиректит на чистый список
 - Cookie выбора режима: `tr_mode` (`auto` / `full` / `lite` / `ultra`), httpOnly, ставит middleware при `?mode=`
+- Заголовок тонкого пути: `x-ultra-path` (`ULTRA_PATH_HEADER`) — публичный путь при внутреннем rewrite на `/u/...`
+- Замер Ultra: `npm run measure:ultra` (`scripts/measure-ultra.mjs`); дым: `node scripts/ultra-smoke.mjs`
 - Cookie сессии аналитики: `tr_sid` (32 hex), 24 часа, httpOnly. Middleware кладёт то же значение в заголовок `x-session-hash`, чтобы Ultra успел записать событие в `after()` на первом заходе
 - Cookie замера: `tr_res` (`full` / `lite` / `ultra`), 7 дней, пишет клиент при `tr_mode=auto`
-- Заголовки запроса после middleware: `x-quality-mode`, `x-quality-preference`, `x-session-hash`
+- Заголовки запроса после middleware: `x-quality-mode`, `x-quality-preference`, `x-session-hash`, при ultra ещё `x-ultra-path`
 - Источник городов: `shared/geo.json` (читают и TypeScript, и Python)
 - Источник профессий: `shared/professions.json` (имена и сферы; популярность на главной — из базы)
 - Prisma seed: `npx prisma db seed` (tsx prisma/seed.ts)
@@ -95,5 +103,5 @@
 ## Открытые вопросы / долги
 - GitHub ещё не подключён к проекту Vercel: `git push` пока сам сайт не обновляет. 2026-08-29 сайт обновили через CLI; шаги привязки репозитория — в docs/SETUP-LOG.md. После связи регион `fra1` из `vercel.json` применится сам.
 - Next.js 16 предупреждает, что `middleware.ts` устарел в пользу `proxy.ts`. Файл оставлен как `src/middleware.ts`, потому что так написано в ядре и на следующих этапах его дополняем.
-- Тонкий путь Ultra без JavaScript (`/u/...`) — Этап 10, раздел 8.6. Сейчас Ultra уже не грузит шрифт, картинки и спрайт, но каркас Next.js ещё едет (~192 КБ JS), поэтому бюджеты 8.5 по JS/запросам/итогу для Lite и Ultra пока не закрыты каркасом, не разметкой главной.
+- Бюджеты 8.5 для **Lite** по JS/запросам/итогу пока не закрыты каркасом Next.js (~192 КБ на Full/Lite). Ultra закрыт тонким путём Этапа 10.
 - «Показать ещё» на сидах не видно: 12 местных при Full/Lite по 20 на страницу — одна страница. На Ultra (10 на страницу) есть `?page=2`. Проверка докидывания — после большего набора или с `?pageSize=` через API.

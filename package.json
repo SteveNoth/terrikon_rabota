@@ -9,6 +9,7 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "check:design": "node scripts/check-design.mjs",
+    "measure:ultra": "node scripts/measure-ultra.mjs",
     "analyze": "echo Bundle analysis not configured yet"
   },
   "prisma": {
