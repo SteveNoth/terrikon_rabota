@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { BrandLockup } from "@/components/brand/BrandLockup";
+import { TelegramChannelLink } from "@/components/brand/TelegramChannelLink";
 import { Button } from "@/components/ui/button";
 import { CitySelect } from "@/components/layout/CitySelect";
 import { LayoutSlot } from "@/components/layout/LayoutSlot";
@@ -17,12 +18,10 @@ export function Header({
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-surface">
       <div className="mx-auto flex min-h-header max-w-container flex-wrap items-center gap-3 px-4 py-2">
-        <Link
-          href={`/${citySlug}`}
-          className="shrink-0 font-display text-md font-medium text-brand"
-        >
-          Террикон Работа
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <BrandLockup href={`/${citySlug}`} />
+          <TelegramChannelLink />
+        </div>
         <div className="min-w-0 flex-1">
           <CitySelect
             id="tr-city-header"

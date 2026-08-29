@@ -22,6 +22,7 @@ export const ICON_NAMES = [
   "menu",
   "home",
   "profile",
+  "telegram",
   "sphere-production",
   "sphere-construction",
   "sphere-trade",
@@ -53,6 +54,7 @@ export const ICON_LABELS: Record<IconName, string> = {
   menu: "Меню",
   home: "Главная",
   profile: "Профиль",
+  telegram: "Telegram",
   "sphere-production": "Производство",
   "sphere-construction": "Стройка",
   "sphere-trade": "Торговля",
@@ -82,6 +84,7 @@ export const ICON_GLYPHS: Record<IconName, string> = {
   menu: "☰",
   home: "⌂",
   profile: "☺",
+  telegram: "✈",
   "sphere-production": "⚙",
   "sphere-construction": "⚒",
   "sphere-trade": "⇄",
@@ -127,7 +130,7 @@ export function Icon({ name, size, className, title, decorative = false }: IconP
     >
       {sprite ? (
         <svg className="size-full" focusable="false" aria-hidden="true">
-          <use href={`/icons/sprite.svg?v=2#icon-${name}`} />
+          <use href={`/icons/sprite.svg?v=3#icon-${name}`} />
         </svg>
       ) : (
         ICON_GLYPHS[name]

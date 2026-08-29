@@ -42,7 +42,7 @@ export function HomeSpheres({
           <li key={tile.slug} className="min-w-0">
             <Link
               href={`/${citySlug}/jobs?sphere=${encodeURIComponent(tile.slug)}`}
-              className="flex h-full min-h-tap min-w-0 flex-col gap-2 rounded-lg border border-border bg-surface p-4 shadow-1"
+              className="flex h-full min-h-tap min-w-0 flex-col gap-2 rounded-lg border border-border bg-surface p-4 shadow-1 transition duration-normal hover:border-brand hover:bg-surface-muted hover:shadow-2"
             >
               <Icon name={asSphereIcon(tile.icon)} decorative />
               <span className="break-words font-medium">{tile.name}</span>

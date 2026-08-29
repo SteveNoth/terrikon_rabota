@@ -9,6 +9,8 @@ const cardVariants = cva("rounded-lg border p-4", {
       muted: "border-border bg-surface-muted",
       outline: "border-border-strong bg-transparent",
       inverse: "border-transparent bg-surface-inverse text-text-inverse",
+      interactive:
+        "border-border bg-surface shadow-1 transition duration-normal hover:border-brand hover:bg-surface-muted hover:shadow-2 group-focus-visible:border-brand group-focus-visible:bg-surface-muted group-focus-visible:shadow-2",
     },
     padding: {
       sm: "p-3",

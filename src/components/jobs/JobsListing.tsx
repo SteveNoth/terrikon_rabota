@@ -96,6 +96,7 @@ function toRepoParams(
     meals: query.meals,
     travel: query.travel,
     direct: query.direct,
+    employerSlug: query.employerSlug,
   };
 }
 
@@ -185,7 +186,7 @@ export async function JobsListing({
         </p>
       ) : null}
 
-      <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-start">
+      <div className="flex min-w-0 flex-col gap-4 md:flex-row md:items-start md:gap-6">
         <JobsFilters
           citySlug={citySlug}
           section={section}

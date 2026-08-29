@@ -49,6 +49,7 @@ export function serializeVacancyQuery(
   setOptional(params, "meals", query.meals ? "1" : undefined);
   setOptional(params, "travel", query.travel ? "1" : undefined);
   setOptional(params, "direct", query.direct ? "1" : undefined);
+  setOptional(params, "employer", query.employerSlug);
   if (sort && sort !== "date") {
     params.set("sort", sort);
   }
@@ -95,6 +96,7 @@ export function queryForTabSwitch(query: ParsedVacancyQuery): ParsedVacancyQuery
   if (query.hasSalary) next.hasSalary = true;
   if (query.verifiedOnly) next.verifiedOnly = true;
   if (query.source) next.source = query.source;
+  if (query.employerSlug) next.employerSlug = query.employerSlug;
   return next;
 }
 
@@ -110,6 +112,7 @@ export function activeFilterCount(query: ParsedVacancyQuery, section: JobsSectio
   if (query.hasSalary) count += 1;
   if (query.verifiedOnly) count += 1;
   if (query.source) count += 1;
+  if (query.employerSlug) count += 1;
   if (section === "jobs") {
     if (query.schedule) count += 1;
     if (query.district) count += 1;

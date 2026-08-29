@@ -15,6 +15,13 @@ import {
   MODE_HEADER,
   PREFERENCE_HEADER,
 } from "@/lib/quality/types";
+import { SESSION_COOKIE, SESSION_HEADER, SESSION_MAX_AGE, isSessionHash } from "@/lib/stats/session";
+
+function randomSessionHash(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
 
 function resolveCity(request: NextRequest): string {
   const fromCookie = request.cookies.get(CITY_COOKIE)?.value;
@@ -26,6 +33,16 @@ function resolveCity(request: NextRequest): string {
 
 function cookieSecure(): boolean {
   return process.env.NODE_ENV === "production";
+}
+
+function cookieOptions(maxAge: number) {
+  return {
+    path: "/",
+    maxAge,
+    sameSite: "lax" as const,
+    httpOnly: true,
+    secure: cookieSecure(),
+  };
 }
 
 function withCityCookie(response: NextResponse, slug: string, request: NextRequest) {
@@ -58,13 +75,7 @@ function applyQuality(
   response.headers.set(PREFERENCE_HEADER, resolved.preference);
 
   if (resolved.rememberPreference) {
-    response.cookies.set(MODE_COOKIE, resolved.preference, {
-      path: "/",
-      maxAge: MODE_COOKIE_MAX_AGE,
-      sameSite: "lax",
-      httpOnly: true,
-      secure: cookieSecure(),
-    });
+    response.cookies.set(MODE_COOKIE, resolved.preference, cookieOptions(MODE_COOKIE_MAX_AGE));
   }
 
   return response;
@@ -72,25 +83,36 @@ function applyQuality(
 
 function passQuality(request: NextRequest): NextResponse {
   const resolved = resolveMode(request);
+  const session = resolveSession(request);
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(MODE_HEADER, resolved.mode);
   requestHeaders.set(PREFERENCE_HEADER, resolved.preference);
+  requestHeaders.set(SESSION_HEADER, session.hash);
 
   const response = NextResponse.next({
     request: { headers: requestHeaders },
   });
 
-  return applyQuality(response, request, resolved);
+  return withSession(applyQuality(response, request, resolved), session);
 }
 
-function cookieOptions(maxAge: number) {
-  return {
-    path: "/",
-    maxAge,
-    sameSite: "lax" as const,
-    httpOnly: true,
-    secure: cookieSecure(),
-  };
+function resolveSession(request: NextRequest): { hash: string; isNew: boolean } {
+  const existing = request.cookies.get(SESSION_COOKIE)?.value;
+  if (isSessionHash(existing)) {
+    return { hash: existing, isNew: false };
+  }
+  return { hash: randomSessionHash(), isNew: true };
+}
+
+function withSession(
+  response: NextResponse,
+  session: { hash: string; isNew: boolean },
+): NextResponse {
+  response.headers.set(SESSION_HEADER, session.hash);
+  if (session.isNew) {
+    response.cookies.set(SESSION_COOKIE, session.hash, cookieOptions(SESSION_MAX_AGE));
+  }
+  return response;
 }
 
 function withLastSearch(request: NextRequest, response: NextResponse): NextResponse {

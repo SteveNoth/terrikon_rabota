@@ -3,10 +3,10 @@
 Последнее обновление: 2026-08-29
 
 ## Где я сейчас
-- Текущий этап: 8
-- Последний завершённый этап: 8
-- Последний коммит: Этапы 6 и 7 — режимы качества и главная города (ветка `stage-07-city-home`)
-- Ветка этапа: `stage-08-jobs-list`
+- Текущий этап: 9
+- Последний завершённый этап: 9
+- Последний коммит: Этап 9 — карточка вакансии (ветка `stage-09-job-card`)
+- Ветка этапа: `stage-09-job-card`
 
 ## Что уже работает
 - Установлены Node.js, Python, Git, Cursor
@@ -29,7 +29,12 @@
 - Форматтеры: деньги, даты, телефон, склонения
 - Режимы качества Full / Lite / Ultra: решение на сервере до HTML (`?mode=`, cookie `tr_mode` / `tr_res`, `Save-Data`, env). Матрица `FEATURES` — единственное место «что включено». Переключатель работает без JavaScript. Понижение сразу, повышение при следующем переходе.
 - Главная города `/gorlovka`: hero с падежом `loc` из geo, поиск GET без JavaScript (`/?city=&q=` → `/[city]/jobs?q=`), теги профессий из `shared/professions.json` по популярности в городе, 6 карточек из базы, 8 сфер со счётчиком из кэша, «Как это работает», планы `soon`/`planned` на `/about#plans`
-- Карточка `src/components/vacancy/VacancyCard.tsx`: полнота по `features.descriptionPreview` / `features.images` (Full — 2 строки сводки; Lite — без сводки; Ultra — название, место, зарплата, дата)
+- Карточка `src/components/vacancy/VacancyCard.tsx`: ссылка на `/[city]/job/[slug]`. Полнота по `features.descriptionPreview` / `features.images` (Full — 2 строки сводки; Lite — без сводки; Ultra — название, место, зарплата, дата)
+- Страница `/[city]/job/[slug]`: первый экран (название, зарплата, работодатель, место, факты, дата/свежесть). Вахта: «Работа: …» крупнее «Набор из …», затем схема смен и условия. Контакты выше описания (`tel:`, `https://t.me/`, `mailto:`), телефон с CSS-защитой от простого копирования. Описание из `VacancyView`: разделы или абзацы, HTML источника всегда вычищен. Источник + «Открыть оригинал» + при автообработке `<details>Показать оригинал</details>`. Нет данных — нет строки. «Что уточнить у работодателя» из `missingInfo`. «О работодателе». Кнопки: отклик → `/login`, избранное локально, поделиться, жалоба → `Report`. Похожие — 3 той же сферы и города. Карта: Full/Lite кнопка (ресурс по клику), Ultra — адрес + `geo:`. Событие `VACANCY_VIEW` без задержки страницы
+- `src/lib/vacancy/view.ts` — контракт `VacancyView`. Компонент описания не получает `rawText`
+- `/api/events` — `sendBeacon` в Full/Lite. Ultra пишет просмотр через `after()`. Cookie сессии `tr_sid` на 24 часа. Без IP и строки браузера. Не чаще раза в 30 минут на пару сессия+вакансия
+- `/api/reports` — форма жалобы без JavaScript, в причинах «Похоже на мошенничество», ссылка на `/safety`. Сайт не называет объявление мошенническим
+- `/login` — заглушка: смотреть можно без аккаунта, отклик позже
 - ISR: `export const revalidate = 600` на главной. Из-за заголовка режима страница в сборке остаётся динамической; свежие вакансии, счётчики сфер и популярные профессии кэшируются адаптером на 10 минут
 - Замер первой загрузки (gzip, production `next start`, скрипт `node scripts/measure-home.mjs`): HTML ~9–10 КБ, CSS ~6 КБ, шрифт 0, спрайт только Full/Lite. JS ~192 КБ — каркас Next.js, тонкий путь Ultra (0 КБ JS) — Этап 10
 - Список `/[city]/jobs`: только `workFormat=LOCAL` (Закон 17 / 11.16). Вкладка «Вахта · N» рядом с заголовком ведёт на `/[city]/vahta`. В общем списке вахт нет
@@ -42,7 +47,7 @@
 - Пустой результат: `EmptyState` + сброс + переход в вахту/местные, если там есть объявления
 - Производительность списка: один `findMany` (take/skip) + отдельный `count` по тому же where. План: `node scripts/bench-vacancies.mjs` — индекс `Vacancy_citySlug_isActive_workFormat_publishedAt_idx`. На 12 строках list+count ~0.2 мс; на 5000 — list ~0.1 мс, count ~4 мс, затем cleanup `bench-*`. HTTP с дома до Франкфурта — дорога, не SQL
 - `npm run build` проходит
-- Живой сайт: https://terrikon-rabota.vercel.app
+- Живой сайт: https://terrikon-rabota.vercel.app — 2026-08-29 повторно выложен через Vercel CLI (не через GitHub). На сайте уже список и карточки, не заглушка Этапа 1
 - База Supabase: проект `terrikon-rabota`, регион Frankfurt (`eu-central-1`)
 - Серверные функции Vercel: регион `fra1` (`vercel.json`), рядом с базой
 
@@ -70,8 +75,9 @@
 - Cookie города: `tr_city`
 - Cookie последнего поиска: `tr_search` (`v1|city|jobs|query`), 30 дней, httpOnly, пишет middleware при фильтрах на `/[city]/jobs` и `/[city]/vahta`; `?reset=1` чистит cookie и редиректит на чистый список
 - Cookie выбора режима: `tr_mode` (`auto` / `full` / `lite` / `ultra`), httpOnly, ставит middleware при `?mode=`
+- Cookie сессии аналитики: `tr_sid` (32 hex), 24 часа, httpOnly. Middleware кладёт то же значение в заголовок `x-session-hash`, чтобы Ultra успел записать событие в `after()` на первом заходе
 - Cookie замера: `tr_res` (`full` / `lite` / `ultra`), 7 дней, пишет клиент при `tr_mode=auto`
-- Заголовки запроса после middleware: `x-quality-mode`, `x-quality-preference`
+- Заголовки запроса после middleware: `x-quality-mode`, `x-quality-preference`, `x-session-hash`
 - Источник городов: `shared/geo.json` (читают и TypeScript, и Python)
 - Источник профессий: `shared/professions.json` (имена и сферы; популярность на главной — из базы)
 - Prisma seed: `npx prisma db seed` (tsx prisma/seed.ts)
@@ -87,7 +93,7 @@
 - Серверные функции Vercel живут в `fra1`, рядом с Supabase (см. docs/DECISIONS.md)
 
 ## Открытые вопросы / долги
-- GitHub ещё не подключён к проекту Vercel: `git push` пока сам сайт не обновляет. Нужно один раз связать репозиторий в панели Vercel (шаги в docs/SETUP-LOG.md). После связи регион `fra1` из `vercel.json` применится сам.
+- GitHub ещё не подключён к проекту Vercel: `git push` пока сам сайт не обновляет. 2026-08-29 сайт обновили через CLI; шаги привязки репозитория — в docs/SETUP-LOG.md. После связи регион `fra1` из `vercel.json` применится сам.
 - Next.js 16 предупреждает, что `middleware.ts` устарел в пользу `proxy.ts`. Файл оставлен как `src/middleware.ts`, потому что так написано в ядре и на следующих этапах его дополняем.
 - Тонкий путь Ultra без JavaScript (`/u/...`) — Этап 10, раздел 8.6. Сейчас Ultra уже не грузит шрифт, картинки и спрайт, но каркас Next.js ещё едет (~192 КБ JS), поэтому бюджеты 8.5 по JS/запросам/итогу для Lite и Ultra пока не закрыты каркасом, не разметкой главной.
 - «Показать ещё» на сидах не видно: 12 местных при Full/Lite по 20 на страницу — одна страница. На Ultra (10 на страницу) есть `?page=2`. Проверка докидывания — после большего набора или с `?pageSize=` через API.

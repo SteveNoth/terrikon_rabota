@@ -82,6 +82,7 @@ export async function GET(request: Request) {
       meals: query.meals,
       travel: query.travel,
       direct: query.direct,
+      employerSlug: query.employerSlug,
     });
 
     const elapsed = Math.round(performance.now() - started);

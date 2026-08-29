@@ -11,7 +11,7 @@ import {
   getDefaultCity,
   type CitySlug,
 } from "@/lib/geo";
-import { cn } from "@/lib/format/cn";
+import { TerriconMark } from "@/components/brand/TerriconMark";
 
 function TerriconSilhouette() {
   return (
@@ -19,25 +19,7 @@ function TerriconSilhouette() {
       feature="images"
       is="none"
       fallback={
-        <svg
-          viewBox="0 0 80 56"
-          className="size-16 text-brand motion-safe:transition-opacity duration-normal"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path
-            d="M8 48 L28 18 L40 32 L52 12 L72 48 Z"
-            className="fill-current opacity-30"
-          />
-          <path
-            d="M12 48 L32 22 L40 34 L50 16 L68 48 Z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinejoin="round"
-          />
-          <path d="M4 50 H76" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+        <TerriconMark className="size-16 motion-safe:transition-opacity duration-normal" />
       }
     >
       <span className="text-3xl text-brand" aria-hidden="true">

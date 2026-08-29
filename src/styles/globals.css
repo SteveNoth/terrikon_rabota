@@ -155,3 +155,55 @@
 .tr-spin {
   animation: tr-spin var(--t-motion-normal) linear infinite;
 }
+
+/*
+  Телефон на карточке. Цифры в HTML идут задом наперёд, CSS переворачивает
+  их для человека. Между ними спрятаны ложные. Простой робот, который копирует
+  текст страницы, получает кашу. Ссылка tel: нужна, чтобы с телефона шёл звонок.
+*/
+.phone-obf {
+  unicode-bidi: bidi-override;
+  direction: rtl;
+  white-space: nowrap;
+}
+
+.phone-bait {
+  display: none;
+}
+
+/* Значок Telegram: тихое «дыхание» тени и кольцо. Длительность — от --t-motion-base. */
+@keyframes tr-tg-glow {
+  0%,
+  100% {
+    box-shadow: var(--t-shadow-1);
+  }
+  50% {
+    box-shadow: var(--t-shadow-2);
+  }
+}
+
+@keyframes tr-tg-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+.tr-tg-pulse {
+  position: relative;
+  animation: tr-tg-glow calc(var(--t-motion-base) * 14) var(--t-motion-ease) infinite;
+}
+
+.tr-tg-pulse::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  border: var(--t-border-width) solid var(--t-color-accent);
+  animation: tr-tg-ping calc(var(--t-motion-base) * 14) var(--t-motion-ease) infinite;
+}

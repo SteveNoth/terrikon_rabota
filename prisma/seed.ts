@@ -705,7 +705,7 @@ async function main(): Promise<void> {
       titleNormalized: "повар",
       rawText:
         "СРОЧНО!!! 🔥🔥 НУЖЕН ПОВАР НА КАФЕ НИКИТОВКА ЗП 1500 ЗА СМЕНУ ЗВОНИТЬ 071-123-45-20 ПОДПИСЫВАЙТЕСЬ НА ГРУППУ!!!!",
-      description: "Повар в кафе. Оплата за смену.",
+      description: "Повар в кафе. <script>alert('xss')</script> Оплата за смену. <b>Звонить срочно</b>.",
       summaryLine: `Повар · ${nikitovka.name} · 1 500 ₽/смена`,
       completeness: 28,
       qualityScore: 24,

@@ -58,6 +58,7 @@ export type ParsedVacancyQuery = {
   meals?: boolean;
   travel?: boolean;
   direct?: boolean;
+  employerSlug?: string;
 };
 
 function first(value: string | string[] | undefined): string | undefined {
@@ -304,6 +305,10 @@ export function parseVacancyQuery(
   }
   if (parseFlag(raw.direct)) {
     parsed.direct = true;
+  }
+  const employerSlug = parseSlug(raw.employer);
+  if (employerSlug) {
+    parsed.employerSlug = employerSlug;
   }
 
   return parsed;

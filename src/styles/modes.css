@@ -51,18 +51,29 @@ html[data-theme="dark"] {
     --t-color-text: #000;
     --t-chart-grid: #ccc;
   }
+
+  .tr-tg-pulse,
+  .tr-tg-pulse::after {
+    animation: none;
+  }
 }
 
 /* Встроенная анимация Tailwind (animate-pulse) не читает --t-motion-base.
    В Ultra и при «меньше движения» выключаем её отдельно. */
 html[data-mode="ultra"] .animate-pulse,
-html[data-mode="ultra"] .tr-spin {
+html[data-mode="ultra"] .tr-spin,
+html[data-mode="ultra"] .tr-tg-pulse,
+html[data-mode="ultra"] .tr-tg-pulse::after,
+html[data-mode="lite"] .tr-tg-pulse,
+html[data-mode="lite"] .tr-tg-pulse::after {
   animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-pulse,
-  .tr-spin {
+  .tr-spin,
+  .tr-tg-pulse,
+  .tr-tg-pulse::after {
     animation: none;
   }
 }

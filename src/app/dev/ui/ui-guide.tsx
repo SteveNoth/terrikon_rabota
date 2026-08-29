@@ -52,7 +52,7 @@ const BUTTON_VARIANTS = ["primary", "accent", "outline", "ghost", "danger"] as c
 const BUTTON_SIZES = ["sm", "md", "lg"] as const;
 const BADGE_TONES = ["neutral", "brand", "accent", "success", "warning", "danger", "info"] as const;
 const CHIP_VARIANTS = ["default", "outline", "accent", "active"] as const;
-const CARD_VARIANTS = ["default", "muted", "outline", "inverse"] as const;
+const CARD_VARIANTS = ["default", "muted", "outline", "inverse", "interactive"] as const;
 const ALERT_TONES = ["info", "success", "warning", "danger"] as const;
 const SKELETON_SHAPES = ["line", "title", "circle", "block"] as const;
 

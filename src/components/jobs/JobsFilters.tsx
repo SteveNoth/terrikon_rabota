@@ -78,10 +78,11 @@ export function JobsFilters({
       method="GET"
       action={jobsPath(citySlug, section)}
       className={cn(
-        "flex min-w-0 flex-col gap-4 border-border bg-surface",
+        "flex min-w-0 flex-col gap-5 bg-surface",
         open
-          ? "fixed inset-0 z-30 overflow-y-auto p-4 pb-bottomnav-plus md:static md:z-0 md:w-72 md:shrink-0 md:overflow-visible md:border-0 md:p-0 md:pb-0"
-          : "hidden md:flex md:w-72 md:shrink-0",
+          ? "fixed inset-0 z-30 overflow-y-auto p-4 pb-bottomnav-plus"
+          : "hidden",
+        "md:static md:z-0 md:flex md:w-96 md:shrink-0 md:overflow-visible md:rounded-lg md:border md:border-border md:p-6 md:pb-6 md:shadow-1",
       )}
     >
       <div className="flex items-center justify-between gap-3 md:hidden">
@@ -90,10 +91,7 @@ export function JobsFilters({
           Закрыть
         </a>
       </div>
-
-      <p className="hidden text-sm text-muted md:block">
-        Условия попадают в адрес. Ссылку можно отправить — человек увидит то же самое.
-      </p>
+      <p className="hidden font-display text-lg font-medium md:block">Фильтры</p>
 
       <Field id="jobs-q" label="Поиск">
         <Input
@@ -339,13 +337,17 @@ export function JobsFilters({
 
       {query.sort !== "date" ? <input type="hidden" name="sort" value={query.sort} /> : null}
 
-      <div className="flex min-w-0 flex-col gap-2">
+      <div className="flex min-w-0 flex-col gap-3">
         <Button type="submit" variant="primary" full>
           Показать вакансии
         </Button>
         <a href={resetHref} className={cn(buttonVariants({ variant: "ghost", full: true }))}>
           Сбросить фильтры
         </a>
+        <p className="rounded-md bg-surface-muted px-3 py-3 text-sm text-muted">
+          Совет: скопируйте адрес страницы и отправьте знакомому — у него откроются те же фильтры и
+          вакансии.
+        </p>
       </div>
     </form>
   );

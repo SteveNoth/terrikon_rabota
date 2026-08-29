@@ -52,6 +52,7 @@ export type ListVacanciesParams = {
   meals?: boolean;
   travel?: boolean;
   direct?: boolean;
+  employerSlug?: string;
 };
 
 export type VacancyListItem = {
@@ -86,17 +87,10 @@ export type VacancyListItem = {
   } | null;
 };
 
-export type ListVacanciesResult = {
-  vacancies: VacancyListItem[];
-  total: number;
-  page: number;
-  pageSize: number;
-  pages: number;
-};
-
-export type VacancyDetail = VacancyListItem & {
+export type VacancyRecord = VacancyListItem & {
   description: string;
   descriptionSections: Prisma.JsonValue | null;
+  rawText: string | null;
   address: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -108,8 +102,35 @@ export type VacancyDetail = VacancyListItem & {
   housingProvided: boolean;
   mealsProvided: boolean;
   travelPaid: boolean;
-  employerKind: string;
+  advancePayment: boolean;
+  employerKind: EmployerKind;
   vahtaDays: number | null;
+  lastSeenAt: Date;
+  firstSeenAt: Date;
+  aiProcessed: boolean;
+  employer: {
+    slug: string;
+    name: string;
+    isVerified: boolean;
+    description: string | null;
+  } | null;
+  group: {
+    postingsCount: number;
+    sourcesCount: number;
+    firstSeenAt: Date;
+    vacancies: {
+      source: Source;
+      sourceName: string | null;
+    }[];
+  } | null;
+};
+
+export type ListVacanciesResult = {
+  vacancies: VacancyListItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  pages: number;
 };
 
 const listSelect = {
@@ -150,6 +171,7 @@ const detailSelect = {
   ...listSelect,
   description: true,
   descriptionSections: true,
+  rawText: true,
   address: true,
   latitude: true,
   longitude: true,
@@ -161,8 +183,33 @@ const detailSelect = {
   housingProvided: true,
   mealsProvided: true,
   travelPaid: true,
+  advancePayment: true,
   employerKind: true,
   vahtaDays: true,
+  lastSeenAt: true,
+  firstSeenAt: true,
+  aiProcessed: true,
+  employer: {
+    select: {
+      slug: true,
+      name: true,
+      isVerified: true,
+      description: true,
+    },
+  },
+  group: {
+    select: {
+      postingsCount: true,
+      sourcesCount: true,
+      firstSeenAt: true,
+      vacancies: {
+        select: {
+          source: true,
+          sourceName: true,
+        },
+      },
+    },
+  },
 } satisfies Prisma.VacancySelect;
 
 function publishedWhere(): Prisma.VacancyWhereInput {
@@ -305,6 +352,9 @@ function buildListWhere(params: ListVacanciesParams): Prisma.VacancyWhereInput {
   if (params.direct) {
     and.push({ employerKind: EmployerKind.DIRECT });
   }
+  if (params.employerSlug) {
+    and.push({ employer: { slug: params.employerSlug } });
+  }
 
   const q = params.q?.trim();
   if (q) {
@@ -360,7 +410,7 @@ export async function listVacancies(params: ListVacanciesParams): Promise<ListVa
   }
 }
 
-export async function getVacancyBySlug(slug: string): Promise<VacancyDetail | null> {
+export async function getVacancyBySlug(slug: string): Promise<VacancyRecord | null> {
   try {
     const vacancy = await prisma.vacancy.findFirst({
       where: { slug, ...publishedWhere() },
@@ -374,14 +424,14 @@ export async function getVacancyBySlug(slug: string): Promise<VacancyDetail | nu
 
 export async function getSimilarVacancies(
   slug: string,
-  limit = 4,
+  limit = 3,
 ): Promise<VacancyListItem[]> {
-  const take = clampTake(limit, 4, MAX_SIMILAR);
+  const take = clampTake(limit, 3, MAX_SIMILAR);
 
   try {
     const current = await prisma.vacancy.findFirst({
       where: { slug, ...publishedWhere() },
-      select: { id: true, citySlug: true, sphere: true, professionSlug: true, workFormat: true },
+      select: { id: true, citySlug: true, sphere: true, workFormat: true },
     });
     if (!current) {
       return [];
@@ -390,11 +440,9 @@ export async function getSimilarVacancies(
     const similarWhere: Prisma.VacancyWhereInput = {
       ...publishedWhere(),
       citySlug: current.citySlug,
+      sphere: current.sphere,
       workFormat: current.workFormat,
       id: { not: current.id },
-      ...(current.professionSlug
-        ? { professionSlug: current.professionSlug }
-        : { sphere: current.sphere }),
     };
 
     return await prisma.vacancy.findMany({

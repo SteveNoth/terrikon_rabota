@@ -30,14 +30,14 @@ async function readQuality() {
 
 /**
  * Брендовый шрифт подключается только если матрица это разрешила.
- * Сейчас файла ещё нет — в DOM не попадает ни одной ссылки на woff2.
- * Lite/Ultra сюда не заходят: features.brandFont === false.
+ * Lite/Ultra сюда не заходят: features.brandFont === false — в HTML нет ссылки на woff2.
  */
 function BrandFont({ enabled }: { enabled: boolean }) {
   if (!enabled) {
     return null;
   }
-  return null;
+
+  return <link rel="stylesheet" href="/fonts/brand.css" precedence="default" />;
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
