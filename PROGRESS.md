@@ -3,11 +3,11 @@
 Последнее обновление: 2026-08-30
 
 ## Где я сейчас
-- Текущий этап: 14B (текст с картинок) — **следующий**, код ещё не начат
-- Последний завершённый этап: 14A, часть 2 (отсев наборов на СВО)
-- Последний коммит: Этап 13 — карта вакансий (ветка `stage-13-maps`)
-- Ветка этапа: `stage-14a-split` (нарезка и отсев СВО в рабочей копии; фильтр части 1 этапа 14 тоже здесь)
-- Порядок дальше: **14B → этап 14 части 2 и 3 → 15…** Часть 2 этапа 14 не начинать до 14B. `process_post` не писать.
+- Текущий этап: 14B (текст с картинок) — **сделан в рабочей копии**, живые макеты в фикстурах
+- Последний завершённый этап: 14B (модуль + синтетика + 38 живых фото; Tesseract с `rus` установлен)
+- Последний коммит: Этап 14B — текст с картинок (ветка `stage-14b-ocr`)
+- Ветка этапа: `stage-14b-ocr` (14A и фильтр части 1 тоже в этой рабочей копии)
+- Порядок дальше: **этап 14 части 2 и 3 → 15…** `process_post` не писать, пока не начата часть 2.
 
 ## Что уже работает
 - Установлены Node.js, Python, Git, Cursor
@@ -64,7 +64,8 @@
 - Этап 14, часть 1: фильтр вакансий на Python до парсеров. Словари `shared/keywords.json` (пороги 60/30, веса), 85 профессий в `shared/professions.json`, вахты в `scripts/vahta.py`. Примеры: 50 синтетических ловушек + 39 живых постов из горловских групп (вакансии, вахты, мусор). Обман лежит отдельно в `scripts/tests/fraud/samples.json` — это не мусор фильтра, `trust_score` будет в части 3. Запуск: `.\.venv\Scripts\python.exe -m pytest` и `python scripts/tests/report.py`. Ямал, 60/30, Мариуполь как вахта внутри географии, 2/2 как местный график, латинские буквы в «Тpeбуeтся», `5.000 ₽`, «курсе вуза» ≠ курсы — покрыты тестами.
 - Этап 14A, часть 1: нарезка поста. Правила в `shared/split.json` (`SPLITTER_VERSION` 2, `maxUnits` 8). `extract_professions` — все должности из словаря; старый `extract_profession` по-прежнему одно лучшее совпадение. `scripts/split.py` → список единиц. Живые простыни: 5 вахтовых списков + «Чистая Вода» (продавец и диспетчер); 9 контрольных с обязанностями/требованиями не режутся. Потолок 8 единиц — лишнее склеивается и помечается на модерацию. Тесты: `python -m pytest`, отчёт `python scripts/tests/split_report.py`.
 - Этап 14A, часть 2: отсев СВО. Это не `workFormat` (по-прежнему только LOCAL / VAHTA / REMOTE). Явный слой `explicit_svo` на целом посте до нарезки; скрытый `hidden_svo` на каждой единице после профессии, зарплаты числом и формата. Срабатывает только вместе: профессия из `coverProfessions` + зарплата ≥ 3× местной медианы (или потолок сферы, если выборка < 5) + нет вахтовых признаков. Словари — блок `svo` в `shared/keywords.json`. Ворота `apply_svo_gate` — не `process_post`. Живые явные: 5 постов из групп (в т.ч. «ты нужен СВОим» и «пункт отбора МО РФ», который иначе стал бы вахтой из‑за жилья и питания). Живые контроли: 6 вахт, включая «бронь от мобилизации». Скрытых живых в парсерных группах нет — скрытый слой держится на синтетике. Запуск: `python -m pytest`, отчёт `python scripts/tests/svo_report.py`.
-- 2026-08-30 в промты добавлены Этапы **14A** (нарезка поста + отсев СВО) и **14B** (OCR картинок). 14A обе части написаны. OCR и `process_post` — нет. В ядре — раздел 11.15. Часть 2 этапа 14 (единый вид) после 14B.
+- Этап 14B: текст с картинок. `shared/ocr.json`, адаптер `scripts/ocr_provider.py`, сборка `scripts/ocr.py`. `OCR_PROVIDER=tesseract` локально (бинарь + `rus`). Живые макеты: `scripts/tests/fixtures/ocr/live/` (38 JPEG, манифест `scripts/tests/ocr/live.json`). Синтетика по-прежнему в тесте без бинаря. Запуск: `python -m pytest`, отчёт `python scripts/tests/ocr_report.py`.
+- 2026-08-30 в промты добавлены Этапы **14A** и **14B**. Обе вставки написаны. `process_post` и части 2–3 этапа 14 — нет. В ядре — раздел 11.15. Часть 2 этапа 14 (единый вид) после 14B.
 - Внешние картинки только с allowlist в `src/lib/images/remote.ts` / `next.config.ts` (ВК, Telegram, hhcdn, Wikimedia для сидов)
 - Спрайт `public/icons/sprite.svg?v=4`: ВК, сайт, карта, предупреждение, поделиться, флажок. Ultra по-прежнему отдаёт текстовый символ и спрайт не качает
 - Логотип «Террикон Работа» — inline SVG (террикон + название), цвет из токена, без файла-картинки
@@ -87,10 +88,11 @@
 - idb: 8.0.3 (IndexedDB на клиенте, Этап 11)
 - maplibre-gl: 6.6.0 (копия ESM в `public/maplibre/`, в бандл Next не импортируется)
 - Пакетный менеджер: npm (v11.19.0)
-- Python: 3.14.6; виртуальное окружение `.venv`; зависимости `requirements.txt` (сейчас `requests`, `pytest`)
-- Фильтр Этапа 14: `scripts/filter.py`, `extract.py`, `vahta.py`, `svo.py`; словари `shared/keywords.json`; профессии `shared/professions.json` (78); тесты `python -m pytest`; отчёты `python scripts/tests/report.py`, `python scripts/tests/split_report.py`, `python scripts/tests/svo_report.py`
+- Python: 3.14.6; виртуальное окружение `.venv`; зависимости `requirements.txt` (`requests`, `pytest`, `pytesseract`, `pillow`). Tesseract — системная программа, не pip
+- Фильтр Этапа 14: `scripts/filter.py`, `extract.py`, `vahta.py`, `svo.py`; словари `shared/keywords.json`; профессии `shared/professions.json` (78); тесты `python -m pytest`; отчёты `python scripts/tests/report.py`, `python scripts/tests/split_report.py`, `python scripts/tests/svo_report.py`, `python scripts/tests/ocr_report.py`
 - Нарезка Этапа 14A часть 1: `scripts/split.py`, `extract_professions` в `extract.py`; правила `shared/split.json`; тесты `scripts/tests/split/`; отчёт `python scripts/tests/split_report.py`. Идентичность: неразрезанный `externalId` как в источнике, разрезанный `{id}` / `{id}#2` / `{id}#3`; `rawText` у всех детей полный.
 - Отсев СВО Этапа 14A часть 2: `scripts/svo.py` (`explicit_svo`, `hidden_svo`, `apply_svo_gate`); блок `svo` в `shared/keywords.json`; тесты `scripts/tests/svo/`; отчёт `python scripts/tests/svo_report.py`. Не вызывает `is_vacancy` и не вызывает `trust_score`. Четвёртого `workFormat` нет.
+- OCR Этапа 14B: `scripts/ocr.py` (`collect_analysis_text`, `assemble_post`), адаптер `scripts/ocr_provider.py`; правила `shared/ocr.json`; тесты `scripts/tests/ocr/`; живые фото `scripts/tests/fixtures/ocr/live/`; отчёт `python scripts/tests/ocr_report.py`. `rawText` = подпись, `ocrText` рядом. `OCR_PROVIDER=tesseract` на этой машине.
 - Git: 2.55.0.windows.5
 - ОС: Windows 10, оболочка PowerShell
 - Имя репозитория GitHub: terrikon_rabota
@@ -112,6 +114,7 @@
 - Источник профессий: `shared/professions.json` (78 записей: имена, сферы, синонимы; популярность на главной — из базы)
 - Источник фильтра: `shared/keywords.json` (пороги accept/maybe, веса, стоп-слова, блок vahta, блок svo). Правка JSON меняет поведение без правки кода
 - Источник нарезки: `shared/split.json` (маркеры должности и работодателя, что не резать, `maxUnits`, `SPLITTER_VERSION`). Правка JSON меняет поведение без правки кода
+- Источник OCR: `shared/ocr.json` (когда гоняем, `maxImages`, язык `rus+eng`, стоп-слова мусора, `OCR_VERSION`). Правка JSON меняет «когда гоняем» без правки кода. Движок — `OCR_PROVIDER` (`none` | `tesseract`), адаптер `scripts/ocr_provider.py`. `split.py` / `filter.py` провайдера не знают
 - Направления вахты вне покрытия: `shared/geo.json` → `externalDestinations`. Это не города проекта: нет страниц и статистики
 - Prisma seed: `npx prisma db seed` (tsx prisma/seed.ts)
 - Кэш списков выдачи: нет (адрес — источник правды). На главной кэшируются свежие 6 карточек, счётчики сфер/профессий и справочники — 10 минут. Счётчики «местные / вахта» на вкладках — 10 минут
@@ -123,6 +126,7 @@
 - Картинки: `src/lib/images/remote.ts` — allowlist доменов для `next/image`; `SmartImage` в `src/components/ui/SmartImage.tsx`; спрайт `/icons/sprite.svg?v=4`
 - Логотип шапки: inline SVG `src/components/brand/TerriconLogo.tsx` / `logo-svg.ts` (531 байт)
 - Карты: `MAPS_PROVIDER` = `maplibre` | `yandex` | `static` | `none`. Адаптер `src/lib/adapters/maps.ts`. Геокодер: `src/lib/geo/geocode.ts`, дым `npx tsx scripts/geocode-smoke.ts`. Копия MapLibre: `node scripts/copy-maplibre-worker.mjs` (уже в `dev`/`build`/`postinstall`)
+- OCR: `OCR_PROVIDER` = `none` | `tesseract`. Адаптер `scripts/ocr_provider.py`. Когда гоняем — `shared/ocr.json`. Tesseract не pip: Windows — установщик UB Mannheim + `TESSDATA_PREFIX`; CI на Этапе 16 — `apt-get install tesseract-ocr tesseract-ocr-rus`
 - Замер главной: `node scripts/measure-home.mjs` (по умолчанию порт 3002; другой: `$env:MEASURE_ORIGIN="http://127.0.0.1:3020"; node scripts/measure-home.mjs`)
 
 ## Решения, которые нельзя менять
@@ -142,5 +146,5 @@
 - «Показать ещё» на сидах не видно: 12 местных при Full/Lite по 20 на страницу — одна страница. На Ultra (10 на страницу) есть `?page=2`. Проверка докидывания — после большего набора или с `?pageSize=` через API.
 - Кабинет соискателя (Этап 21) ещё не пишет `Application`/`Favorite` в аккаунт. Офлайн-очередь Этапа 11 фиксирует факт доставки событием `APPLY_SENT` / `FAVORITE_ADD` один раз на сессию и вакансию.
 - Service worker в `next dev` не ставится. Проверка офлайна — через `npm run build` и `npm start` (или прод на Vercel).
-- Для Этапа 14B нужны живые посты, где смысл на картинке. Скрытых наборов на СВО в парсерных группах пока нет — скрытый слой проверяется синтетикой.
+- Для Этапа 14B: 38 живых макетов из `C:\Users\Max\Desktop\ПОСТЫ ФОТО` лежат в `scripts/tests/fixtures/ocr/live/` (латинские имена, уменьшенные JPEG). Метки: вакансия 11, вахта 6, мусор 10, не вакансия 4, СВО 7. Tesseract с `rus` установлен, `OCR_PROVIDER=tesseract`. Скрытых наборов на СВО в парсерных группах пока нет — скрытый слой проверяется синтетикой.
 - `npx prisma generate` на Windows может дать EPERM, если крутится старый `next start` и держит `query_engine-windows.dll.node`. Сборка сайта при уже сгенерированном клиенте проходит и без повторного generate.

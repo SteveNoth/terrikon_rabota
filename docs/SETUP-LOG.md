@@ -175,3 +175,33 @@ npx prisma studio
 - Первый проход после заглушки падал: Vercel ходил в базу со **старым паролем** (`Authentication failed`). `DATABASE_URL` в Production обновили из локального `.env.local` (значение в лог не писали). После второго деплоя https://terrikon-rabota.vercel.app открывает главную города, не текст «Скоро здесь будут вакансии…».
 - Чтобы следующие этапы выезжали сами: всё ещё нужно Connect Git Repository — шаги в записи от 2026-08-28.
 
+## 2026-08-30 — Tesseract на Windows (Этап 14B), ещё не установлен
+
+Пока `OCR_PROVIDER=none`: конвейер жив, картинки не читаются. Когда будешь ставить:
+
+1. Установщик: https://github.com/UB-Mannheim/tesseract/wiki (Windows).
+2. В мастере отметь язык **Russian**. Папка по умолчанию: `C:\Program Files\Tesseract-OCR`.
+3. Добавь эту папку в PATH (системные переменные среды).
+4. При необходимости в `.env.local`:
+   - `OCR_PROVIDER=tesseract`
+   - `TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe`
+   - `TESSDATA_PREFIX=C:\Program Files\Tesseract-OCR\tessdata`
+5. Новое окно PowerShell, проверка:
+
+```
+tesseract --list-langs
+```
+
+В списке должны быть `rus` и `eng`.
+
+GitHub Actions (Этап 16, ещё не пишем workflow):
+
+```
+sudo apt-get update
+sudo apt-get install -y tesseract-ocr tesseract-ocr-rus
+tesseract --list-langs
+```
+
+Tesseract — системная программа. `pip install -r requirements.txt` ставит только `pytesseract` и `pillow`.
+
+

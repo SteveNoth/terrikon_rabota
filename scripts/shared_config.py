@@ -17,6 +17,7 @@ GEO_PATH = SHARED / "geo.json"
 KEYWORDS_PATH = SHARED / "keywords.json"
 PROFESSIONS_PATH = SHARED / "professions.json"
 SPLIT_PATH = SHARED / "split.json"
+OCR_PATH = SHARED / "ocr.json"
 
 _GENERIC_DISTRICT_NAME_MAX = 6
 
@@ -26,6 +27,7 @@ _cache: dict[str, Any] = {
     "keywords": None,
     "professions": None,
     "split": None,
+    "ocr": None,
 }
 
 
@@ -44,6 +46,7 @@ def _stale() -> bool:
         "keywords": _mtime(KEYWORDS_PATH),
         "professions": _mtime(PROFESSIONS_PATH),
         "split": _mtime(SPLIT_PATH) if SPLIT_PATH.exists() else None,
+        "ocr": _mtime(OCR_PATH) if OCR_PATH.exists() else None,
     }
     return mtimes != _cache["mtimes"]
 
@@ -54,15 +57,18 @@ def reload() -> None:
     keywords = _read_json(KEYWORDS_PATH)
     professions = _read_json(PROFESSIONS_PATH)
     split = _read_json(SPLIT_PATH) if SPLIT_PATH.exists() else {}
+    ocr = _read_json(OCR_PATH) if OCR_PATH.exists() else {}
     _cache["geo"] = geo
     _cache["keywords"] = keywords
     _cache["professions"] = professions
     _cache["split"] = split
+    _cache["ocr"] = ocr
     _cache["mtimes"] = {
         "geo": _mtime(GEO_PATH),
         "keywords": _mtime(KEYWORDS_PATH),
         "professions": _mtime(PROFESSIONS_PATH),
         "split": _mtime(SPLIT_PATH) if SPLIT_PATH.exists() else None,
+        "ocr": _mtime(OCR_PATH) if OCR_PATH.exists() else None,
     }
     _cache["indexes"] = _build_indexes(geo, professions)
 
@@ -94,6 +100,11 @@ def get_profession_items() -> list[dict[str, Any]]:
 def get_split() -> dict[str, Any]:
     _ensure_loaded()
     return _cache["split"] or {}
+
+
+def get_ocr() -> dict[str, Any]:
+    _ensure_loaded()
+    return _cache["ocr"] or {}
 
 
 def _alias_variants(alias: str) -> list[str]:

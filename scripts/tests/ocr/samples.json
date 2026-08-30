@@ -1,0 +1,43 @@
+{
+  "source": {
+    "name": "Работа Горловка",
+    "default_city": "gorlovka",
+    "externalId": "ocr-fixture"
+  },
+  "posts": [
+    {
+      "id": "img-only-seller",
+      "caption": "",
+      "images": ["vacancy_seller.png"],
+      "kind": "image_vacancy",
+      "mockOcr": "Требуется продавец\nГорловка\nЗарплата 28 000 руб\nГрафик 2/2\nТел. 071-321-45-67",
+      "expectedVerdict": "accept",
+      "expectOcr": true,
+      "expectSalary": 28000,
+      "expectProfession": "prodavets",
+      "note": "Пустая подпись, смысл на картинке"
+    },
+    {
+      "id": "salary-on-layout",
+      "caption": "Требуется продавец в магазин. Горловка. График 2/2. Тел. 071-555-12-34",
+      "images": ["salary_mockup.png"],
+      "kind": "salary_layout",
+      "mockOcr": "Зарплата 45 000 руб",
+      "expectedVerdict": "accept",
+      "expectOcr": true,
+      "expectSalary": 45000,
+      "expectProfession": "prodavets",
+      "note": "Зарплата только на макете"
+    },
+    {
+      "id": "sale-fridge",
+      "caption": "продам холодильник",
+      "images": ["fridge.png"],
+      "kind": "garbage",
+      "mockOcr": "этот текст не должен появиться",
+      "expectedVerdict": "reject",
+      "expectOcr": false,
+      "note": "Продажа с фото: OCR не гоняем"
+    }
+  ]
+}
