@@ -2,9 +2,12 @@ requests>=2.32.0
 pytest>=8.3.0
 # Tesseract — системная программа, не pip-пакет.
 # Windows: установщик UB Mannheim, отметь язык Russian, путь в PATH / TESSDATA_PREFIX.
-# GitHub Actions (Этап 16): apt-get install tesseract-ocr tesseract-ocr-rus
+# GitHub Actions (Этапы 16–17): apt-get install tesseract-ocr tesseract-ocr-rus
 # pip ставит только мост к бинарю и библиотеку, чтобы открыть картинку.
 pytesseract>=0.3.13
 pillow>=10.4.0
 # Ночные скрипты Этапа 15 (regroup / reprocess) и send_test пишут в Postgres напрямую.
 psycopg[binary]>=3.2.0
+# Парсер Telegram (Этап 17): официальный client API (MTProto), не Bot API и не HTML t.me.
+# Сессия — StringSession в TG_SESSION, не файл *.session в git.
+telethon>=1.36.0

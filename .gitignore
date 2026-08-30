@@ -39,6 +39,14 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Логи парсеров (раздел 11.6): jsonl уходит артефактом Actions, не в git и не в базу
+/logs/*
+!/logs/.gitkeep
+
+# Telegram Telethon: файл сессии = полноценный вход. Строка — в GitHub Secrets, не сюда.
+*.session
+*.session-journal
+
 # vercel
 .vercel
 

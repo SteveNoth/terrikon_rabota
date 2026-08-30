@@ -1,6 +1,7 @@
 """Единая точка входа обработки поста (раздел 11.1).
 
-Парсеры вызывают только process_post. Никто не собирает запись сам.
+Парсеры вызывают process_post (список) или run_process_post (список + причина
+отброса для лога). Карточку никто кроме этого модуля не собирает.
 
 Порядок внутри — как в ядре, и его нельзя переставлять:
 
@@ -28,6 +29,7 @@ rawText у каждой записи — подпись источника бе�
 from __future__ import annotations
 
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -291,6 +293,94 @@ def _process_unit(
     return _omit_empty(payload)
 
 
+@dataclass
+class ProcessRun:
+    """Тот же конвейер, что process_post, плюс причина отброса для лога парсера.
+
+    records пустой — пост не стал вакансиями. Парсер не собирает карточку сам:
+    он только читает этот результат.
+    """
+
+    records: list[dict[str, Any]]
+    vacancy_verdict: str | None = None
+    svo_verdict: str | None = None
+    reject_reason: str | None = None
+    filter_score: int | None = None
+    filter_reasons: list[str] = field(default_factory=list)
+    ocr_text: str = ""
+    image_urls: list[str] = field(default_factory=list)
+
+
+def run_process_post(
+    text: str,
+    source: dict[str, Any] | None = None,
+    images: list[str] | None = None,
+    *,
+    market: dict[str, Any] | None = None,
+    fetch: Any = None,
+    ocr: Any = None,
+    spam: bool = False,
+    contacts_index: dict[str, Any] | None = None,
+    contact_verdicts: dict[str, Any] | None = None,
+    aggregation: dict[str, Any] | None = None,
+    ocr_text: str | None = None,
+) -> ProcessRun:
+    """Один проход конвейера. OCR не дублируется: картинки качаются здесь."""
+    source = source or {}
+    caption = text if text is not None else ""
+    assembled = assemble_post(
+        caption,
+        images,
+        source=source,
+        market=market,
+        fetch=fetch,
+        ocr=ocr,
+        spam=spam,
+        ocr_text=ocr_text,
+    )
+    ocr_out = assembled.analysis.ocr_text or ""
+    image_urls = list(assembled.analysis.image_urls)
+    if not assembled.units:
+        if assembled.svo_verdict == "reject":
+            reason = "svo"
+        elif assembled.vacancy_verdict == "reject":
+            reason = "filter"
+        else:
+            reason = "hidden_svo"
+        return ProcessRun(
+            records=[],
+            vacancy_verdict=assembled.vacancy_verdict,
+            svo_verdict=assembled.svo_verdict,
+            reject_reason=reason,
+            filter_score=assembled.filter_score,
+            filter_reasons=list(assembled.filter_reasons),
+            ocr_text=ocr_out,
+            image_urls=image_urls,
+        )
+    records: list[dict[str, Any]] = []
+    for unit in assembled.units:
+        records.append(
+            _process_unit(
+                unit,
+                source,
+                vacancy_verdict=assembled.vacancy_verdict,
+                contacts_index=contacts_index,
+                market=market,
+                contact_verdicts=contact_verdicts,
+                aggregation=aggregation,
+            )
+        )
+    return ProcessRun(
+        records=records,
+        vacancy_verdict=assembled.vacancy_verdict,
+        svo_verdict=assembled.svo_verdict,
+        filter_score=assembled.filter_score,
+        filter_reasons=list(assembled.filter_reasons),
+        ocr_text=ocr_out,
+        image_urls=image_urls,
+    )
+
+
 def process_post(
     text: str,
     source: dict[str, Any] | None = None,
@@ -314,31 +404,16 @@ def process_post(
 
     ocr_text — уже сохранённое распознавание. Картинки заново не качаем.
     """
-    source = source or {}
-    caption = text if text is not None else ""
-    assembled = assemble_post(
-        caption,
+    return run_process_post(
+        text,
+        source,
         images,
-        source=source,
         market=market,
         fetch=fetch,
         ocr=ocr,
         spam=spam,
+        contacts_index=contacts_index,
+        contact_verdicts=contact_verdicts,
+        aggregation=aggregation,
         ocr_text=ocr_text,
-    )
-    if not assembled.units:
-        return []
-    records: list[dict[str, Any]] = []
-    for unit in assembled.units:
-        records.append(
-            _process_unit(
-                unit,
-                source,
-                vacancy_verdict=assembled.vacancy_verdict,
-                contacts_index=contacts_index,
-                market=market,
-                contact_verdicts=contact_verdicts,
-                aggregation=aggregation,
-            )
-        )
-    return records
+    ).records

@@ -1,0 +1,73 @@
+{
+  "_readme": "Открытые группы ВКонтакте, откуда парсер читает стену через официальный API (wall.get). Это не секрет и не токен. default_city — город набора, если в посте город не назван (раздел 11.3). enabled: false выключает группу без правки кода. count — сколько последних постов, максимум 100. Токен ВК сюда не класть — только VK_TOKEN в .env.local и GitHub Secrets. Названия групп сверены методом groups.getById 2026-08-30. Группа rabotadpr пишет и по другим городам ДНР: чужой город отсеется на приёме (город не active).",
+  "defaults": {
+    "count": 30,
+    "default_city": "gorlovka"
+  },
+  "groups": [
+    {
+      "enabled": true,
+      "screen_name": "rabotadpr",
+      "owner_id": -136489529,
+      "sourceName": "РАБОТА ДНР ГОРЛОВКА ЕНАКИЕВО ДОНЕЦК МАКЕЕВКА",
+      "default_city": "gorlovka",
+      "count": 30
+    },
+    {
+      "enabled": true,
+      "screen_name": "gorlovka_job",
+      "owner_id": -186235937,
+      "sourceName": "Работа Горловка | Енакиево | Объявления ДНР",
+      "default_city": "gorlovka",
+      "count": 30
+    },
+    {
+      "enabled": true,
+      "screen_name": "workgorlovka",
+      "owner_id": -152752803,
+      "sourceName": "РАБОТА В ГОРЛОВКЕ, НИКИТОВКЕ",
+      "default_city": "gorlovka",
+      "count": 30
+    },
+    {
+      "enabled": true,
+      "screen_name": "rabota.gorlovka",
+      "owner_id": -227897934,
+      "sourceName": "РАБОТА В ГОРЛОВКЕ, В ДНР",
+      "default_city": "gorlovka",
+      "count": 30
+    },
+    {
+      "enabled": true,
+      "screen_name": "club218218419",
+      "owner_id": -218218419,
+      "sourceName": "Горловка Работа Шабашка Халтура",
+      "default_city": "gorlovka",
+      "count": 30
+    },
+    {
+      "enabled": true,
+      "screen_name": "vakansii_gorlovka",
+      "owner_id": -193539906,
+      "sourceName": "Объявления и Работа Горловка",
+      "default_city": "gorlovka",
+      "count": 30
+    },
+    {
+      "enabled": true,
+      "screen_name": "club63194031",
+      "owner_id": -63194031,
+      "sourceName": "Работа в Горловке",
+      "default_city": "gorlovka",
+      "count": 30
+    },
+    {
+      "enabled": true,
+      "screen_name": "rabotagorlovka",
+      "owner_id": -139699160,
+      "sourceName": "Работа в Горловке: вакансии и резюме Горловки",
+      "default_city": "gorlovka",
+      "count": 30
+    }
+  ]
+}

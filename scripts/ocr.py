@@ -138,6 +138,8 @@ class AssembleResult:
     units: list[AssembledUnit]
     vacancy_verdict: str | None = None
     svo_verdict: str | None = None
+    filter_score: int | None = None
+    filter_reasons: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -145,6 +147,8 @@ class AssembleResult:
             "units": [item.as_dict() for item in self.units],
             "vacancyVerdict": self.vacancy_verdict,
             "svoVerdict": self.svo_verdict,
+            "filterScore": self.filter_score,
+            "filterReasons": list(self.filter_reasons),
         }
 
 
@@ -173,6 +177,15 @@ def _host_allowed(hostname: str, allow: list[str]) -> bool:
         if host == base or host.endswith("." + base):
             return True
     return False
+
+
+def image_url_allowed(url: str) -> bool:
+    """URL картинки с хоста из downloadAllowHosts (shared/ocr.json)."""
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return False
+    allow = list(get_ocr_cfg().get("downloadAllowHosts") or [])
+    return _host_allowed(parsed.hostname or "", allow)
 
 
 def _pace_download(gap_ms: int) -> None:
@@ -430,6 +443,8 @@ def assemble_post(
             units=[],
             vacancy_verdict=vacancy.verdict,
             svo_verdict=svo.verdict,
+            filter_score=vacancy.score,
+            filter_reasons=list(vacancy.reasons),
         )
 
     if svo.verdict == "maybe":
@@ -453,4 +468,6 @@ def assemble_post(
         units=kept,
         vacancy_verdict=vacancy.verdict,
         svo_verdict=svo.verdict,
+        filter_score=vacancy.score,
+        filter_reasons=list(vacancy.reasons),
     )

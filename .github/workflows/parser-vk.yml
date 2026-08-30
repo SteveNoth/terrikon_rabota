@@ -1,0 +1,59 @@
+# Парсер открытых стен ВКонтакте (Этап 16).
+# Только официальный API. Токен — секрет VK_TOKEN, не файл репозитория.
+
+name: parser-vk
+
+on:
+  schedule:
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      OCR_PROVIDER: tesseract
+      SOURCE_VK_ENABLED: "true"
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      SITE_URL: ${{ secrets.SITE_URL }}
+      VK_TOKEN: ${{ secrets.VK_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Tesseract with Russian
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-rus
+          tesseract --list-langs
+
+      - name: Run VK parser
+        run: python scripts/parser_vk.py
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parser-vk-logs
+          path: logs/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Job summary
+        if: always()
+        run: |
+          if [ -f logs/summary.md ]; then
+            cat logs/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Нет logs/summary.md — парсер не успел написать отчёт." >> "$GITHUB_STEP_SUMMARY"
+          fi

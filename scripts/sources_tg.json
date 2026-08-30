@@ -1,0 +1,23 @@
+{
+  "_readme": "Публичные каналы Telegram, откуда парсер читает последние сообщения через клиентский API (Telethon, MTProto). Это не секрет и не строка сессии. default_city — город набора, если в посте город не назван (раздел 11.3). enabled: false выключает канал без правки кода. count — сколько последних сообщений, максимум 100. Альбом (несколько сообщений с одним grouped_id) склеивается в один пост до process_post. api_id, api_hash и StringSession сюда не класть — только TG_API_ID / TG_API_HASH / TG_SESSION в .env.local и GitHub Secrets. Названия сверены с публичными страницами каналов 2026-08-30. rabota_gorlovkaw пишет и по другим городам ДНР: чужой город отсеется на приёме (город не active). Наборы на СВО отбрасывает process_post, не этот файл.",
+  "defaults": {
+    "count": 30,
+    "default_city": "gorlovka"
+  },
+  "channels": [
+    {
+      "enabled": true,
+      "username": "rabotagorlovka",
+      "sourceName": "Работа Горловка",
+      "default_city": "gorlovka",
+      "count": 30
+    },
+    {
+      "enabled": true,
+      "username": "rabota_gorlovkaw",
+      "sourceName": "Вакансии в Горловке",
+      "default_city": "gorlovka",
+      "count": 30
+    }
+  ]
+}
