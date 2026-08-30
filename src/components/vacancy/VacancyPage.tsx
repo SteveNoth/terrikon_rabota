@@ -69,6 +69,7 @@ export function VacancyPage({
         source={view.source}
         sourceLabel={view.sourceLabel}
         originalHref={view.originalHref}
+        openDataAttribution={view.openDataAttribution}
         postedByEmployer={view.postedByEmployer}
         autoNormalized={view.autoNormalized}
         originalText={view.originalText}

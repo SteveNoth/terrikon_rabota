@@ -48,6 +48,7 @@ function renderDescription(view: VacancyView): string {
 
 function renderSource(view: VacancyView): string {
   const originalHref = safeHttpUrl(view.originalHref);
+  const attributionHref = view.openDataAttribution ? safeHttpUrl(view.openDataAttribution.href) : null;
   const original =
     view.autoNormalized && view.originalText
       ? `<details><summary>Показать оригинал</summary><pre class="orig">${esc(view.originalText)}</pre></details>`
@@ -63,6 +64,7 @@ function renderSource(view: VacancyView): string {
   return section(
     "Источник",
     `<p>${esc(view.postedByEmployer ? "Размещено работодателем" : view.sourceLabel)}</p>
+${attributionHref && view.openDataAttribution ? `<p><a href="${attr(attributionHref)}" rel="noopener noreferrer">${esc(view.openDataAttribution.label)}</a></p>` : ""}
 ${originalHref ? `<p><a href="${attr(originalHref)}" rel="noopener noreferrer">Открыть оригинал</a></p>` : ""}
 ${view.autoNormalized ? `<p class="muted">Объявление приведено к единому виду автоматически</p>` : ""}
 ${original}
@@ -173,6 +175,7 @@ ${REPORT_REASONS.map(
 <h1>${esc(view.title)}</h1>
 ${view.summaryLine ? `<p class="muted">${esc(view.summaryLine)}</p>` : ""}
 <p class="salary">${esc(view.salary)}</p>
+${view.salaryGrossNote ? `<p class="muted small">${esc(view.salaryGrossNote)}</p>` : ""}
 ${
   view.employer
     ? `<p class="employer">${renderLetterAvatar(view.employer.name)}<span>${esc(view.employer.name)}${view.employer.isVerified ? ` <span class="ok">Проверено</span>` : ""}</span></p>`

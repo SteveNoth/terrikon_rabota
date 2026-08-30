@@ -52,6 +52,7 @@ enum Source {
   VK
   TELEGRAM
   WEBSITE
+  TRUDVSEM
   MANUAL
   EMPLOYER
 }
@@ -208,6 +209,13 @@ model Vacancy {
   sourceUrl  String?
   externalId String
 
+  /// true — в источнике до вычета налога (ЦЗН / «Работа России»); false — «на руки»; null — неизвестно (13.3).
+  salaryIsGross Boolean?
+  /// ИНН работодателя, если источник его дал. Пятый уровень дублей (11.21).
+  employerInn   String?
+  /// Когда сняли с публикации, потому что исчезла у официального источника. Не удаление.
+  archivedAt    DateTime?
+
   contentHash   String
   duplicateOfId String?
   duplicateOf   Vacancy?  @relation("VacancyDuplicates", fields: [duplicateOfId], references: [id], onDelete: SetNull)
@@ -251,6 +259,7 @@ model Vacancy {
   @@index([contentHash])
   @@index([signature])
   @@index([moderationStatus])
+  @@index([employerInn])
   @@index([sourcePostExternalId])
   @@index([source, sourcePostExternalId])
   @@index([contactPhone])
@@ -262,6 +271,8 @@ model Employer {
   id          String   @id @default(cuid())
   slug        String   @unique
   name        String
+  /// Если заполнено — уникально. Несколько пустых ИНН в Postgres допустимы.
+  inn         String?  @unique
   description String?  @db.Text
   citySlug    String
   sphere      String

@@ -80,6 +80,7 @@ export type VacancyListItem = {
   completeness: number;
   source: Source;
   sourceName: string | null;
+  salaryIsGross: boolean | null;
   employer: {
     slug: string;
     name: string;
@@ -160,6 +161,7 @@ const listSelect = {
   completeness: true,
   source: true,
   sourceName: true,
+  salaryIsGross: true,
   employer: {
     select: {
       slug: true,

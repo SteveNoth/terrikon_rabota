@@ -61,6 +61,7 @@ export function VacancyHero({ view }: { view: VacancyView }) {
         <p className="min-w-0 break-words text-md text-muted">{view.summaryLine}</p>
       ) : null}
       <p className="font-display text-3xl font-medium leading-tight">{view.salary}</p>
+      {view.salaryGrossNote ? <p className="text-sm text-muted">{view.salaryGrossNote}</p> : null}
 
       {view.employer ? (
         <p className="flex min-w-0 flex-wrap items-center gap-2 text-md">

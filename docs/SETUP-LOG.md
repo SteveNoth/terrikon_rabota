@@ -570,4 +570,50 @@ GitHub Secrets те же `CRON_SECRET` и `SITE_URL`, новых ключей н
 - Ручной запуск `parser-web`: ☐
 - Артефакт логов скачивается: ☐
 
+---
+
+## 2026-08-30 — Этап 18A: открытые данные «Работы России»
+
+Код региона **не угадывали.** Справочник — поле `vacancy.region` в JSON (отдельного списка регионов в WADL нет).
+
+| Что | Значение |
+|---|---|
+| Код | `9300000000000` |
+| Имя в API | Донецкая Народная Республика |
+| Откуда взяли | `GET https://opendata.trudvsem.ru/api/v1/vacancies?text=Горловка&limit=2` → `results.vacancies[].vacancy.region.region_code` |
+| Подтверждение | `GET https://opendata.trudvsem.ru/api/v1/vacancies/region/9300000000000?offset=0&limit=1` → 200, `meta.total` = 7951 |
+| WADL | `https://opendata.trudvsem.ru/api/v1/vacancies/application.wadl` |
+| Условия | https://trudvsem.ru/opendata — свободное использование при указании источника |
+
+Горловка в справочнике регионов как субъект не числится (город внутри ДНР). Соседний код не подставляли.
+
+Выключатель: `SOURCE_TRUDVSEM_ENABLED` в `.env.local` / GitHub Actions. Ключа API нет. Секреты те же `CRON_SECRET` и `SITE_URL`.
+
+```
+.\.venv\Scripts\python.exe scripts\parser_trudvsem.py --dry-run --limit 3
+```
+
+Расписание: `.github/workflows/parser-trudvsem.yml`, cron `0 6 * * *` (после сайтов `0 5`). Tesseract и Chromium не ставим. Оценка минут: при шаге 100 и ~80 страницах пауза 1–3 с ≈ 5–10 мин/запуск × 30 ≈ **150–300 мин/месяц**. С этой машины `limit=100` и `limit=10` дают Read timeout; `limit=5` отвечает. Парсер при таймауте уменьшает шаг до 5, прокси не включает. `--dry-run --limit 3` сам берёт шаг 5.
+
+Живой сухой прогон 2026-08-30:
+
+- Регион 9300000000000, в API 7951
+- Собрано 50 записей региона, совпало с городом 3 (Инженер, Слесарь, Слесарь)
+- Работодатель «ДОНБАССГАЗ» / филиал, ИНН 9704210635
+- Зарплата числом из JSON, подпись `salaryIsGross: True (до вычета налога)`
+- `sourceUrl` на `https://trudvsem.ru/vacancy/card/...`, не m-czn.ru
+- Чужих городов 47 — пропуск, в dry-run в базу не писали
+- OCR_PROVIDER для этого парсера принудительно `none`
+
+Шаблон отметки:
+
+- Дата: 2026-08-30
+- Код региона из справочника API, не угадан: ☑ `9300000000000`
+- Сухой прогон Горловки с «до вычета» и ссылкой trudvsem: ☑
+- HTML m-czn / trudvsem.ru не читаем: ☑
+- GitHub Secrets `CRON_SECRET`, `SITE_URL` (те же): ☐
+- Ручной запуск `parser-trudvsem`: ☐
+- Миграция `trudvsem` накатана на Supabase: ☐
+
+
 

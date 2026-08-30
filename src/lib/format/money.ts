@@ -50,3 +50,14 @@ export function formatMoney(input: MoneyInput): string {
   }
   return `до ${groupThousands(to!)} ${suffix}`;
 }
+
+/** Подпись к зарплате как в источнике. 13 % молча не пересчитываем (13.3). */
+export function salaryGrossNote(isGross: boolean | null | undefined): string | null {
+  if (isGross === true) {
+    return "до вычета налога";
+  }
+  if (isGross === false) {
+    return "на руки";
+  }
+  return null;
+}

@@ -1,5 +1,5 @@
 import { formatDate } from "@/lib/format/date";
-import { formatMoney } from "@/lib/format/money";
+import { formatMoney, salaryGrossNote } from "@/lib/format/money";
 import { cityName, districtName, isCitySlug } from "@/lib/geo";
 import type { VacancyListItem } from "@/lib/repo/vacancies";
 import { vacancyPath } from "@/lib/vacancy/path";
@@ -25,6 +25,7 @@ function place(vacancy: VacancyListItem): string {
 export function renderVacancyCard(vacancy: VacancyListItem, extra = ""): string {
   const href = vacancyPath(vacancy.citySlug, vacancy.slug);
   const salary = formatMoney(vacancy);
+  const grossNote = salaryGrossNote(vacancy.salaryIsGross);
   const published = formatDate(vacancy.publishedAt);
   const iso =
     vacancy.publishedAt instanceof Date
@@ -36,6 +37,7 @@ export function renderVacancyCard(vacancy: VacancyListItem, extra = ""): string 
 <h3>${esc(vacancy.title)}</h3>
 ${place(vacancy)}
 <p class="salary">${esc(salary)}</p>
+${grossNote ? `<p class="muted small">${esc(grossNote)}</p>` : ""}
 <p class="muted small"><time datetime="${attr(iso)}">${esc(published)}</time></p>
 </a>
 ${extra}

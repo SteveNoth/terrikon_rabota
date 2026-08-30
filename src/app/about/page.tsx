@@ -29,6 +29,23 @@ export default function AboutPage() {
           </p>
         </header>
 
+        <section className="flex min-w-0 flex-col gap-3">
+          <h2 className="font-display text-xl font-medium">Откуда вакансии</h2>
+          <p className="max-w-xl text-md">
+            Часть объявлений — открытые данные портала «Работа России» (центры занятости). Мы
+            указываем источник и не пересчитываем зарплату «до вычета налога» в сумму «на руки».
+          </p>
+          <p>
+            <a
+              href="https://trudvsem.ru"
+              rel="noopener noreferrer"
+              className="text-brand underline-offset-2 hover:underline"
+            >
+              Источник данных: Работа России
+            </a>
+          </p>
+        </section>
+
         <section id="plans" className="flex min-w-0 scroll-mt-header flex-col gap-4">
           <h2 className="font-display text-xl font-medium">Планы развития</h2>
           <p className="max-w-xl text-sm text-muted">

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { MAX_BATCH_SIZE, MAX_DESCRIPTION_CHARS, MAX_IMAGE_URLS, MAX_STRING, MAX_URL } from "@/lib/parser/limits";
 
-const SOURCES = ["VK", "TELEGRAM", "WEBSITE", "MANUAL", "EMPLOYER"] as const;
+const SOURCES = ["VK", "TELEGRAM", "WEBSITE", "TRUDVSEM", "MANUAL", "EMPLOYER"] as const;
 const WORK_FORMATS = ["LOCAL", "VAHTA", "REMOTE"] as const;
 const SALARY_PERIODS = ["MONTH", "SHIFT", "HOUR", "PIECE"] as const;
 const EXPERIENCE = ["NONE", "UP_TO_1", "FROM_1_TO_3", "FROM_3"] as const;
@@ -100,6 +100,9 @@ const VacancyRecordSchema = z
     source: z.enum(SOURCES),
     sourceName: optString(120),
     sourceUrl: optString(MAX_URL),
+    salaryIsGross: optBool(),
+    employerInn: optString(20),
+    employerName: optString(200),
     contentHash: optString(64),
     signature: optString(200),
     qualityScore: z.number().int().min(0).max(100).optional().nullable(),

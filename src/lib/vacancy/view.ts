@@ -1,10 +1,10 @@
 import type { EmployerKind, EmploymentType, Experience, Source } from "@prisma/client";
 import { formatDate } from "@/lib/format/date";
 import { employerKindLabel, employmentLabel, experienceLabel } from "@/lib/format/labels";
-import { formatMoney } from "@/lib/format/money";
+import { formatMoney, salaryGrossNote } from "@/lib/format/money";
 import { emailHref, formatPhone, phoneTelHref, telegramHref } from "@/lib/format/phone";
 import { plural } from "@/lib/format/plural";
-import { formatSource } from "@/lib/format/source";
+import { formatSource, openDataAttribution } from "@/lib/format/source";
 import { cityName, districtName, isCitySlug } from "@/lib/geo";
 import type { VacancyRecord } from "@/lib/repo/vacancies";
 import { stripHtml, toParagraphs } from "@/lib/vacancy/sanitize";
@@ -61,6 +61,8 @@ export type VacancyView = {
   /** 0–100 из правил нормализатора. Компоненты не считают полноту сами. */
   completeness: number;
   salary: string;
+  /** «до вычета налога» / «на руки». 13 % не пересчитываем. */
+  salaryGrossNote: string | null;
   employer: {
     slug: string;
     name: string;
@@ -89,6 +91,7 @@ export type VacancyView = {
   descriptionParagraphs: string[];
   sourceLabel: string;
   originalHref: string | null;
+  openDataAttribution: { label: string; href: string } | null;
   postedByEmployer: boolean;
   autoNormalized: boolean;
   /** Только для <details>. Компонент описания это поле не получает. */
@@ -294,6 +297,7 @@ export function toVacancyView(record: VacancyRecord): VacancyView {
     summaryLine: record.summaryLine?.trim() || null,
     completeness: record.completeness,
     salary: formatMoney(record),
+    salaryGrossNote: salaryGrossNote(record.salaryIsGross),
     employer: record.employer
       ? {
           slug: record.employer.slug,
@@ -323,6 +327,7 @@ export function toVacancyView(record: VacancyRecord): VacancyView {
     descriptionParagraphs,
     sourceLabel: formatSource(record.source, record.sourceName),
     originalHref: record.sourceUrl?.trim() || null,
+    openDataAttribution: openDataAttribution(record.source as Source),
     postedByEmployer,
     autoNormalized: !postedByEmployer,
     originalText: record.rawText?.trim() || null,

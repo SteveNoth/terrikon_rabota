@@ -77,6 +77,8 @@ BLOCKED_HOST_SUFFIXES = (
     "youla.ru",
     "ok.ru",
     "odnoklassniki.ru",
+    "m-czn.ru",
+    "trudvsem.ru",
 )
 AUTH_PATH_MARKERS = (
     "/login",

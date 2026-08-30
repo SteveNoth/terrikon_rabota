@@ -81,3 +81,13 @@ export function uniqueSlug(base: string, taken: Set<string>): string {
   taken.add(slug);
   return slug;
 }
+
+export function employerSlug(input: { inn?: string | null; name: string; citySlug: string }): string {
+  const inn = input.inn?.replace(/\D/g, "") ?? "";
+  if (inn.length === 10 || inn.length === 12) {
+    return `inn-${inn}`;
+  }
+  const head = slugPart(input.name) || "employer";
+  const tail = createHash("sha1").update(`${input.citySlug}:${input.name}`).digest("hex").slice(0, 10);
+  return `${head}-${input.citySlug}-${tail}`;
+}

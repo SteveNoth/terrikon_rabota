@@ -15,7 +15,7 @@ import { getDefaultCity } from "@/lib/geo";
 import { decideCity } from "@/lib/parser/city";
 import { blockReasonForFlags, contactKey } from "@/lib/parser/contact";
 import { contentHash, isSha1, samePostUnits, titlesSimilar } from "@/lib/parser/dedupe";
-import { uniqueSlug, vacancySlug } from "@/lib/parser/slug";
+import { uniqueSlug, vacancySlug, employerSlug } from "@/lib/parser/slug";
 import { decideModeration } from "@/lib/parser/moderation";
 import { qualityScoreFrom } from "@/lib/parser/quality";
 import {
@@ -65,6 +65,8 @@ type ExistingVacancy = {
   splitIndex: number;
   moderationStatus: ModerationStatus;
   workFormat: WorkFormat;
+  archivedAt: Date | null;
+  isActive: boolean;
 };
 
 type GroupRow = {
@@ -118,6 +120,104 @@ function shouldUpdateOcr(
 
 function pairKey(source: Source, externalId: string): string {
   return `${source}::${externalId}`;
+}
+
+function cleanInn(value: string | null | undefined): string | null {
+  const digits = (value ?? "").replace(/\D/g, "");
+  if (digits.length === 10 || digits.length === 12) {
+    return digits;
+  }
+  return null;
+}
+
+function employerLookupKey(inn: string | null, name: string | null, citySlug: string): string | null {
+  if (inn) {
+    return `inn:${inn}`;
+  }
+  const trimmed = name?.trim() ?? "";
+  if (trimmed) {
+    return `name:${citySlug}:${trimmed}`;
+  }
+  return null;
+}
+
+async function resolveEmployerMap(
+  items: { inn: string | null; name: string | null; citySlug: string; sphere: string }[],
+): Promise<Map<string, string>> {
+  const result = new Map<string, string>();
+  const inns = [...new Set(items.map((item) => cleanInn(item.inn)).filter((item): item is string => Boolean(item)))];
+  if (inns.length) {
+    const found = await prisma.employer.findMany({ where: { inn: { in: inns } } });
+    for (const row of found) {
+      if (row.inn) {
+        result.set(`inn:${row.inn}`, row.id);
+      }
+    }
+  }
+
+  const pendingInn = new Map<string, (typeof items)[number]>();
+  for (const item of items) {
+    const inn = cleanInn(item.inn);
+    if (inn && !result.has(`inn:${inn}`) && !pendingInn.has(inn)) {
+      pendingInn.set(inn, item);
+    }
+  }
+  for (const [inn, item] of pendingInn) {
+    const name = item.name?.trim() || `ИНН ${inn}`;
+    const slug = employerSlug({ inn, name, citySlug: item.citySlug });
+    try {
+      const created = await prisma.employer.create({
+        data: {
+          slug,
+          name,
+          inn,
+          citySlug: item.citySlug,
+          sphere: item.sphere || "unknown",
+        },
+      });
+      result.set(`inn:${inn}`, created.id);
+    } catch {
+      const again = await prisma.employer.findUnique({ where: { inn } });
+      if (again) {
+        result.set(`inn:${inn}`, again.id);
+      }
+    }
+  }
+
+  for (const item of items) {
+    if (cleanInn(item.inn) || !item.name?.trim()) {
+      continue;
+    }
+    const name = item.name.trim();
+    const key = `name:${item.citySlug}:${name}`;
+    if (result.has(key)) {
+      continue;
+    }
+    const slug = employerSlug({ name, citySlug: item.citySlug });
+    const existing = await prisma.employer.findUnique({ where: { slug } });
+    if (existing) {
+      result.set(key, existing.id);
+      continue;
+    }
+    try {
+      const created = await prisma.employer.create({
+        data: {
+          slug,
+          name,
+          citySlug: item.citySlug,
+          sphere: item.sphere || "unknown",
+        },
+      });
+      result.set(key, created.id);
+    } catch {
+      const again = await prisma.employer.findUnique({ where: { slug } });
+      if (again) {
+        result.set(key, again.id);
+      }
+    }
+  }
+
+  return result;
 }
 
 export async function ingestVacancies(input: {
@@ -285,6 +385,23 @@ export async function ingestVacancies(input: {
     takenSlugs.add(row.slug);
   }
 
+  const employerIds = await resolveEmployerMap(
+    vacancyBound.flatMap((item) => {
+      const city = decideCity(item.record.citySlug ?? undefined, item.record.cityName ?? undefined);
+      if (!city.ok) {
+        return [];
+      }
+      return [
+        {
+          inn: item.record.employerInn ?? null,
+          name: item.record.employerName ?? null,
+          citySlug: city.city.slug,
+          sphere: item.record.sphere || "unknown",
+        },
+      ];
+    }),
+  );
+
   type CreatePlan = {
     index: number;
     record: ParserVacancyInput;
@@ -390,6 +507,11 @@ export async function ingestVacancies(input: {
     const splitterVersion = asVersionString(record.splitterVersion);
     const hours =
       record.hoursPerDay == null || Number.isNaN(record.hoursPerDay) ? null : Math.round(record.hoursPerDay);
+    const inn = cleanInn(record.employerInn);
+    const employerKey = employerLookupKey(inn, record.employerName ?? null, city.city.slug);
+    const employerId = employerKey ? (employerIds.get(employerKey) ?? null) : null;
+    const salaryIsGross =
+      record.salaryIsGross ?? (asSource(record.source) === Source.TRUDVSEM ? true : null);
 
     if (existingExact) {
       const data: Prisma.VacancyUpdateInput = {
@@ -432,6 +554,8 @@ export async function ingestVacancies(input: {
         contactEmail: record.contactEmail ?? null,
         sourceName: record.sourceName ?? undefined,
         sourceUrl: record.sourceUrl ?? undefined,
+        salaryIsGross,
+        employerInn: inn,
         contentHash: hash,
         signature,
         qualityScore,
@@ -445,6 +569,18 @@ export async function ingestVacancies(input: {
       if (shouldUpdateOcr(existingExact, record.ocrText ?? null, ocrVersion)) {
         data.ocrText = record.ocrText;
         data.ocrVersion = ocrVersion;
+      }
+      if (employerId) {
+        data.employer = { connect: { id: employerId } };
+      }
+      if (existingExact.archivedAt) {
+        data.archivedAt = null;
+        if (
+          existingExact.moderationStatus === ModerationStatus.APPROVED ||
+          existingExact.moderationStatus === ModerationStatus.AUTO_OK
+        ) {
+          data.isActive = true;
+        }
       }
       if (
         existingExact.moderationStatus !== ModerationStatus.APPROVED &&
@@ -536,6 +672,9 @@ export async function ingestVacancies(input: {
       source: asSource(record.source),
       sourceName: record.sourceName ?? null,
       sourceUrl: record.sourceUrl ?? null,
+      salaryIsGross,
+      employerInn: inn,
+      employerId,
       externalId: record.externalId,
       contentHash: hash,
       duplicateOfId,
@@ -728,6 +867,8 @@ function existingSelect() {
     splitIndex: true,
     moderationStatus: true,
     workFormat: true,
+    archivedAt: true,
+    isActive: true,
   } satisfies Prisma.VacancySelect;
 }
 
@@ -831,6 +972,7 @@ export async function deactivateStaleVacancies(days = 30): Promise<{ deactivated
     where: {
       isActive: true,
       lastSeenAt: { lt: cutoff },
+      source: { not: Source.TRUDVSEM },
     },
     data: { isActive: false },
   });

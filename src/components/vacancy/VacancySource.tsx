@@ -7,6 +7,7 @@ export function VacancySource({
   source,
   sourceLabel,
   originalHref,
+  openDataAttribution,
   postedByEmployer,
   autoNormalized,
   originalText,
@@ -15,6 +16,7 @@ export function VacancySource({
   source: Source;
   sourceLabel: string;
   originalHref: string | null;
+  openDataAttribution: { label: string; href: string } | null;
   postedByEmployer: boolean;
   autoNormalized: boolean;
   originalText: string | null;
@@ -27,6 +29,18 @@ export function VacancySource({
         {postedByEmployer ? null : <Icon name={sourceIconName(source)} size="sm" decorative />}
         <span className="min-w-0 break-words">{postedByEmployer ? "Размещено работодателем" : sourceLabel}</span>
       </p>
+      {openDataAttribution ? (
+        <p>
+          <a
+            href={openDataAttribution.href}
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-brand underline-offset-2 hover:underline"
+          >
+            <Icon name="website" size="sm" decorative />
+            {openDataAttribution.label}
+          </a>
+        </p>
+      ) : null}
       {originalHref ? (
         <p>
           <a

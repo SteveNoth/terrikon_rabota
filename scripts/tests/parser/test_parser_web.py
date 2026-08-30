@@ -127,6 +127,9 @@ def test_hh_host_is_blocked():
     assert is_blocked_host("https://spb.hh.ru/employer/1")
     assert is_blocked_host("https://www.avito.ru/gorlovka/vakansii")
     assert is_blocked_host("https://ok.ru/rabotavdn")
+    assert is_blocked_host("https://m-czn.ru/vacancy/g-gorlovka")
+    assert is_blocked_host("https://trudvsem.ru/vacancy/card/1/2")
+    assert is_blocked_host("https://opendata.trudvsem.ru/api/v1/vacancies")
     assert not is_blocked_host("https://vodadonbassa.ru/job-openings/")
     assert not is_blocked_host("https://mozaika.biz/vakansy/")
 

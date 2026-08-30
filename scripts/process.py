@@ -117,7 +117,7 @@ def _source_type(source: dict[str, Any]) -> str | None:
     if not raw:
         return None
     token = str(raw).upper()
-    if token in {"VK", "TELEGRAM", "WEBSITE", "MANUAL", "EMPLOYER"}:
+    if token in {"VK", "TELEGRAM", "WEBSITE", "TRUDVSEM", "MANUAL", "EMPLOYER"}:
         return token
     return None
 
@@ -324,6 +324,7 @@ def run_process_post(
     contact_verdicts: dict[str, Any] | None = None,
     aggregation: dict[str, Any] | None = None,
     ocr_text: str | None = None,
+    split: bool = True,
 ) -> ProcessRun:
     """Один проход конвейера. OCR не дублируется: картинки качаются здесь."""
     source = source or {}
@@ -337,6 +338,7 @@ def run_process_post(
         ocr=ocr,
         spam=spam,
         ocr_text=ocr_text,
+        split=split,
     )
     ocr_out = assembled.analysis.ocr_text or ""
     image_urls = list(assembled.analysis.image_urls)
@@ -394,6 +396,7 @@ def process_post(
     contact_verdicts: dict[str, Any] | None = None,
     aggregation: dict[str, Any] | None = None,
     ocr_text: str | None = None,
+    split: bool = True,
 ) -> list[dict[str, Any]]:
     """Список записей. Пустой — пост отброшен. Парсеры вызывают только это.
 
@@ -403,6 +406,7 @@ def process_post(
     словарь (в том числе пустой) включает правило нового телефона.
 
     ocr_text — уже сохранённое распознавание. Картинки заново не качаем.
+    split=False — одна запись источника = одна вакансия (открытые данные).
     """
     return run_process_post(
         text,
@@ -416,4 +420,5 @@ def process_post(
         contact_verdicts=contact_verdicts,
         aggregation=aggregation,
         ocr_text=ocr_text,
+        split=split,
     ).records

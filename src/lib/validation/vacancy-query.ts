@@ -25,7 +25,7 @@ const SORTS = ["date", "salary", "salary_desc", "salary_asc", "quality"] as cons
 
 const EXPERIENCE = ["NONE", "UP_TO_1", "FROM_1_TO_3", "FROM_3"] as const;
 const EMPLOYMENT = ["FULL", "PART", "SHIFT", "TEMPORARY", "REMOTE"] as const;
-const SOURCES = ["VK", "TELEGRAM", "WEBSITE", "MANUAL", "EMPLOYER"] as const;
+const SOURCES = ["VK", "TELEGRAM", "WEBSITE", "TRUDVSEM", "MANUAL", "EMPLOYER"] as const;
 const WORK_FORMATS = ["LOCAL", "VAHTA", "REMOTE"] as const;
 const PUBLISHED_DAYS = [1, 3, 7, 30] as const;
 

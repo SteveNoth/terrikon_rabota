@@ -31,7 +31,7 @@ export const PUBLISHED_OPTIONS = [
   { value: 30, label: "За месяц" },
 ] as const;
 
-export const SOURCE_OPTIONS = (["VK", "TELEGRAM", "WEBSITE", "MANUAL", "EMPLOYER"] as const).map(
+export const SOURCE_OPTIONS = (["VK", "TELEGRAM", "WEBSITE", "TRUDVSEM", "MANUAL", "EMPLOYER"] as const).map(
   (value) => ({ value, label: SOURCE_LABEL[value] }),
 );
 

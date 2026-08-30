@@ -382,7 +382,13 @@ def _to_assembled(unit: SplitUnit, analysis: AnalysisText) -> AssembledUnit:
     )
 
 
-def _whole_post_unit(text: str, source: dict[str, Any] | None, reasons: list[str]) -> SplitUnit:
+def _whole_post_unit(
+    text: str,
+    source: dict[str, Any] | None,
+    reasons: list[str],
+    *,
+    needs_human_review: bool = True,
+) -> SplitUnit:
     source_id = _source_id(source)
     version = int(shared_config.get_split().get("SPLITTER_VERSION") or 1)
     unit = SplitUnit(
@@ -392,7 +398,7 @@ def _whole_post_unit(text: str, source: dict[str, Any] | None, reasons: list[str
         source_post_external_id=source_id,
         external_id=unit_external_id(source_id, 0, 1),
         reasons=reasons,
-        needs_human_review=True,
+        needs_human_review=needs_human_review,
         splitter_version=version,
     )
     unit.profession = extract_profession(unit.unit_text)
@@ -412,12 +418,14 @@ def assemble_post(
     ocr: OcrFn | None = None,
     spam: bool = False,
     ocr_text: str | None = None,
+    split: bool = True,
 ) -> AssembleResult:
     """Сборка шагов 0…7. Единый вид добавляет process_post поверх.
 
     Порядок внутри: OCR → явный СВО → фильтр → резка → поля / формат / скрытый СВО.
     ocr_text: уже сохранённое распознавание. Картинки заново не качаем
     (ссылки протухают) — так работает reprocess.py.
+    split=False: одна запись API = одна вакансия (открытые данные ЦЗН, не простыня).
     """
     if ocr_text is not None:
         refs = [str(item) for item in (image_refs or []) if item]
@@ -447,7 +455,9 @@ def assemble_post(
             filter_reasons=list(vacancy.reasons),
         )
 
-    if svo.verdict == "maybe":
+    if not split:
+        split_units = [_whole_post_unit(full, source, [], needs_human_review=False)]
+    elif svo.verdict == "maybe":
         split_units = [_whole_post_unit(full, source, ["svo:explicit:maybe", *svo.reasons])]
     else:
         split_units = split_post(full, source=source)

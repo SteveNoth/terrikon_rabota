@@ -4,7 +4,7 @@ import { Icon } from "@/components/ui/icon";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { cn } from "@/lib/format/cn";
 import { formatDate } from "@/lib/format/date";
-import { formatMoney } from "@/lib/format/money";
+import { formatMoney, salaryGrossNote } from "@/lib/format/money";
 import { formatSource } from "@/lib/format/source";
 import { cityName, districtName, isCitySlug } from "@/lib/geo";
 import type { QualityFeatures } from "@/lib/quality/types";
@@ -67,6 +67,7 @@ export function VacancyCard({
   const preview =
     previewLines > 0 && vacancy.summaryLine ? vacancy.summaryLine.trim() : "";
   const salary = formatMoney(vacancy);
+  const grossNote = salaryGrossNote(vacancy.salaryIsGross);
   const published = formatDate(vacancy.publishedAt);
   const publishedIso = isoDate(vacancy.publishedAt);
   const source = formatSource(vacancy.source, vacancy.sourceName);
@@ -119,6 +120,7 @@ export function VacancyCard({
             {compact ? null : <Icon name="wallet" size="sm" decorative />}
             <span className="min-w-0 break-words">{salary}</span>
           </p>
+          {grossNote ? <p className="text-xs text-muted">{grossNote}</p> : null}
 
           {compact || !rhythm ? null : (
             <p className="flex min-w-0 items-start gap-2 text-sm text-muted">
