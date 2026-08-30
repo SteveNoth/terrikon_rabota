@@ -1,0 +1,106 @@
+{
+  "_readme": "Правила нарезки поста на единицы вакансий (раздел 11.15). Пороги, маркеры и то, что резать нельзя, правятся здесь. Код в scripts/split.py только собирает регулярки и режет по границам. SPLITTER_VERSION увеличь, если меняешь смысл правил — тогда можно пересчитать старые посты.",
+  "SPLITTER_VERSION": 2,
+  "maxUnits": 8,
+  "minListItems": 2,
+  "minChunkChars": 12,
+  "professionWindow": 72,
+  "bareProfessionAfterIntro": true,
+  "orgChangeSplits": true,
+  "phoneTiedToProfessionBlock": true,
+  "inlineDashProfession": true,
+  "compoundIfHyphen": true,
+  "inherit": {
+    "city": true,
+    "district": true,
+    "singlePhone": true,
+    "singleOrg": true,
+    "vahtaHousing": true,
+    "vahtaMeals": true,
+    "vahtaTravel": true,
+    "sharedConditionBlocks": true
+  },
+  "inheritPhrases": [
+    { "id": "zhilye_predostavlyaetsya", "phrase": "жилье предоставляется", "field": "housing" },
+    { "id": "zhilye_predostavlyaem", "phrase": "жилье предоставляем", "field": "housing" },
+    { "id": "zhilye_za_schet", "phrase": "жилье за счет", "field": "housing" },
+    { "id": "prozhivanie_predostavlyaetsya", "phrase": "проживание предоставляется", "field": "housing" },
+    { "id": "pitanie_predostavlyaetsya", "phrase": "питание предоставляется", "field": "meals" },
+    { "id": "pitanie_za_schet", "phrase": "питание за счет", "field": "meals" }
+  ],
+  "roleMarkers": [
+    { "id": "takzhe_trebuetsya", "phrase": "также требуется" },
+    { "id": "takzhe_trebuyutsya", "phrase": "также требуются" },
+    { "id": "takzhe_nuzhen", "phrase": "также нужен" },
+    { "id": "takzhe_nuzhna", "phrase": "также нужна" },
+    { "id": "takzhe_nuzhny", "phrase": "также нужны" },
+    { "id": "takzhe_ischem", "phrase": "также ищем" },
+    { "id": "takzhe_priglashaem", "phrase": "также приглашаем" },
+    { "id": "eshche_nuzhny", "phrase": "еще нужны" },
+    { "id": "eshche_nuzhen", "phrase": "еще нужен" },
+    { "id": "eshche_trebuetsya", "phrase": "еще требуется" },
+    { "id": "eshche_trebuyutsya", "phrase": "еще требуются" },
+    { "id": "krome_togo_trebuetsya", "phrase": "кроме того требуется" },
+    { "id": "otdelno_trebuetsya", "phrase": "отдельно требуется" },
+    { "id": "plus_trebuetsya", "phrase": "плюс требуется" },
+    { "id": "i_eshche", "phrase": "и еще", "needsProfession": true },
+    { "id": "trebuetsya_role", "stem": "требу", "endings": ["ется", "ются"], "requireEnding": true, "needsProfession": true, "subsequentOnly": true },
+    { "id": "ischem_role", "stem": "ищ", "endings": ["ем", "ете"], "requireEnding": true, "needsProfession": true, "subsequentOnly": true },
+    { "id": "nuzhen_role", "stem": "нуж", "endings": ["ен", "на", "ны", "но"], "requireEnding": true, "needsProfession": true, "subsequentOnly": true },
+    { "id": "priglashaem_role", "stem": "приглаша", "endings": ["ем", "ются"], "requireEnding": true, "needsProfession": true, "subsequentOnly": true }
+  ],
+  "listIntros": [
+    { "id": "vakansii_colon", "phrase": "вакансии" },
+    { "id": "otkrytye_vakansii", "phrase": "открытые вакансии" },
+    { "id": "aktualnye_vakansii", "phrase": "актуальные вакансии" },
+    { "id": "spisok_vakansiy", "phrase": "список вакансий" },
+    { "id": "nuzhny_colon", "pattern": "\\bнужн[ыао]\\s*:" },
+    { "id": "trebuyutsya_colon", "pattern": "\\bтребуются\\s*:" }
+  ],
+  "employerMarkers": [
+    { "id": "other_employer", "phrase": "от другого работодателя" },
+    { "id": "another_employer", "phrase": "другой работодатель" },
+    { "id": "other_org", "phrase": "от другой организации" }
+  ],
+  "orgMarkers": [
+    { "id": "ooo", "pattern": "\\bооо\\s+[«\"']?[-а-яёa-z0-9]+" },
+    { "id": "zao", "pattern": "\\bзао\\s+[«\"']?[-а-яёa-z0-9]+" },
+    { "id": "pao", "pattern": "\\bпао\\s+[«\"']?[-а-яёa-z0-9]+" },
+    { "id": "oao", "pattern": "\\bоао\\s+[«\"']?[-а-яёa-z0-9]+" },
+    { "id": "ip", "pattern": "\\bип\\s+[а-яё]+" },
+    { "id": "chp", "pattern": "\\bчп\\s+[а-яё]+" }
+  ],
+  "lineMarkers": [
+    { "id": "numbered", "kind": "numbered", "pattern": "^\\s*\\d{1,2}\\s*[.)]\\s+" },
+    { "id": "emoji_fire", "kind": "emoji", "prefix": "🔥" },
+    { "id": "emoji_check", "kind": "emoji", "prefix": "✅" },
+    { "id": "emoji_pin", "kind": "emoji", "prefix": "📌" },
+    { "id": "emoji_star", "kind": "emoji", "prefix": "⭐" },
+    { "id": "emoji_right", "kind": "emoji", "prefix": "➡" },
+    { "id": "bullet_black", "kind": "emoji", "prefix": "▪" },
+    { "id": "bullet_diamond", "kind": "emoji", "prefix": "🔹" },
+    { "id": "bullet_dot", "kind": "emoji", "prefix": "•" },
+    { "id": "bullet_circle", "kind": "emoji", "prefix": "●" },
+    { "id": "bullet_dash", "kind": "emoji", "pattern": "^\\s*[-—–]\\s+" },
+    { "id": "qmark_bullet", "kind": "emoji", "pattern": "^\\s*\\?+" }
+  ],
+  "doNotSplit": {
+    "dutyStarters": [
+      { "id": "duties", "stem": "обязанност", "endings": ["и", "ь", "ях", "ей"], "requireEnding": true },
+      { "id": "what_to_do", "phrase": "что делать" },
+      { "id": "functions", "stem": "функци", "endings": ["и", "я", "й"], "requireEnding": true },
+      { "id": "requirements", "stem": "требован", "endings": ["ия", "ий", "иях", "ие"], "requireEnding": true },
+      { "id": "zhdem", "phrase": "ждем от вас" },
+      { "id": "nuzhen_opyt", "phrase": "нужен опыт" },
+      { "id": "we_offer", "phrase": "мы предлагаем" },
+      { "id": "what_we_offer", "phrase": "что предлагаем" }
+    ],
+    "sharedConditions": [
+      { "id": "usloviya_dlya_vseh", "phrase": "условия для всех" },
+      { "id": "dlya_vseh_vakansiy", "phrase": "для всех вакансий" },
+      { "id": "obshchee_dlya_vseh", "phrase": "общее для всех" },
+      { "id": "usloviya_obshchie", "phrase": "условия общие" }
+    ],
+    "compoundSeparators": ["-", "—", "–"]
+  }
+}
