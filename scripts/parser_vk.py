@@ -166,8 +166,22 @@ def _clean_screen_name(value: Any) -> str | None:
     text = str(value).strip()
     if not text or text == "example_replace_me":
         return None
-    text = text.replace("https://vk.com/", "").replace("https://vk.ru/", "")
-    text = text.replace("http://vk.com/", "").replace("http://vk.ru/", "")
+    lowered = text.lower()
+    for prefix in (
+        "https://m.vk.com/",
+        "https://m.vk.ru/",
+        "http://m.vk.com/",
+        "http://m.vk.ru/",
+        "https://www.vk.com/",
+        "https://www.vk.ru/",
+        "https://vk.com/",
+        "https://vk.ru/",
+        "http://vk.com/",
+        "http://vk.ru/",
+    ):
+        if lowered.startswith(prefix):
+            text = text[len(prefix) :]
+            break
     text = text.split("?")[0].strip("/")
     if text.startswith("public"):
         rest = text[6:]
@@ -177,6 +191,7 @@ def _clean_screen_name(value: Any) -> str | None:
 
 
 def _parse_owner_id(value: Any) -> int | None:
+    """Знак как в API: группа отрицательная, личная стена — положительная."""
     if value is None or value == "":
         return None
     try:
@@ -185,7 +200,20 @@ def _parse_owner_id(value: Any) -> int | None:
         return None
     if number == 0:
         return None
-    return number if number < 0 else -number
+    return number
+
+
+def owner_id_from_screen(screen: str | None) -> int | None:
+    """club123 / public123 → группа, id123 → пользователь. Иначе None."""
+    if not screen:
+        return None
+    if screen.startswith("id") and screen[2:].isdigit():
+        return int(screen[2:])
+    if screen.startswith("club") and screen[4:].isdigit():
+        return -int(screen[4:])
+    if screen.startswith("public") and screen[6:].isdigit():
+        return -int(screen[6:])
+    return None
 
 
 def wall_url(owner_id: int, post_id: int) -> str:
@@ -384,10 +412,9 @@ class VkClient:
         screen = group.get("screen_name")
         if not screen:
             raise VkApiError(100, "нет screen_name и owner_id")
-        if screen.startswith("club") and screen[4:].isdigit():
-            return -int(screen[4:])
-        if screen.startswith("public") and screen[6:].isdigit():
-            return -int(screen[6:])
+        from_screen = owner_id_from_screen(screen)
+        if from_screen is not None:
+            return from_screen
         response = self.call("groups.getById", {"group_id": screen})
         items = response if isinstance(response, list) else (response.get("groups") if isinstance(response, dict) else None)
         if not items:

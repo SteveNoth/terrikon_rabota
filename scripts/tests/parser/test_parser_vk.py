@@ -12,11 +12,14 @@ from parser_vk import (
     SOURCES_PATH,
     VkApiError,
     VkClient,
+    _clean_screen_name,
+    _parse_owner_id,
     enabled_groups,
     extract_image_urls,
     extract_text,
     load_sources,
     original_post,
+    owner_id_from_screen,
     post_batch_with_retry,
     process_vk_item,
     redact,
@@ -78,6 +81,61 @@ class FakeResponse:
 def test_wall_url_and_external_id():
     assert wall_url(-123, 456) == "https://vk.com/wall-123_456"
     assert wall_external_id(-123, 456) == "-123_456"
+    assert wall_url(795897198, 6864) == "https://vk.com/wall795897198_6864"
+    assert wall_external_id(795897198, 6864) == "795897198_6864"
+
+
+def test_parse_owner_id_keeps_sign():
+    assert _parse_owner_id(-136489529) == -136489529
+    assert _parse_owner_id(795897198) == 795897198
+    assert _parse_owner_id("795897198") == 795897198
+    assert _parse_owner_id(0) is None
+    assert _parse_owner_id("") is None
+
+
+def test_owner_id_from_screen():
+    assert owner_id_from_screen("id795897198") == 795897198
+    assert owner_id_from_screen("club218218419") == -218218419
+    assert owner_id_from_screen("public123") == -123
+    assert owner_id_from_screen("rabotadpr") is None
+    assert owner_id_from_screen("ideas") is None
+
+
+def test_clean_screen_name_user_and_mobile_url():
+    assert _clean_screen_name("https://vk.ru/id795897198") == "id795897198"
+    assert _clean_screen_name("https://m.vk.ru/id795897198") == "id795897198"
+    assert _clean_screen_name("https://vk.com/rabotadpr") == "rabotadpr"
+
+
+def test_user_wall_stays_positive_in_enabled_groups():
+    groups = enabled_groups(
+        {
+            "defaults": {"count": 30, "default_city": "gorlovka"},
+            "groups": [
+                {
+                    "enabled": True,
+                    "screen_name": "id795897198",
+                    "owner_id": 795897198,
+                    "sourceName": "Иван Приходько",
+                    "default_city": "gorlovka",
+                    "count": 30,
+                }
+            ],
+        }
+    )
+    assert len(groups) == 1
+    assert groups[0]["owner_id"] == 795897198
+    assert groups[0]["screen_name"] == "id795897198"
+
+
+def test_resolve_owner_id_user_screen_does_not_call_groups_api():
+    class Probe(VkClient):
+        def call(self, method, params):
+            raise AssertionError(f"нельзя звать {method} для id-экрана")
+
+    client = Probe("token")
+    assert client.resolve_owner_id({"screen_name": "id795897198"}) == 795897198
+    assert client.resolve_owner_id({"owner_id": 795897198, "screen_name": "id795897198"}) == 795897198
 
 
 def test_repost_text_from_original():
@@ -156,6 +214,9 @@ def test_sources_have_gorlovka_default_and_no_placeholder():
     raw = data.get("groups") or []
     assert raw
     assert all(item.get("default_city") == "gorlovka" for item in raw if isinstance(item, dict))
+    prikhodko = next(item for item in groups if item.get("screen_name") == "id795897198")
+    assert prikhodko["owner_id"] == 795897198
+    assert prikhodko["owner_id"] > 0
 
 
 def test_two_jobs_one_post_suffix_and_same_origin():
