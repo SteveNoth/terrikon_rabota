@@ -1,5 +1,5 @@
 {
-  "_readme": "Словари фильтра, вахты и СВО — основами слов, не целыми словоформами. Пороги и веса правятся здесь, без изменения кода. Регулярки с границами слов собирает scripts/filter.py (раздел 11.2 ядра). Блок fraud появится в части 3 Этапа 14 — сюда его не кладём.",
+  "_readme": "Словари фильтра, вахты, СВО и мошенничества — основами слов, не целыми словоформами. Пороги и веса правятся здесь, без изменения кода. Регулярки с границами слов собирает scripts/filter.py (раздел 11.2 ядра). Блок fraud читает scripts/trust.py; is_vacancy его не вызывает.",
   "thresholds": {
     "accept": 60,
     "maybe": 30
@@ -280,6 +280,143 @@
       { "id": "bpla", "stem": "бпла", "weight": 20, "label": "БПЛА" },
       { "id": "shturmovyh_zadach", "phrase": "штурмовых задач", "weight": 25, "label": "штурмовые задачи" },
       { "id": "voyska_bespilotnyh", "phrase": "войска беспилотных", "weight": 30, "label": "войска беспилотных" }
+    ]
+  },
+  "fraud": {
+    "_comment": "Оценка доверия (11.18), не фильтр «вакансия или мусор». is_vacancy и trust_score — разные вопросы: оформленная вакансия может быть обманом. Веса вычитаются из 100. Жёсткие флаги минуют баллы и очередь — сразу BLOCKED. Потолки зарплаты здесь свои и с разбивкой по workFormat: вахта законно втрое выше местной, чужой блок svo.sphereSalaryCeiling сюда не подмешиваем. «Пишите в WhatsApp» — целиком фраза: честные вахты пишут «WhatsApp или телеграм» рядом с телефоном, это не уход в личку. «Аванс» не предоплата: у вахты это выплата компании, не взнос соискателя. Правило нового контакта в коде: неизвестный телефон идёт на одобрение один раз, даже при высоком балле — белый список растёт, очередь со временем сокращается.",
+    "thresholds": {
+      "publish": 70,
+      "review": 40
+    },
+    "salaryMultiplier": 3,
+    "hourlyMultiplier": 3,
+    "minSample": 5,
+    "workDaysPerMonth": 22,
+    "hoursPerDayDefault": 8,
+    "shiftAsMonthlyAbove": 40000,
+    "shortDescriptionChars": 150,
+    "incompatibleProfessionCount": 10,
+    "manyPhonesInGroup": 5,
+    "jaccardThreshold": 0.6,
+    "basketWindowDays": 60,
+    "salaryCorridor": 10000,
+    "bigMoneyMonthly": {
+      "LOCAL": 150000,
+      "REMOTE": 150000,
+      "VAHTA": 280000
+    },
+    "weights": {
+      "salaryVsMedian": 40,
+      "hourlyVsMedian": 25,
+      "emptyProfession": 15,
+      "emptyCompany": 8,
+      "shortDescription": 12,
+      "accountNoPhone": 15,
+      "manyPhonesInGroup": 20,
+      "phoneManyProfessions": 25
+    },
+    "sphereSalaryCeiling": {
+      "LOCAL": {
+        "torgovlya": 80000,
+        "uslugi": 70000,
+        "bezopasnost": 80000,
+        "obschepit": 90000,
+        "transport": 120000,
+        "meditsina": 90000,
+        "stroitelstvo": 100000,
+        "proizvodstvo": 110000,
+        "obrazovanie": 70000,
+        "it": 150000,
+        "default": 100000
+      },
+      "REMOTE": {
+        "default": 120000
+      },
+      "VAHTA": {
+        "stroitelstvo": 350000,
+        "transport": 350000,
+        "obschepit": 220000,
+        "uslugi": 220000,
+        "proizvodstvo": 300000,
+        "torgovlya": 200000,
+        "default": 400000
+      }
+    },
+    "fastMoney": [
+      { "id": "ezhednevnye_vyplaty", "phrase": "ежедневные выплаты", "weight": 12, "label": "ежедневные выплаты" },
+      { "id": "dengi_v_pervyy_den", "phrase": "деньги в первый день", "weight": 14, "label": "деньги в первый день" },
+      { "id": "mgnovennyy_zarabotok", "phrase": "мгновенный заработок", "weight": 14, "label": "мгновенный заработок" },
+      { "id": "passivnyy_dohod", "phrase": "пассивный доход", "weight": 16, "label": "пассивный доход" },
+      { "id": "finansovaya_svoboda", "phrase": "финансовая свобода", "weight": 16, "label": "финансовая свобода" },
+      { "id": "rabota_na_sebya", "phrase": "работа на себя", "weight": 12, "label": "работа на себя" },
+      { "id": "svoy_biznes", "phrase": "свой бизнес", "weight": 12, "label": "свой бизнес" },
+      { "id": "investicii", "stem": "инвестици", "endings": ["я", "и", "й", "ях", "ями"], "requireEnding": true, "weight": 14, "label": "инвестиции" },
+      { "id": "kripta", "stem": "крипт", "endings": ["а", "е", "у", "ы", "ой"], "requireEnding": true, "weight": 16, "label": "крипта" },
+      { "id": "kriptovalyuta", "stem": "криптовалют", "endings": ["а", "ы", "у", "е"], "weight": 16, "label": "криптовалюта" },
+      { "id": "treyding", "stem": "трейдинг", "endings": ["", "а", "у", "е"], "weight": 14, "label": "трейдинг" },
+      { "id": "arbitrazh", "stem": "арбитраж", "endings": ["", "а", "у", "е"], "weight": 14, "label": "арбитраж" },
+      { "id": "partnerskaya", "phrase": "партнерская программа", "weight": 16, "label": "партнёрская программа" },
+      { "id": "dohod_v_den", "pattern": "\\b(?:доход|заработ\\w*|выплат\\w*)[^\\n.]{0,40}\\bв\\s+день\\b", "weight": 18, "label": "доход в день" },
+      { "id": "summa_v_den", "pattern": "\\d[\\d\\s\\u00a0]{2,10}\\s*(?:₽|руб(?:л\\w*)?|р)\\.?\\s*в\\s+день\\b", "weight": 18, "label": "сумма в день" }
+    ],
+    "privacy": [
+      { "id": "podrobnosti_v_lichke", "phrase": "подробности в личке", "weight": 18, "label": "подробности в личке" },
+      { "id": "pishi_plus", "phrase": "пиши плюс", "weight": 14, "label": "пиши плюс в комментарии" },
+      { "id": "plus_v_kommentarii", "phrase": "плюс в комментарии", "weight": 14, "label": "плюс в комментарии" },
+      { "id": "pishite_v_whatsapp", "phrase": "пишите в whatsapp", "weight": 10, "label": "пишите в WhatsApp", "requireNoPhone": true },
+      { "id": "pishite_v_vatsap", "phrase": "пишите в ватсап", "weight": 10, "label": "пишите в ватсап", "requireNoPhone": true },
+      { "id": "zayavka_v_lichku", "phrase": "отправь заявку в личку", "weight": 16, "label": "заявка в личку" },
+      { "id": "napishite_mne", "phrase": "напишите мне", "weight": 10, "label": "напишите мне", "requireNoPhone": true }
+    ],
+    "denials": [
+      { "id": "ne_setevoy_marketing", "phrase": "не сетевой маркетинг", "weight": 16, "label": "отрицание сетевого" },
+      { "id": "ne_prodazhi", "phrase": "не продажи", "weight": 14, "label": "отрицание продаж" },
+      { "id": "bez_prodazh", "phrase": "без продаж", "weight": 14, "label": "без продаж" },
+      { "id": "bez_vlozheniy", "phrase": "без вложений", "weight": 16, "label": "без вложений" },
+      { "id": "mlm", "stem": "млм", "weight": 12, "label": "МЛМ" }
+    ],
+    "hardFlags": [
+      { "id": "vstupitelnyy_vznos", "phrase": "вступительный взнос", "label": "предоплата: вступительный взнос" },
+      { "id": "vznos_za_trud", "phrase": "взнос за трудоустройство", "label": "предоплата: взнос за трудоустройство" },
+      { "id": "zalog_za_formu", "phrase": "залог за форму", "label": "предоплата: залог за форму" },
+      { "id": "zalog_za_instrument", "phrase": "залог за инструмент", "label": "предоплата: залог за инструмент" },
+      { "id": "oplatit_obuchenie", "phrase": "оплатить обучение", "label": "предоплата: оплатить обучение" },
+      { "id": "oplata_obucheniya", "phrase": "оплата обучения", "label": "предоплата: оплата обучения" },
+      { "id": "kupit_nabor", "phrase": "купить стартовый набор", "label": "предоплата: стартовый набор" },
+      { "id": "startovyy_nabor", "phrase": "стартовый набор", "label": "предоплата: стартовый набор" },
+      { "id": "vnesti_depozit", "phrase": "внести депозит", "label": "предоплата: депозит" },
+      { "id": "predoplata", "stem": "предоплат", "endings": ["а", "у", "ы", "е", "ой"], "label": "предоплата" },
+      { "id": "oformit_kartu", "phrase": "оформить карту на себя", "label": "дроппер: карта на себя" },
+      { "id": "karta_na_svoe_imya", "phrase": "карту на свое имя", "label": "дроппер: карта на своё имя" },
+      { "id": "pasport_dlya_oformleniya", "phrase": "нужен паспорт для оформления", "label": "дроппер: паспорт для оформления" },
+      { "id": "sim_karty", "pattern": "\\bсим\\s*-?\\s*карт", "label": "дроппер: сим-карты" },
+      { "id": "podstavnoe_lico", "phrase": "подставное лицо", "label": "дроппер: подставное лицо" },
+      { "id": "obnal", "stem": "обнал", "endings": ["", "а", "у", "е"], "label": "дроппер: обнал" }
+    ],
+    "abroad": [
+      { "id": "za_granicey", "phrase": "за границей", "label": "работа за границей" },
+      { "id": "v_polshe", "phrase": "в польше", "label": "работа в Польше" },
+      { "id": "v_chehii", "phrase": "в чехии", "label": "работа в Чехии" }
+    ],
+    "documentsHelp": [
+      { "id": "pomozhem_s_dokumentami", "phrase": "поможем с документами", "label": "поможем с документами" },
+      { "id": "oformim_vizu", "phrase": "оформим визу", "label": "оформим визу" },
+      { "id": "pomozhem_s_vizoy", "phrase": "поможем с визой", "label": "поможем с визой" }
+    ],
+    "klady": [
+      { "id": "klady", "stem": "клады", "label": "клады" },
+      { "id": "rasfasovka", "stem": "расфасовк", "endings": ["а", "у", "и", "ой"], "label": "расфасовка" }
+    ],
+    "dailyPay": [
+      { "id": "ezhednevnaya_oplata", "phrase": "ежедневная оплата", "label": "ежедневная оплата" },
+      { "id": "oplata_kazhdyy_den", "phrase": "оплата каждый день", "label": "оплата каждый день" },
+      { "id": "vyplata_kazhdyy_den", "phrase": "выплата каждый день", "label": "выплата каждый день" }
+    ],
+    "shingleStopWords": [
+      "и", "в", "на", "с", "по", "для", "от", "до", "или", "а", "но", "же",
+      "это", "как", "из", "к", "у", "о", "об", "за", "при", "над", "под",
+      "без", "что", "не", "то", "же", "бы", "ли", "же", "их", "его", "ее",
+      "мы", "вы", "он", "она", "они", "все", "так", "уже", "еще", "ещё"
     ]
   }
 }

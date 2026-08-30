@@ -12,8 +12,10 @@ import { employerVacanciesHref, vacancyApplyHref, vacancyPath } from "@/lib/vaca
 
 /**
  * Единственный тип, который получают компоненты карточки (раздел 11.10).
- * Сырой пост сюда не попадает как основное содержимое: `originalText` — только
- * для блока «Показать оригинал».
+ * Сборка вида из полей записи: канонический заголовок, сводка, зарплата,
+ * разделы, признак «текст обработан автоматически», ссылка на оригинал.
+ * `rawText` сюда попадает только как `originalText` — для блока
+ * «Показать оригинал». Компонент описания это поле не получает.
  */
 export type VacancyFact = {
   label: string;
@@ -56,6 +58,8 @@ export type VacancyView = {
   href: string;
   title: string;
   summaryLine: string | null;
+  /** 0–100 из правил нормализатора. Компоненты не считают полноту сами. */
+  completeness: number;
   salary: string;
   employer: {
     slug: string;
@@ -288,6 +292,7 @@ export function toVacancyView(record: VacancyRecord): VacancyView {
     href: vacancyPath(record.citySlug, record.slug),
     title: record.title,
     summaryLine: record.summaryLine?.trim() || null,
+    completeness: record.completeness,
     salary: formatMoney(record),
     employer: record.employer
       ? {

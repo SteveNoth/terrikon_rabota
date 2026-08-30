@@ -40,7 +40,7 @@
     { "slug": "gazorezchik", "name": "Газорезчик", "sphere": "stroitelstvo", "synonyms": ["газорезчик-сварщик"] },
     { "slug": "otdelochik", "name": "Отделочник", "sphere": "stroitelstvo", "synonyms": ["отделочник-универсал"] },
     { "slug": "prorab", "name": "Прораб", "sphere": "stroitelstvo", "synonyms": ["производитель работ"] },
-    { "slug": "master-uchastka", "name": "Мастер участка", "sphere": "stroitelstvo", "synonyms": ["мастер строительного участка"] },
+    { "slug": "master-uchastka", "name": "Мастер участка", "sphere": "stroitelstvo", "synonyms": ["мастер строительного участка", "руководитель участка"] },
     { "slug": "kranshchik", "name": "Крановщик", "sphere": "stroitelstvo", "synonyms": ["машинист крана"] },
     { "slug": "stropalshchik", "name": "Стропальщик", "sphere": "stroitelstvo", "synonyms": ["стропальщик-такелажник"] },
     { "slug": "gornorabochiy", "name": "Горнорабочий", "sphere": "stroitelstvo", "synonyms": ["грп", "горнорабочий очистного"] },
