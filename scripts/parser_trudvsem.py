@@ -59,6 +59,11 @@ API_LIMIT_CAP = 10_000
 PORTAL = "https://trudvsem.ru"
 COMPLETE_PARSER = "parser_trudvsem_complete"
 FALLBACK_PAGE_LIMIT = 5
+SECTION_ITEM_MAX = 500
+TITLE_MAX = 200
+ADDRESS_MAX = 200
+SUMMARY_MAX = 300
+DESCRIPTION_MAX = 3000
 
 HttpGet = Callable[..., requests.Response]
 HttpPost = Callable[..., requests.Response]
@@ -342,6 +347,76 @@ def parse_api_vacancy(item: Any) -> dict[str, Any] | None:
     }
 
 
+def split_to_max(text: str, max_len: int) -> list[str]:
+    """Режем длинный абзац API на куски, которые проходит дверь upload (tasks ≤ 500)."""
+    compact = " ".join((text or "").split())
+    if not compact:
+        return []
+    chunks: list[str] = []
+    rest = compact
+    while rest:
+        if len(rest) <= max_len:
+            chunks.append(rest)
+            break
+        window = rest[:max_len]
+        cut = 0
+        for sep in (". ", "; ", ", ", " "):
+            pos = window.rfind(sep)
+            if pos >= max(40, max_len // 4):
+                cut = max(cut, pos + len(sep))
+        if cut < 1:
+            cut = max_len
+        piece = rest[:cut].strip(" ;,")
+        rest = rest[cut:].strip(" ;,")
+        if piece:
+            chunks.append(piece)
+    return chunks
+
+
+def _section_lines(heading: str, body: str) -> list[str]:
+    parts = split_to_max(str(body or ""), SECTION_ITEM_MAX)
+    if not parts:
+        return []
+    if len(parts) == 1:
+        return [f"{heading}: {parts[0]}"]
+    return [f"{heading}:", *[f"- {part}" for part in parts]]
+
+
+def clip_upload_record(record: dict[str, Any]) -> dict[str, Any]:
+    """Zod на двери: пункт списка ≤ 500, адрес ≤ 200. Текст не выкидываем — режем на пункты."""
+    sections = record.get("descriptionSections")
+    if isinstance(sections, dict):
+        for key in ("tasks", "requirements", "conditions"):
+            items = sections.get(key)
+            if not isinstance(items, list):
+                continue
+            clipped: list[str] = []
+            for item in items:
+                if isinstance(item, str):
+                    clipped.extend(split_to_max(item, SECTION_ITEM_MAX))
+                if len(clipped) >= 40:
+                    clipped = clipped[:40]
+                    break
+            sections[key] = clipped
+        desc = sections.get("description")
+        if isinstance(desc, str) and len(desc) > DESCRIPTION_MAX:
+            sections["description"] = desc[:DESCRIPTION_MAX]
+        record["descriptionSections"] = sections
+    title = record.get("title")
+    if isinstance(title, str) and len(title) > TITLE_MAX:
+        record["title"] = title[:TITLE_MAX].rstrip()
+    original = record.get("titleOriginal")
+    if isinstance(original, str) and len(original) > TITLE_MAX:
+        record["titleOriginal"] = original[:TITLE_MAX].rstrip()
+    address = record.get("address")
+    if isinstance(address, str) and len(address) > ADDRESS_MAX:
+        record["address"] = address[: ADDRESS_MAX - 1].rstrip() + "…"
+    summary = record.get("summaryLine")
+    if isinstance(summary, str) and len(summary) > SUMMARY_MAX:
+        record["summaryLine"] = summary[: SUMMARY_MAX - 1].rstrip() + "…"
+    return record
+
+
 def assemble_pipeline_text(parsed: dict[str, Any]) -> str:
     """Короткий текст из полей JSON. Правила заголовка пишет process_post, не этот файл."""
     lines: list[str] = []
@@ -363,10 +438,8 @@ def assemble_pipeline_text(parsed: dict[str, Any]) -> str:
         lines.append(f"Зарплата: {parsed['salaryText']} до вычета налога")
     if parsed.get("schedule"):
         lines.append(f"График: {parsed['schedule']}")
-    if parsed.get("duty"):
-        lines.append(f"Обязанности: {parsed['duty']}")
-    if parsed.get("requirements"):
-        lines.append(f"Требования: {parsed['requirements']}")
+    lines.extend(_section_lines("Обязанности", str(parsed.get("duty") or "")))
+    lines.extend(_section_lines("Требования", str(parsed.get("requirements") or "")))
     if parsed.get("qualification"):
         lines.append(f"Квалификация: {parsed['qualification']}")
     if parsed.get("phone"):
@@ -437,7 +510,7 @@ def overlay_structured(record: dict[str, Any], parsed: dict[str, Any], *, city_s
         record["publishedAt"] = iso
     if parsed.get("jobName") and not record.get("titleOriginal"):
         record["titleOriginal"] = parsed["jobName"]
-    return record
+    return clip_upload_record(record)
 
 
 def process_trudvsem_item(
@@ -704,6 +777,7 @@ def run_parser(
         for region in regions:
             offset = 0
             total = None
+            page_timeouts = 0
             while offset < max_records and (remaining is None or remaining > 0):
                 chunk_limit = min(page_limit, max_records - offset)
                 try:
@@ -722,7 +796,16 @@ def run_parser(
                         )
                         page_limit = FALLBACK_PAGE_LIMIT
                         continue
+                    if is_timeout_error(exc) and page_timeouts < 3:
+                        page_timeouts += 1
+                        print(
+                            f"Таймаут offset={offset} limit={chunk_limit}, "
+                            f"повтор {page_timeouts}/3. Прокси не используем."
+                        )
+                        sleeper(2.0 * page_timeouts)
+                        continue
                     raise
+                page_timeouts = 0
                 if total is None:
                     total = page_total(page)
                     if total == 0 and not page_vacancies(page):
@@ -940,6 +1023,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_arg_parser().parse_args(argv)
+    os.environ["OCR_PROVIDER"] = "none"
     limit = args.limit if args.limit is None or args.limit > 0 else None
     if args.site_url:
         os.environ["SITE_URL"] = str(args.site_url).rstrip("/")

@@ -150,6 +150,49 @@ def test_process_overlays_json_not_html():
     assert "trudvsem.ru" in (record.get("sourceUrl") or "")
 
 
+def test_long_duty_is_split_under_upload_limit():
+    duty = ("Выполнение работ по обслуживанию тепловых сетей и насосных станций. " * 20).strip()
+    assert len(duty) > 500
+    parsed = {
+        "id": "tv-long-duty-001",
+        "jobName": "Слесарь",
+        "employerName": "МУП Теплосеть",
+        "employerInn": "9303011111",
+        "sourceUrl": "https://trudvsem.ru/vacancy/card/a/tv-long-duty-001",
+        "salaryIsGross": True,
+        "salaryFrom": 40000,
+        "salaryTo": 40000,
+        "salaryText": "40000",
+        "address": "г. Горловка, ул. Ленина, 1",
+        "location": "г. Горловка",
+        "duty": duty,
+        "requirements": "",
+        "qualification": "",
+        "schedule": "5/2",
+        "employment": "FULL",
+        "experience": "FROM_1_TO_3",
+        "phone": "0710000000",
+        "email": None,
+        "hrAgency": False,
+        "publishedAt": "2026-08-01T10:00:00+03:00",
+    }
+    result = process_trudvsem_item(
+        parsed,
+        city_slug="gorlovka",
+        source_name="Работа России · ЦЗН",
+        default_city="gorlovka",
+    )
+    assert result["records"]
+    record = result["records"][0]
+    sections = record.get("descriptionSections") or {}
+    for key in ("tasks", "requirements", "conditions"):
+        for item in sections.get(key) or []:
+            assert len(item) <= 500, (key, len(item), item[:80])
+    joined = " ".join(sections.get("tasks") or []) + " " + (record.get("description") or "")
+    assert "Выполнение работ по обслуживанию" in joined
+    assert len(record.get("address") or "") <= 200
+
+
 def test_overlay_drops_salary_extracted_from_index():
     parsed = {
         "id": "x",
@@ -241,6 +284,22 @@ def test_limit_does_not_archive(tmp_path, monkeypatch):
     assert any("/api/parser/upload" in url for url in posted)
     assert not any("archive-missing" in url for url in posted)
     assert "limit" in (stats.get("note") or "").lower() or "--limit" in (stats.get("note") or "")
+
+
+def test_timeout_at_fallback_size_retries_then_succeeds():
+    page = fixture_page()
+    hits = {"n": 0}
+
+    def http_get(url, **kwargs):
+        hits["n"] += 1
+        if hits["n"] == 1:
+            raise requests.Timeout("Read timed out.")
+        return FakeResponse(page)
+
+    stats = run_parser(dry_run=True, limit=3, http_get=http_get, sleep=lambda _s: None)
+    assert hits["n"] >= 2
+    assert stats["run_ok"] is True
+    assert stats["fetched"] >= 1
 
 
 def test_timeout_falls_back_to_small_page():
