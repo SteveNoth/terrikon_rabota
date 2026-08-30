@@ -3,11 +3,11 @@
 Последнее обновление: 2026-08-30
 
 ## Где я сейчас
-- Текущий этап: 14, часть 3 (доверие и дубли) — **сделан в рабочей копии**, без коммита
+- Текущий этап: 15 (приём вакансий от парсеров) — код готов в ветке `stage-15-parser-upload`, жду «готово»
 - Последний завершённый этап: 14 часть 3 (`trust.py`, `dedupe.py`, блок `fraud`)
-- Последний коммит: Этап 14B — текст с картинок (ветка `stage-14b-ocr`)
-- Ветка этапа: `stage-14-part3-trust` (от `stage-14-part2-normalize`)
-- Порядок дальше: **этап 15** (приём от парсеров) — не начинать, пока нет «готово».
+- Последний коммит: Этап 14 части 2 и 3 (ветка `stage-14-part3-trust`)
+- Ветка этапа: `stage-15-parser-upload` (от `stage-14-part3-trust`)
+- Порядок дальше: **этап 16** (парсер ВКонтакте) — не начинать, пока нет «готово».
 
 ## Что уже работает
 - Установлены Node.js, Python, Git, Cursor
@@ -67,7 +67,8 @@
 - Этап 14B: текст с картинок. `shared/ocr.json`, адаптер `scripts/ocr_provider.py`, сборка `scripts/ocr.py`. `OCR_PROVIDER=tesseract` локально (бинарь + `rus`). Живые макеты: `scripts/tests/fixtures/ocr/live/` (38 JPEG, манифест `scripts/tests/ocr/live.json`). Синтетика по-прежнему в тесте без бинаря. Запуск: `python -m pytest`, отчёт `python scripts/tests/ocr_report.py`.
 - Этап 14, часть 2: единый вид. Правила в `shared/normalize.json` (`NORMALIZER_VERSION` 1). `scripts/normalize.py` (заголовок, капс, эмодзи→список, разделы, мусор, сводка, полнота), `scripts/enrich.py` (район, сфера, заготовка работодателя по телефону, пробелы → «что уточнить»), единая точка `scripts/process.py` → `process_post(text, source, images=None)` возвращает **список** записей. Пустой список — мусор, явный СВО или все единицы скрытый СВО. Простыня из 14A даёт несколько записей, обычный пост — одну. `rawText` = подпись без изменений. Каждая запись несёт `trustScore`, `trustFlags`, `signature`, `moderationStatus` (часть 3). Тесты нормализации: `python scripts/tests/normalize_report.py` (18/18, 100 %). `VacancyView` в `src/lib/vacancy/view.ts` — единственный тип для карточки, `rawText` только как «Показать оригинал», в виде есть `completeness`.
 - Этап 14, часть 3: доверие и дубли. Блок `fraud` в `shared/keywords.json` (веса, потолки по `workFormat`, жёсткие флаги). `scripts/trust.py` — `trust_score` 0–100, не вызывает `is_vacancy` и не вызывает СВО. Зарплата против медианы той же профессии **и** того же формата; выборка < 5 — потолок сферы. Предоплата / дроппер / клады → `BLOCKED`, не в очередь. Новый телефон при переданном словаре контактов — на одобрение один раз. `scripts/dedupe.py` — сигнатура + шинглы + Жаккар > 0,6 внутри корзины за 60 дней; местные дубли внутри города, вахты по всем городам. При приёме только `signature`, группировка — ночью (этап 15). Живые примеры: 2 обманки из «ПОСТЫ ОБМАН», 4 честные вахты из «ПОСТЫ ВАХТА» + синтетика (руководитель, машинист, предоплата). Запуск: `python -m pytest`, отчёт `python scripts/tests/trust_report.py`.
-- 2026-08-30 в промты добавлены Этапы **14A** и **14B**. Этап 14 закрыт тремя частями в рабочей копии.
+- Этап 15: дверь парсеров. `POST /api/parser/upload` — Bearer `CRON_SECRET` (≥ 32 символа), пачка до 100, тело ≤ 1.5 МБ, не чаще 30 запросов в минуту. Кривая запись не роняет пачку. `rawText` обязателен (пустая строка ок, если есть `ocrText`) и больше не перезаписывается. Город не `active` — пропуск с причиной. `maybe` → `ParsedPost` (один на исходный пост). СВО → счётчик, не в Vacancy. Три дешёвых уровня дедупа (11.5) + группа по `signature` при приёме. `qualityScore` из `completeness`. Статус: чёрный список / жёсткий флаг → `BLOCKED` + `ContactVerdict`; ≥ 70 и контакт `TRUSTED` → `AUTO_OK`; иначе `PENDING` (на сайте нет). Автопубликации по таймеру нет. `POST /api/parser/deactivate` — не видели 30 дней → `isActive=false`. Ночью `scripts/regroup.py` (GitHub Actions `regroup.yml`). `scripts/reprocess.py` гоняет сохранённые оригиналы через `process_post(..., ocr_text=)` без скачивания картинок; лишние единицы деактивирует, модерацию не отменяет. Пример для парсеров: `python scripts/send_test.py`. Миграция: `ocrText`, `imageUrls`, `splitIndex`, `sourcePostExternalId`, `ocrVersion`, `splitterVersion`.
+- 2026-08-30 в промты добавлены Этапы **14A** и **14B**. Этап 14 закрыт тремя частями. Этап 15 — приём пачки.
 - Внешние картинки только с allowlist в `src/lib/images/remote.ts` / `next.config.ts` (ВК, Telegram, hhcdn, Wikimedia для сидов)
 - Спрайт `public/icons/sprite.svg?v=4`: ВК, сайт, карта, предупреждение, поделиться, флажок. Ultra по-прежнему отдаёт текстовый символ и спрайт не качает
 - Логотип «Террикон Работа» — inline SVG (террикон + название), цвет из токена, без файла-картинки
@@ -90,8 +91,9 @@
 - idb: 8.0.3 (IndexedDB на клиенте, Этап 11)
 - maplibre-gl: 6.6.0 (копия ESM в `public/maplibre/`, в бандл Next не импортируется)
 - Пакетный менеджер: npm (v11.19.0)
-- Python: 3.14.6; виртуальное окружение `.venv`; зависимости `requirements.txt` (`requests`, `pytest`, `pytesseract`, `pillow`). Tesseract — системная программа, не pip
+- Python: 3.14.6; виртуальное окружение `.venv`; зависимости `requirements.txt` (`requests`, `pytest`, `pytesseract`, `pillow`, `psycopg`). Tesseract — системная программа, не pip
 - Фильтр Этапа 14: `scripts/filter.py`, `extract.py`, `vahta.py`, `svo.py`, `normalize.py`, `enrich.py`, `process.py`, `trust.py`, `dedupe.py`; словари `shared/keywords.json`; профессии `shared/professions.json` (78); тесты `python -m pytest`; отчёты `python scripts/tests/report.py`, `python scripts/tests/split_report.py`, `python scripts/tests/svo_report.py`, `python scripts/tests/ocr_report.py`, `python scripts/tests/normalize_report.py`, `python scripts/tests/trust_report.py`
+- Приём Этапа 15: `src/app/api/parser/upload/route.ts`, `src/app/api/parser/deactivate/route.ts`, `src/lib/parser/*`; `scripts/send_test.py`, `scripts/regroup.py`, `scripts/reprocess.py`, `scripts/db_pg.py`; workflow `.github/workflows/regroup.yml` (cron `20 2 * * *`). Скрипты к базе — через `DIRECT_URL`.
 - Нарезка Этапа 14A часть 1: `scripts/split.py`, `extract_professions` в `extract.py`; правила `shared/split.json`; тесты `scripts/tests/split/`; отчёт `python scripts/tests/split_report.py`. Идентичность: неразрезанный `externalId` как в источнике, разрезанный `{id}` / `{id}#2` / `{id}#3`; `rawText` у всех детей полный.
 - Отсев СВО Этапа 14A часть 2: `scripts/svo.py` (`explicit_svo`, `hidden_svo`, `apply_svo_gate`); блок `svo` в `shared/keywords.json`; тесты `scripts/tests/svo/`; отчёт `python scripts/tests/svo_report.py`. Не вызывает `is_vacancy` и не вызывает `trust_score`. Четвёртого `workFormat` нет.
 - OCR Этапа 14B: `scripts/ocr.py` (`collect_analysis_text`, `assemble_post`), адаптер `scripts/ocr_provider.py`; правила `shared/ocr.json`; тесты `scripts/tests/ocr/`; живые фото `scripts/tests/fixtures/ocr/live/`; отчёт `python scripts/tests/ocr_report.py`. `rawText` = подпись, `ocrText` рядом. `OCR_PROVIDER=tesseract` на этой машине.
@@ -145,6 +147,7 @@
 
 ## Открытые вопросы / долги
 - GitHub ещё не подключён к проекту Vercel: `git push` пока сам сайт не обновляет. 2026-08-29 сайт обновили через CLI; шаги привязки репозитория — в docs/SETUP-LOG.md. После связи регион `fra1` из `vercel.json` применится сам.
+- Этап 15: `CRON_SECRET` есть в `.env.local` (64 символа). В Vercel и GitHub Secrets его ещё нет — без этого прод и ночной `regroup.yml` не примут пачку. Команда генерации и куда вставить — `docs/SETUP-LOG.md`.
 - Next.js 16 предупреждает, что `middleware.ts` устарел в пользу `proxy.ts`. Файл оставлен как `src/middleware.ts`, потому что так написано в ядре и на следующих этапах его дополняем.
 - Бюджеты 8.5 для **Lite** по JS/запросам/итогу пока не закрыты каркасом Next.js (~205 КБ gzip на Full/Lite главной). Карта в этот каркас не входит. Ultra закрыт тонким путём Этапа 10.
 - «Показать ещё» на сидах не видно: 12 местных при Full/Lite по 20 на страницу — одна страница. На Ultra (10 на страницу) есть `?page=2`. Проверка докидывания — после большего набора или с `?pageSize=` через API.

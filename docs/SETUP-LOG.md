@@ -202,6 +202,36 @@ sudo apt-get install -y tesseract-ocr tesseract-ocr-rus
 tesseract --list-langs
 ```
 
-Tesseract — системная программа. `pip install -r requirements.txt` ставит только `pytesseract` и `pillow`.
+Tesseract — системная программа. `pip install -r requirements.txt` ставит `pytesseract`, `pillow` и (с Этапа 15) `psycopg`.
+
+## 2026-08-30 — Этап 15: CRON_SECRET и секреты для двери парсеров
+
+`CRON_SECRET` — пароль, которым роботы доказывают, что они свои. Длина не меньше 32 символов.
+
+Сгенерировать в PowerShell:
+
+```
+[BitConverter]::ToString([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32)).Replace('-','').ToLower()
+```
+
+Куда вставить одно и то же значение (в git не попадает):
+
+1. `.env.local` — строка `CRON_SECRET=...` (читает Next и `scripts/send_test.py`)
+2. Vercel → проект terrikon-rabota → Settings → Environment Variables → `CRON_SECRET` (Production, Preview, Development)
+3. GitHub → SteveNoth/terrikon_rabota → Settings → Secrets and variables → Actions:
+   - `CRON_SECRET`
+   - `SITE_URL` = `https://terrikon-rabota.vercel.app`
+   - `DATABASE_URL` и `DIRECT_URL` — те же, что у Prisma (для `scripts/regroup.py` ночью)
+
+Проверка длины (секрет не печатает):
+
+```
+((Get-Content .env.local | Where-Object { $_ -like 'CRON_SECRET=*' } | Select-Object -First 1) -replace '^CRON_SECRET=','').Trim().Length
+```
+
+2026-08-30: секрет есть в `.env.local` (64 символа). В Vercel CLI в списке переменных были `DATABASE_URL` / `DIRECT_URL`, **`CRON_SECRET` и `SITE_URL` ещё не добавлены**. GitHub CLI (`gh`) на этой машине нет — секреты Actions тоже нужно вставить руками (шаг 3 выше). Пока их нет, прод и ночной `regroup.yml` эту дверь не откроют.
+
+Миграция схемы приёма: `npx prisma migrate deploy` (файл `prisma/migrations/20260830150000_parser_ingest`).
+
 
 

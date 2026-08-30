@@ -89,4 +89,9 @@ export async function wrap<T>(
   return adapter.wrap(key, ttlSeconds, fn);
 }
 
+/** Сброс памяти процесса. После приёма пачки счётчики главной не должны врать 10 минут. */
+export function clearMemoryCache(): void {
+  store().clear();
+}
+
 export const cache = adapter;

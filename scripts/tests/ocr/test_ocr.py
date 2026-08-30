@@ -319,8 +319,10 @@ def test_schema_and_storage_have_no_image_files():
     assert "Bytes" not in schema
     assert "@db.ByteA" not in schema
     assert "imageBlob" not in schema
-    assert "ocrText" not in schema
-    assert "imageUrls" not in schema
+    assert "ocrText" in schema
+    assert "imageUrls" in schema
+    assert "splitIndex" in schema
+    assert "sourcePostExternalId" in schema
     assert "STORAGE_DRIVER=external" in storage
     assert "не кладём картинки в свою базу" in storage
     assert set(get_args(WorkFormat)) == {"LOCAL", "VAHTA", "REMOTE"}

@@ -6,3 +6,5 @@ pytest>=8.3.0
 # pip ставит только мост к бинарю и библиотеку, чтобы открыть картинку.
 pytesseract>=0.3.13
 pillow>=10.4.0
+# Ночные скрипты Этапа 15 (regroup / reprocess) и send_test пишут в Postgres напрямую.
+psycopg[binary]>=3.2.0

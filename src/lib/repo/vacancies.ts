@@ -224,12 +224,8 @@ function publishedWhere(): Prisma.VacancyWhereInput {
 }
 
 /**
- * Этап 15 соберёт дубли в группы. Счётчик и выдача считают группу один раз,
- * а не каждое размещение (раздел 11.17): одна вахта из восьми групп — одна вакансия.
- *
- * Пока групп нет, у всех `groupId` пустой, и условие совпадает с «все опубликованные».
- * Когда появятся группы, менять нужно только эту функцию: главная запись группы
- * или вакансия без группы. `listVacancies` и `count` берут её из одного `where`.
+ * Единица выдачи: группа дублей считается один раз, одиночная вакансия — сама за себя
+ * (раздел 11.17). Главная запись группы или вакансия без группы.
  */
 function listingUnitWhere(): Prisma.VacancyWhereInput {
   return {
@@ -443,6 +439,7 @@ export async function getSimilarVacancies(
 
     const similarWhere: Prisma.VacancyWhereInput = {
       ...publishedWhere(),
+      ...listingUnitWhere(),
       citySlug: current.citySlug,
       sphere: current.sphere,
       workFormat: current.workFormat,

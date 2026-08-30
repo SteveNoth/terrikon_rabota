@@ -398,12 +398,25 @@ def assemble_post(
     fetch: FetchFn | None = None,
     ocr: OcrFn | None = None,
     spam: bool = False,
+    ocr_text: str | None = None,
 ) -> AssembleResult:
     """Сборка шагов 0…7. Единый вид добавляет process_post поверх.
 
     Порядок внутри: OCR → явный СВО → фильтр → резка → поля / формат / скрытый СВО.
+    ocr_text: уже сохранённое распознавание. Картинки заново не качаем
+    (ссылки протухают) — так работает reprocess.py.
     """
-    analysis = collect_analysis_text(caption, image_refs, fetch=fetch, ocr=ocr)
+    if ocr_text is not None:
+        refs = [str(item) for item in (image_refs or []) if item]
+        analysis = AnalysisText(
+            caption=caption if caption is not None else "",
+            ocr_text=ocr_text,
+            analysis_text=join_analysis_text(caption if caption is not None else "", ocr_text),
+            image_urls=refs,
+            skipped_reason="saved_ocr",
+        )
+    else:
+        analysis = collect_analysis_text(caption, image_refs, fetch=fetch, ocr=ocr)
     full = analysis.analysis_text
 
     svo = explicit_svo(full)

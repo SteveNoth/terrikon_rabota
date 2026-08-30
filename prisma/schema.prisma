@@ -133,6 +133,23 @@ model Vacancy {
   /// Единственное, что позволит переобработать базу, когда правила станут лучше.
   rawText String? @db.Text
 
+  /// Распознанный текст картинок того же поста. Можно обновить, если OCR_VERSION вырос.
+  ocrText String? @db.Text
+
+  /// Ссылки на картинки источника, не файлы (Закон 10).
+  imageUrls Json?
+
+  /// 0 у неразрезанного поста и у первой единицы; дальше 1, 2… (раздел 11.15).
+  splitIndex Int @default(0)
+
+  /// id исходного поста без суффикса #2. У всех детей одного поста одинаковый.
+  sourcePostExternalId String
+
+  /// Версия OCR / нарезки, которой получены ocrText и splitIndex.
+  /// Нужны reprocess.py: не затирать лучшее распознавание и знать, какой резкой резали.
+  ocrVersion      String?
+  splitterVersion String?
+
   /// Обработанное описание, которое видит пользователь. Закон 10: не длиннее 3000.
   description         String  @db.VarChar(3000)
   descriptionSections Json?
@@ -234,6 +251,9 @@ model Vacancy {
   @@index([contentHash])
   @@index([signature])
   @@index([moderationStatus])
+  @@index([sourcePostExternalId])
+  @@index([source, sourcePostExternalId])
+  @@index([contactPhone])
   /// Главная выдача: город + активные + местные/вахта + свежесть.
   @@index([citySlug, isActive, workFormat, publishedAt])
 }

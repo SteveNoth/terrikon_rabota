@@ -303,6 +303,7 @@ def process_post(
     contacts_index: dict[str, Any] | None = None,
     contact_verdicts: dict[str, Any] | None = None,
     aggregation: dict[str, Any] | None = None,
+    ocr_text: str | None = None,
 ) -> list[dict[str, Any]]:
     """Список записей. Пустой — пост отброшен. Парсеры вызывают только это.
 
@@ -310,6 +311,8 @@ def process_post(
     не должна портить честную. Нечёткие дубли здесь не группируем —
     только signature. contact_verdicts: None — таблицы контактов ещё нет;
     словарь (в том числе пустой) включает правило нового телефона.
+
+    ocr_text — уже сохранённое распознавание. Картинки заново не качаем.
     """
     source = source or {}
     caption = text if text is not None else ""
@@ -321,6 +324,7 @@ def process_post(
         fetch=fetch,
         ocr=ocr,
         spam=spam,
+        ocr_text=ocr_text,
     )
     if not assembled.units:
         return []

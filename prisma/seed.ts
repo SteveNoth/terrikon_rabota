@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { config as loadEnv } from "dotenv";
 import {
+  ContactVerdictKind,
   EmployerKind,
   EmploymentType,
   Experience,
@@ -325,7 +326,7 @@ async function main(): Promise<void> {
     conditions: ["Проживание и питание за счёт компании", "Проезд оплачивается", "Набор через агентство"],
   };
 
-  const vacancies: Prisma.VacancyCreateManyInput[] = [
+  const vacancies: Omit<Prisma.VacancyCreateManyInput, "sourcePostExternalId" | "splitIndex">[] = [
     {
       slug: "svarshchik-mehzavod-centr",
       title: "Сварщик",
@@ -1043,7 +1044,25 @@ async function main(): Promise<void> {
     throw new Error(`Описание длиннее 3000 символов: ${overlong.map((row) => row.slug).join(", ")}`);
   }
 
-  await prisma.vacancy.createMany({ data: vacancies });
+  await prisma.vacancy.createMany({
+    data: vacancies.map((row) => ({
+      ...row,
+      splitIndex: 0,
+      sourcePostExternalId: row.externalId,
+    })),
+  });
+
+  const seedPhones = [...new Set(vacancies.map((row) => row.contactPhone).filter((item): item is string => Boolean(item)))];
+  if (seedPhones.length > 0) {
+    await prisma.contactVerdict.createMany({
+      data: seedPhones.map((contact) => ({
+        contact,
+        verdict: ContactVerdictKind.TRUSTED,
+        reason: "seed: работодатель из сидов уже на сайте",
+        vacanciesCount: vacancies.filter((row) => row.contactPhone === contact).length,
+      })),
+    });
+  }
 
   await prisma.vacancy.updateMany({
     where: { workFormat: WorkFormat.LOCAL },
