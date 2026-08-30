@@ -197,7 +197,7 @@ main{flex:1}
 .chips{gap:var(--t-space-2);margin-top:var(--t-space-5)}
 summary{cursor:pointer;font-weight:500}
 pre.orig{margin-top:var(--t-space-3);white-space:pre-wrap;font:inherit}
-.bottom{display:grid;grid-template-columns:1fr 1fr;position:fixed;bottom:0;left:0;right:0;z-index:2;border-top-width:var(--t-border-width)}
+.bottom{display:grid;grid-template-columns:1fr 1fr 1fr;position:fixed;bottom:0;left:0;right:0;z-index:2;border-top-width:var(--t-border-width)}
 .bottom a{display:flex;align-items:center;justify-content:center;min-height:var(--t-bottomnav-height);font-size:var(--t-text-sm);color:var(--t-color-text-muted);text-decoration:none}
 .bottom a[aria-current="page"]{color:var(--t-color-brand)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}

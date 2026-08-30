@@ -43,6 +43,7 @@ import {
 import { isFiltersOpen, parseVacancyQuery } from "@/lib/validation/vacancy-query";
 import { WorkFormat, type Source } from "@prisma/client";
 import { cookies } from "next/headers";
+import Link from "next/link";
 import type { PaginationPageLink } from "@/components/ui/pagination";
 
 function pageWindow(page: number, pageCount: number): (number | "gap")[] {
@@ -189,6 +190,17 @@ export async function JobsListing({
       />
       <header className="flex min-w-0 flex-col gap-3">
         <h1 className="font-display text-2xl font-medium">{title}</h1>
+        {section === "jobs" ? (
+          <p>
+            <Link
+              href={`/${citySlug}/map`}
+              prefetch={false}
+              className="text-brand underline-offset-2 hover:underline"
+            >
+              Карта вакансий
+            </Link>
+          </p>
+        ) : null}
         <JobsTabs
           citySlug={citySlug}
           section={section}

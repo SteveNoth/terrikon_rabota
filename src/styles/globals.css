@@ -99,6 +99,8 @@
   --spacing-bottomnav: var(--t-bottomnav-height);
   --spacing-bottomnav-plus: calc(var(--t-bottomnav-height) + var(--t-qualitybar-height));
   --max-width-container: var(--t-container-max);
+  --min-height-map: var(--t-map-min-height);
+  --height-map: var(--t-map-min-height);
 }
 
 /* Базовый сброс: всё считается от края до края, шрифт и цвета — из токенов. */

@@ -14,6 +14,7 @@ import { renderOffline } from "@/ultra/render/offline";
 import { renderSafety } from "@/ultra/render/safety";
 import { renderCityStub } from "@/ultra/render/stub";
 import { renderVacancyPage } from "@/ultra/render/vacancy";
+import { renderMapPage } from "@/ultra/render/map";
 import type { VacancyView } from "@/lib/vacancy/view";
 
 export type UltraResult = {
@@ -140,6 +141,14 @@ export async function dispatchUltra(input: {
         return { ...renderGenericMissing(city), citySlug: city, status: 404, cache: "none" };
       }
       return { ...page, citySlug: city, status: 200, cache: "none" };
+    }
+
+    if (parts[1] === "map" && parts.length === 2) {
+      const page = await renderMapPage({
+        citySlug: city,
+        searchParams: input.search,
+      });
+      return { ...page, citySlug: city, status: 200, cache: "page" };
     }
 
     return { ...renderGenericMissing(city), citySlug: city, status: 404, cache: "none" };

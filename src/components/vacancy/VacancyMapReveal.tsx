@@ -2,6 +2,7 @@
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Icon } from "@/components/ui/icon";
+import { NavigatorLink } from "@/components/map/NavigatorLink";
 import { cn } from "@/lib/format/cn";
 import { useState } from "react";
 
@@ -41,11 +42,7 @@ export function VacancyMapReveal({
           alt={address ? `Схема проезда: ${address}` : "Схема проезда"}
           className="h-auto w-full max-w-full rounded-md border border-border"
         />
-        {navigatorHref ? (
-          <a href={navigatorHref} className="text-brand underline-offset-2 hover:underline">
-            Открыть в навигаторе
-          </a>
-        ) : null}
+        {navigatorHref ? <NavigatorLink href={navigatorHref} /> : null}
       </div>
     );
   }
@@ -53,11 +50,7 @@ export function VacancyMapReveal({
   return (
     <div className="flex min-w-0 flex-col gap-2">
       {address ? <p className="min-w-0 break-words">{address}</p> : null}
-      {navigatorHref ? (
-        <a href={navigatorHref} className="text-brand underline-offset-2 hover:underline">
-          Открыть в навигаторе
-        </a>
-      ) : null}
+      {navigatorHref ? <NavigatorLink href={navigatorHref} /> : null}
     </div>
   );
 }

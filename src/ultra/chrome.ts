@@ -72,6 +72,7 @@ export function renderChrome({
   const { active, soon } = getCitySelectGroups();
   const homeHref = `/${citySlug}`;
   const jobsHref = `/${citySlug}/jobs`;
+  const mapHref = `/${citySlug}/map`;
   const formAction = currentPath || "/";
   const homeCurrent = currentPath === homeHref || currentPath === `/${citySlug}`;
   const jobsCurrent =
@@ -79,6 +80,7 @@ export function renderChrome({
     currentPath.startsWith(`/${citySlug}/jobs`) ||
     currentPath === `/${citySlug}/vahta` ||
     currentPath.startsWith(`/${citySlug}/vahta/`);
+  const mapCurrent = currentPath === mapHref || currentPath.startsWith(`${mapHref}/`);
   const selected = isQualityPreference(preference) ? preference : "ultra";
 
   return `<div class="site">
@@ -103,6 +105,7 @@ ${cityForm("u-city-footer", citySlug, active, soon)}
 <a href="${attr(TELEGRAM_CHANNEL_URL)}" rel="noopener noreferrer">${esc(telegramChannelTitle())}</a>
 <a href="/about">О проекте</a>
 <a href="/about/lite">Почему сайт лёгкий</a>
+<a href="${attr(mapHref)}">Карта вакансий</a>
 </div>
 ${qualityForm("u-quality-footer", formAction, selected)}
 <p class="muted small">Сейчас: Только текст · 2G · эта страница весит ≈ 25 КБ</p>
@@ -113,6 +116,7 @@ ${qualityForm("u-quality-footer", formAction, selected)}
 <nav class="bottom" aria-label="Основное меню">
 <a href="${attr(homeHref)}"${homeCurrent ? ' aria-current="page"' : ""}>Главная</a>
 <a href="${attr(jobsHref)}"${jobsCurrent ? ' aria-current="page"' : ""}>Вакансии</a>
+<a href="${attr(mapHref)}"${mapCurrent ? ' aria-current="page"' : ""}>Карта</a>
 </nav>
 </div>`;
 }

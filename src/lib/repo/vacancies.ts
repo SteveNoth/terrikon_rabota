@@ -576,3 +576,64 @@ export async function countVacanciesBySphere(citySlug: string): Promise<SphereCo
     throw repoError("посчитать вакансии по сферам", cause);
   }
 }
+
+/** Потолок точек на карте: кластеры справляются, HTML не раздуваем. */
+export const MAX_MAP_POINTS = 500;
+
+export type MapVacancyRecord = {
+  id: string;
+  slug: string;
+  title: string;
+  salaryFrom: number | null;
+  salaryTo: number | null;
+  salaryPeriod: SalaryPeriod;
+  salaryCurrency: string;
+  districtSlug: string | null;
+  address: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  geocodeAccuracy: import("@prisma/client").GeocodeAccuracy | null;
+};
+
+/**
+ * Местные вакансии города для карты. Без description. Геокодер здесь не зовём.
+ */
+export async function listMapVacancies(params: {
+  citySlug: string;
+  sphere?: string;
+  salaryFrom?: number;
+  districtSlug?: string;
+}): Promise<MapVacancyRecord[]> {
+  const where = buildListWhere({
+    citySlug: params.citySlug,
+    sphere: params.sphere,
+    salaryFrom: params.salaryFrom,
+    districtSlug: params.districtSlug,
+    workFormat: WorkFormat.LOCAL,
+    pageSize: MAX_MAP_POINTS,
+  });
+
+  try {
+    return await prisma.vacancy.findMany({
+      where,
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        salaryFrom: true,
+        salaryTo: true,
+        salaryPeriod: true,
+        salaryCurrency: true,
+        districtSlug: true,
+        address: true,
+        latitude: true,
+        longitude: true,
+        geocodeAccuracy: true,
+      },
+      orderBy: [{ publishedAt: "desc" }, { qualityScore: "desc" }],
+      take: MAX_MAP_POINTS,
+    });
+  } catch (cause) {
+    throw repoError("загрузить вакансии для карты", cause);
+  }
+}

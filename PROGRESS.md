@@ -3,10 +3,10 @@
 Последнее обновление: 2026-08-30
 
 ## Где я сейчас
-- Текущий этап: 12
-- Последний завершённый этап: 12
+- Текущий этап: 13
+- Последний завершённый этап: 13
 - Последний коммит: Этап 9 — карточка вакансии (ветка `stage-09-job-card`)
-- Ветка этапа: `stage-12-images`
+- Ветка этапа: `stage-13-maps`
 
 ## Что уже работает
 - Установлены Node.js, Python, Git, Cursor
@@ -36,9 +36,9 @@
 - `/api/reports` — форма жалобы без JavaScript, в причинах «Похоже на мошенничество», ссылка на `/safety`. Сайт не называет объявление мошенническим
 - `/login` — заглушка: смотреть можно без аккаунта, отклик позже
 - ISR: `export const revalidate = 600` на главной. Из-за заголовка режима страница в сборке остаётся динамической; свежие вакансии, счётчики сфер и популярные профессии кэшируются адаптером на 10 минут
-- Замер первой загрузки Full/Lite (gzip, production `next start`, скрипт `node scripts/measure-home.mjs`): HTML ~9–10 КБ, CSS ~6 КБ, шрифт 0, спрайт только Full/Lite. JS ~192 КБ — каркас Next.js (бюджеты 8.5 для Lite этим каркасом всё ещё не закрыты)
+- Замер первой загрузки главной (gzip, production, `node scripts/measure-home.mjs`, 2026-08-30): Full HTML 14.8 КБ / CSS 7.1 / JS 205.4; Lite HTML 14.6 / CSS 6.7 / JS 205.4. Шрифт 0, спрайт только Full/Lite. Библиотеки карты в первой загрузке **нет**. Бюджеты 8.5 для Lite по JS по-прежнему не закрыты каркасом Next.js
 - Ultra Lite — отдельный тонкий путь: middleware при режиме `ultra` переписывает запрос на `/u/...`, адрес в браузере не меняется (`x-ultra-path`). HTML собирается строками в `src/ultra/`, без React и без `<script>`. Прямой заход на `/u/...` вне ultra уводит на публичный адрес
-- Тонкие страницы: главная города, `/[city]/jobs` и `/[city]/vahta` (GET-фильтры, сортировка ссылками, нумерованная пагинация, `?filters=1`), карточка (`toVacancyView`, оригинал в `<details>Показать оригинал</details>`, телефон CSS-обфускацией, `geo:` вместо карты, просмотр через `after()`), заглушка soon + POST `intent=notify-city`, `/about`, `/about/lite`, `/safety`, `/login`, `/offline`, ошибки. Данные — те же `src/lib/repo`
+- Тонкие страницы: главная города, `/[city]/jobs` и `/[city]/vahta` (GET-фильтры, сортировка ссылками, нумерованная пагинация, `?filters=1`), карточка (`toVacancyView`, оригинал в `<details>Показать оригинал</details>`, телефон CSS-обфускацией, ссылка в навигатор — https OSM/Яндекс, просмотр через `after()`), `/[city]/map` (адреса + ссылка на карту в браузере, без скриптов), заглушка soon + POST `intent=notify-city`, `/about`, `/about/lite`, `/safety`, `/login`, `/offline`, ошибки. Данные — те же `src/lib/repo`
 - Критический CSS Ultra: подмножество тех же `--t-*` из `src/styles/tokens.css` + оверлеи из `modes.css`, ~8 КБ несжатых, встроен в HTML. Второй палитры нет
 - Переключение версий: в Ultra футер/низ «Полная версия» / «Полная» → `?mode=full`; в Full/Lite футер «Экономная версия» → `?mode=ultra` и ссылка на `/about/lite`
 - `Cache-Control`: главная/about/списки — `private, max-age=60, stale-while-revalidate=300`; карточка/логин/ошибки — `private, no-store`. `Vary: Cookie, Save-Data`
@@ -59,11 +59,12 @@
 - `/offline` — что доступно без сети, ссылки на сохранённое и избранное. Ultra — текст без IndexedDB (0 JS)
 - PWA: `public/manifest.webmanifest` + иконки из `public/icons/app.svg` (`npm run icons:pwa`). Сайт можно установить на телефон. Тяжёлых надстроек нет
 - Этап 12: `SmartImage` смотрит на `features.images` (adaptive / thumb / none). Логотип работодателя — внешняя ссылка, файлы не храним. Нет ссылки, чужой домен или ошибка загрузки — буквенный аватар из токенов (инициалы без кавычек и «ООО»), без `<img>` в Ultra. Сиды Wikimedia — превью 40px (стандартные ширины, иначе 400)
+- Этап 13: карта `/[city]/map`. Full — кнопка «Показать карту», затем MapLibre + кластеры (центр Горловки 48.3353, 38.0911, зум 13 из geo.json). Lite — статичное превью OSM + честное предупреждение о весе и кнопка «Открыть интерактивную карту». Ultra — без карты, адреса и ссылка «Открыть в навигаторе» (https OSM, при `MAPS_PROVIDER=yandex` — Яндекс.Карты; схема `geo:` на Windows не открывается). Город `soon` — заглушка. Фильтры: сфера, зарплата от, район. Клик по точке — карточка (название, зарплата, район, ссылка). Адаптер `src/lib/adapters/maps.ts`, выбор `MAPS_PROVIDER`. Геокодер `resolveVacancyCoordinates` / `applyVacancyGeocode` — из парсера и админки, не со страницы. Таблица `GeocodeCache` + `GeocodeAccuracy`. MapLibre 6 копируется в `public/maplibre/` (`scripts/copy-maplibre-worker.mjs`), в бандл Next не входит
 - Внешние картинки только с allowlist в `src/lib/images/remote.ts` / `next.config.ts` (ВК, Telegram, hhcdn, Wikimedia для сидов)
 - Спрайт `public/icons/sprite.svg?v=4`: ВК, сайт, карта, предупреждение, поделиться, флажок. Ultra по-прежнему отдаёт текстовый символ и спрайт не качает
 - Логотип «Террикон Работа» — inline SVG (террикон + название), цвет из токена, без файла-картинки
 - Favicon в шапке Full/Lite — `public/icons/app.svg`; PNG 192/512 остаются в манифесте для установки
-- `npm run build` проходит
+- `npm run build` проходит (MapLibre не в графе Turbopack)
 - Живой сайт: https://terrikon-rabota.vercel.app — 2026-08-29 повторно выложен через Vercel CLI (не через GitHub). На сайте уже список и карточки, не заглушка Этапа 1
 - База Supabase: проект `terrikon-rabota`, регион Frankfurt (`eu-central-1`)
 - Серверные функции Vercel: регион `fra1` (`vercel.json`), рядом с базой
@@ -79,6 +80,7 @@
 - Prisma: 6.19.3 (не 7: URL в schema.prisma, клиент `@prisma/client`)
 - zod: 3.25.76
 - idb: 8.0.3 (IndexedDB на клиенте, Этап 11)
+- maplibre-gl: 6.6.0 (копия ESM в `public/maplibre/`, в бандл Next не импортируется)
 - Пакетный менеджер: npm (v11.19.0)
 - Python: 3.14.6
 - Git: 2.55.0.windows.5
@@ -109,6 +111,8 @@
 - Иконки PWA: источник `public/icons/app.svg`, пересборка `npm run icons:pwa` (`scripts/generate-pwa-icons.mjs`)
 - Картинки: `src/lib/images/remote.ts` — allowlist доменов для `next/image`; `SmartImage` в `src/components/ui/SmartImage.tsx`; спрайт `/icons/sprite.svg?v=4`
 - Логотип шапки: inline SVG `src/components/brand/TerriconLogo.tsx` / `logo-svg.ts` (531 байт)
+- Карты: `MAPS_PROVIDER` = `maplibre` | `yandex` | `static` | `none`. Адаптер `src/lib/adapters/maps.ts`. Геокодер: `src/lib/geo/geocode.ts`, дым `npx tsx scripts/geocode-smoke.ts`. Копия MapLibre: `node scripts/copy-maplibre-worker.mjs` (уже в `dev`/`build`/`postinstall`)
+- Замер главной: `node scripts/measure-home.mjs` (по умолчанию порт 3002; другой: `$env:MEASURE_ORIGIN="http://127.0.0.1:3020"; node scripts/measure-home.mjs`)
 
 ## Решения, которые нельзя менять
 - Стек выбран бесплатный (см. docs/DECISIONS.md)
@@ -117,11 +121,13 @@
 - Prisma 6.x, не 7 (см. docs/DECISIONS.md)
 - Серверные функции Vercel живут в `fra1`, рядом с Supabase (см. docs/DECISIONS.md)
 - HTML в service worker — network-first, в кэш только статус 200; SW только в production (см. docs/DECISIONS.md)
+- Карта: MapLibre из `public/maplibre/`, не из бандла Next; геокодер не вызывается при отрисовке страницы (см. docs/DECISIONS.md)
 
 ## Открытые вопросы / долги
 - GitHub ещё не подключён к проекту Vercel: `git push` пока сам сайт не обновляет. 2026-08-29 сайт обновили через CLI; шаги привязки репозитория — в docs/SETUP-LOG.md. После связи регион `fra1` из `vercel.json` применится сам.
 - Next.js 16 предупреждает, что `middleware.ts` устарел в пользу `proxy.ts`. Файл оставлен как `src/middleware.ts`, потому что так написано в ядре и на следующих этапах его дополняем.
-- Бюджеты 8.5 для **Lite** по JS/запросам/итогу пока не закрыты каркасом Next.js (~192 КБ на Full/Lite). Ultra закрыт тонким путём Этапа 10.
+- Бюджеты 8.5 для **Lite** по JS/запросам/итогу пока не закрыты каркасом Next.js (~205 КБ gzip на Full/Lite главной). Карта в этот каркас не входит. Ultra закрыт тонким путём Этапа 10.
 - «Показать ещё» на сидах не видно: 12 местных при Full/Lite по 20 на страницу — одна страница. На Ultra (10 на страницу) есть `?page=2`. Проверка докидывания — после большего набора или с `?pageSize=` через API.
 - Кабинет соискателя (Этап 21) ещё не пишет `Application`/`Favorite` в аккаунт. Офлайн-очередь Этапа 11 фиксирует факт доставки событием `APPLY_SENT` / `FAVORITE_ADD` один раз на сессию и вакансию.
 - Service worker в `next dev` не ставится. Проверка офлайна — через `npm run build` и `npm start` (или прод на Vercel).
+- `npx prisma generate` на Windows может дать EPERM, если крутится старый `next start` и держит `query_engine-windows.dll.node`. Сборка сайта при уже сгенерированном клиенте проходит и без повторного generate.

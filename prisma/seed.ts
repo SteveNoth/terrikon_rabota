@@ -4,6 +4,7 @@ import {
   EmployerKind,
   EmploymentType,
   Experience,
+  GeocodeAccuracy,
   ModerationStatus,
   PrismaClient,
   SalaryPeriod,
@@ -12,6 +13,7 @@ import {
   type Prisma,
 } from "@prisma/client";
 import geoJson from "../shared/geo.json";
+import { buildGeocodeQuery } from "../src/lib/geo/geocode-query";
 
 loadEnv({ path: ".env", quiet: true });
 loadEnv({ path: ".env.local", override: true, quiet: true });
@@ -76,18 +78,19 @@ function daysAgo(days: number): Date {
   return date;
 }
 
+let pointSalt = 0;
+
 function pointForDistrict(city: GeoCity, districtSlug: string): { lat: number; lng: number } {
-  const offsets: Record<string, { lat: number; lng: number }> = {
-    centr: { lat: 0, lng: 0 },
-    nikitovka: { lat: 0.042, lng: -0.078 },
-    kalininskiy: { lat: -0.018, lng: 0.036 },
-    golmovskiy: { lat: 0.048, lng: 0.055 },
-    mayorsk: { lat: 0.028, lng: -0.118 },
-  };
-  const offset = offsets[districtSlug] ?? { lat: 0, lng: 0 };
+  const district = city.districts.find((item) => item.slug === districtSlug);
+  const base =
+    district && "center" in district && district.center
+      ? { lat: district.center.lat, lng: district.center.lng }
+      : { lat: city.center.lat, lng: city.center.lng };
+  pointSalt += 1;
+  const mix = pointSalt * 17;
   return {
-    lat: city.center.lat + offset.lat,
-    lng: city.center.lng + offset.lng,
+    lat: base.lat + ((mix % 11) - 5) * 0.0011,
+    lng: base.lng + (((mix * 7) % 9) - 4) * 0.0014,
   };
 }
 
@@ -1041,6 +1044,53 @@ async function main(): Promise<void> {
   }
 
   await prisma.vacancy.createMany({ data: vacancies });
+
+  await prisma.vacancy.updateMany({
+    where: { workFormat: WorkFormat.LOCAL },
+    data: { geocodeAccuracy: GeocodeAccuracy.DISTRICT },
+  });
+  await prisma.vacancy.updateMany({
+    where: { workFormat: WorkFormat.VAHTA },
+    data: { geocodeAccuracy: GeocodeAccuracy.CITY },
+  });
+
+  const mapped = await prisma.vacancy.findMany({
+    select: {
+      address: true,
+      citySlug: true,
+      districtSlug: true,
+      latitude: true,
+      longitude: true,
+      geocodeAccuracy: true,
+    },
+  });
+  const cityBySlug = new Map(geoJson.cities.map((item) => [item.slug, item]));
+  for (const row of mapped) {
+    if (row.latitude == null || row.longitude == null) {
+      continue;
+    }
+    const cityMeta = cityBySlug.get(row.citySlug);
+    if (!cityMeta) {
+      continue;
+    }
+    const districtMeta = cityMeta.districts.find((item) => item.slug === row.districtSlug);
+    const query = buildGeocodeQuery({
+      cityName: cityMeta.name.nom,
+      address: row.address,
+      districtName: districtMeta?.name ?? null,
+    });
+    await prisma.geocodeCache.upsert({
+      where: { query },
+      create: {
+        query,
+        lat: row.latitude,
+        lng: row.longitude,
+        accuracy: row.geocodeAccuracy ?? GeocodeAccuracy.CITY,
+        provider: "seed",
+      },
+      update: {},
+    });
+  }
 
   const grouped = await prisma.vacancy.groupBy({
     by: ["sphere"],

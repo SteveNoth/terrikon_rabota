@@ -20,7 +20,7 @@ export function BottomNav({ citySlug }: { citySlug: string }) {
   const items: NavItem[] = [
     { id: "home", label: "Главная", icon: "home", href: `/${citySlug}` },
     { id: "search", label: "Поиск", icon: "search", href: `/${citySlug}/jobs` },
-    { id: "map", label: "Карта", icon: "map" },
+    { id: "map", label: "Карта", icon: "map", href: `/${citySlug}/map` },
     { id: "saved", label: "Избранное", icon: "star", href: "/offline#favorites" },
     { id: "profile", label: "Профиль", icon: "profile" },
   ];
@@ -59,6 +59,7 @@ export function BottomNav({ citySlug }: { citySlug: string }) {
                   href={item.href}
                   className={className}
                   aria-current={current ? "page" : undefined}
+                  prefetch={item.id === "map" ? false : undefined}
                 >
                   <Icon name={item.icon} size="sm" decorative />
                   <span className="truncate">{item.label}</span>

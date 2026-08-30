@@ -149,4 +149,5 @@
   --t-header-height: 56px;
   --t-bottomnav-height: 56px;
   --t-qualitybar-height: 104px; /* переключатель качества над нижним меню */
+  --t-map-min-height: calc(var(--t-space-unit) * 90); /* слот карты, чтобы вёрстка не прыгала */
 }

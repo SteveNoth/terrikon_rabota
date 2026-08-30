@@ -18,6 +18,7 @@ export type District = {
   slug: string;
   name: string;
   aliases: string[];
+  center?: { lat: number; lng: number };
 };
 
 export type City = {
@@ -56,11 +57,18 @@ function asCitySlug(slug: string): CitySlug {
 }
 
 function readDistricts(city: GeoCityJson): District[] {
-  return city.districts.map((district) => ({
-    slug: district.slug,
-    name: district.name,
-    aliases: "aliases" in district && Array.isArray(district.aliases) ? [...district.aliases] : [],
-  }));
+  return city.districts.map((district) => {
+    const center =
+      "center" in district && district.center
+        ? { lat: district.center.lat, lng: district.center.lng }
+        : undefined;
+    return {
+      slug: district.slug,
+      name: district.name,
+      aliases: "aliases" in district && Array.isArray(district.aliases) ? [...district.aliases] : [],
+      ...(center ? { center } : {}),
+    };
+  });
 }
 
 function readCity(city: GeoCityJson): City {
@@ -195,6 +203,32 @@ export function districtName(citySlug: string, districtSlug: string | null | und
     return null;
   }
   return getDistricts(citySlug).find((district) => district.slug === districtSlug)?.name ?? districtSlug;
+}
+
+export function getDistrictCenter(
+  citySlug: string,
+  districtSlug: string | null | undefined,
+): { lat: number; lng: number } | null {
+  if (!districtSlug) {
+    return null;
+  }
+  return getDistricts(citySlug).find((district) => district.slug === districtSlug)?.center ?? null;
+}
+
+/** Запасная точка, если геокодер не узнал адрес. Район важнее города. */
+export function fallbackMapPoint(
+  citySlug: string,
+  districtSlug: string | null | undefined,
+): { lat: number; lng: number; accuracy: "DISTRICT" | "CITY" } | null {
+  const city = getCity(citySlug);
+  if (!city) {
+    return null;
+  }
+  const districtCenter = getDistrictCenter(citySlug, districtSlug);
+  if (districtCenter) {
+    return { lat: districtCenter.lat, lng: districtCenter.lng, accuracy: "DISTRICT" };
+  }
+  return { lat: city.center.lat, lng: city.center.lng, accuracy: "CITY" };
 }
 
 export function getDefaultCity(): City {

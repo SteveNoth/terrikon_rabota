@@ -80,6 +80,7 @@ export function VacancyPage({
         latitude={view.latitude}
         longitude={view.longitude}
         mapMode={features.map}
+        citySlug={view.citySlug}
       />
       {view.missingInfo.length > 0 ? (
         <section className="flex min-w-0 flex-col gap-2">

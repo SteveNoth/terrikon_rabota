@@ -112,6 +112,12 @@ enum ContactVerdictKind {
   BLOCKED
 }
 
+enum GeocodeAccuracy {
+  EXACT
+  DISTRICT
+  CITY
+}
+
 // --- Основные таблицы ---
 
 model Vacancy {
@@ -148,11 +154,13 @@ model Vacancy {
   salaryPeriod   SalaryPeriod  @default(MONTH)
 
   /// Город набора / город вакансии. Строка, не enum: список городов живёт в shared/geo.json.
-  citySlug     String
-  districtSlug String?
-  address      String?
-  latitude     Float?
-  longitude    Float?
+  citySlug         String
+  districtSlug     String?
+  address          String?
+  latitude         Float?
+  longitude        Float?
+  /// exact — геокодер узнал адрес; district/city — запасная точка, чтобы не врать.
+  geocodeAccuracy  GeocodeAccuracy?
 
   /// LOCAL / VAHTA / REMOTE. У вахты два места: citySlug — откуда набирают, work* — где работа (Закон 17).
   workFormat       WorkFormat   @default(LOCAL)
@@ -373,12 +381,13 @@ model CityWaitlist {
 }
 
 model GeocodeCache {
-  id        String   @id @default(cuid())
-  query     String   @unique
+  id        String           @id @default(cuid())
+  query     String           @unique
   lat       Float
   lng       Float
   provider  String
-  createdAt DateTime @default(now())
+  accuracy  GeocodeAccuracy
+  createdAt DateTime         @default(now())
 }
 
 model VacancyGroup {

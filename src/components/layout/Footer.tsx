@@ -43,6 +43,13 @@ export function Footer({
         </div>
         <Divider />
         <div className="flex min-w-0 flex-wrap gap-x-4 gap-y-2 text-sm">
+          <Link
+            href={`/${citySlug}/map`}
+            prefetch={false}
+            className="text-brand underline-offset-2 hover:underline"
+          >
+            Карта вакансий
+          </Link>
           <Link href="/safety" className="text-brand underline-offset-2 hover:underline">
             Как не попасться при поиске работы
           </Link>

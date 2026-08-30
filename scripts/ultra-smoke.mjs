@@ -4,6 +4,7 @@ const origin = "http://127.0.0.1:3000";
 const paths = [
   "/gorlovka?mode=ultra",
   "/gorlovka/jobs?mode=ultra",
+  "/gorlovka/map?mode=ultra",
   "/gorlovka/jobs?q=сварщик&mode=ultra",
   "/donetsk?mode=ultra",
   "/about/lite?mode=ultra",

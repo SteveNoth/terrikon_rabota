@@ -1,4 +1,4 @@
-import { maps } from "@/lib/adapters/maps";
+import { navigatorAnchorExtras, navigatorHrefFor } from "@/lib/maps/points";
 import { getSimilarVacancies, getVacancyBySlug } from "@/lib/repo/vacancies";
 import { REPORT_REASONS } from "@/lib/vacancy/reports";
 import { toVacancyView, vacancyMetaDescription, vacancyMetaTitle, type VacancyView } from "@/lib/vacancy/view";
@@ -82,12 +82,13 @@ function renderMap(view: VacancyView): string {
   if (!view.address && !hasPoint) {
     return "";
   }
-  const navigatorHref = hasPoint
-    ? maps.navigatorLink(view.latitude as number, view.longitude as number, view.address ?? undefined)
-    : `geo:0,0?q=${encodeURIComponent(view.address ?? "")}`;
+  const navigatorHref = navigatorHrefFor(view.latitude, view.longitude, view.address);
+  const navHtml = navigatorHref
+    ? `<p><a href="${attr(navigatorHref)}"${navigatorAnchorExtras(navigatorHref)}>Открыть в навигаторе</a></p>`
+    : "";
   return section(
     "Адрес",
-    `${view.address ? `<p>${esc(view.address)}</p>` : ""}<p><a href="${attr(navigatorHref)}">Открыть в навигаторе</a></p>`,
+    `${view.address ? `<p>${esc(view.address)}</p>` : ""}${navHtml}<p><a href="${attr(`/${view.citySlug}/map`)}">Все вакансии на карте</a></p>`,
   );
 }
 

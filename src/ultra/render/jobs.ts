@@ -349,6 +349,7 @@ ${section === "jobs" ? "<li>Вахта в общий список не попа�
 <div class="wrap stack">
 <header class="stack tight">
 <h1>${esc(title)}</h1>
+${section === "jobs" && !cityInDevelopment ? `<p><a href="/${attr(citySlug)}/map">Карта вакансий</a></p>` : ""}
 <nav aria-label="Формат работы" class="chips">
 <a class="chip${section === "jobs" ? " chip-on" : ""}" href="${attr(jobsUrl)}"${section === "jobs" ? ' aria-current="page"' : ""}>Вакансии · ${localCount}</a>
 <a class="chip chip-accent${section === "vahta" ? " chip-on" : ""}" href="${attr(vahtaUrl)}"${section === "vahta" ? ' aria-current="page"' : ""}>Вахта · ${vahtaCount}</a>

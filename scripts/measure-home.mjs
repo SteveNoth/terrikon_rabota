@@ -1,6 +1,6 @@
 import { gzipSync } from "node:zlib";
 
-const origin = "http://127.0.0.1:3002";
+const origin = process.env.MEASURE_ORIGIN || "http://127.0.0.1:3002";
 const modes = ["full", "lite", "ultra"];
 
 function parseAssets(html, base) {
