@@ -17,6 +17,7 @@ import { bulkVacancies, saveVacancyFromForm } from "@/lib/admin/vacancies";
 import { approvePostAsVacancy, rejectPost } from "@/lib/admin/posts";
 import { acceptQuality, exportLearnedSamples } from "@/lib/admin/quality";
 import { dismissReport, hideVacancyFromReport } from "@/lib/admin/reports";
+import { setEmployerVerified } from "@/lib/admin/employers";
 
 function redirectNotice(path: string, notice: string, extra?: string): never {
   const url = extra
@@ -257,4 +258,15 @@ export async function reportDismissAction(formData: FormData) {
     failNotice("/admin/reports", result.error);
   }
   redirectNotice("/admin/reports", "Жалоба отклонена.");
+}
+
+export async function employerVerifyAction(formData: FormData) {
+  await guard();
+  const id = String(formData.get("id") ?? "");
+  const next = formData.get("verified") === "true";
+  const result = await setEmployerVerified(id, next);
+  if (!result.ok) {
+    failNotice("/admin/employers", result.error);
+  }
+  redirectNotice("/admin/employers", next ? "Отметка «проверен» поставлена." : "Отметка «проверен» снята.");
 }

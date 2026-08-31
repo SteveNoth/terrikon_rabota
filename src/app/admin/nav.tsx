@@ -15,6 +15,7 @@ const NAV = [
   { href: "/admin/parsers", label: "Статистика парсеров" },
   { href: "/admin/reports", label: "Жалобы" },
   { href: "/admin/cities", label: "Города" },
+  { href: "/admin/employers", label: "Работодатели" },
 ];
 
 export function AdminNav({ queueSize }: { queueSize: number }) {

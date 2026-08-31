@@ -91,6 +91,7 @@ export function renderChrome({
 <div class="tools">
 ${cityForm("u-city-header", citySlug, active, soon)}
 ${qualityForm("u-quality-header", formAction, selected, true)}
+<a class="btn btn-outline" href="/auth/login">Войти</a>
 </div>
 </div>
 </header>

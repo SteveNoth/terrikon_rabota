@@ -1,4 +1,3 @@
-import { getDefaultCity, isSelectableCity } from "@/lib/geo";
 import { attr } from "@/ultra/html";
 
 function nextPath(value: string | null, fallback: string): string {
@@ -13,13 +12,13 @@ export function renderLogin(cityHint: string | undefined, nextRaw: string | null
   description: string;
   body: string;
 } {
-  const citySlug = cityHint && isSelectableCity(cityHint) ? cityHint : getDefaultCity().slug;
-  const next = nextPath(nextRaw, `/${citySlug}/jobs`);
+  const next = nextPath(nextRaw, "/auth/login");
+  const href = next.startsWith("/auth/") ? next : `/auth/login?next=${encodeURIComponent(next)}`;
 
   const body = `<article class="wrap article">
 <h1>Вход</h1>
-<p class="muted">Смотреть вакансии можно без регистрации. Чтобы откликнуться, позже понадобится аккаунт — сейчас вход ещё не подключен.</p>
-<p><a class="btn btn-primary" href="${attr(next)}">Вернуться к вакансии</a></p>
+<p class="muted">Смотреть вакансии можно без регистрации. Вход и кабинет — отдельная страница с формами.</p>
+<p><a class="btn btn-primary" href="${attr(href)}">Перейти ко входу</a></p>
 </article>`;
 
   return {

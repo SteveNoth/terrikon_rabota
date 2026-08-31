@@ -202,7 +202,7 @@ export function publishOnlyActiveMessage(): string {
     return "Пока публикация недоступна: в geo.json нет города со статусом active.";
   }
   if (active.length === 1) {
-    return `Пока публикация доступна только в ${active[0]!.name.loc}`;
+    return `Пока публикация вакансий доступна только в ${active[0]!.name.loc}. Другие города скоро подключим!`;
   }
   const names = active.map((city) => city.name.loc).join(", ");
   return `Пока публикация доступна только в ${names}`;

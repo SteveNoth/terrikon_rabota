@@ -627,6 +627,35 @@ GitHub Secrets те же `CRON_SECRET` и `SITE_URL`, новых ключей н
 
 Код админки на живой сайт сам не попадёт, пока GitHub не привязан. После merge в `master`: `npx vercel --prod --yes`, либо Redeploy в кабинете.
 
+---
+
+## 2026-08-31 — Этап 20: Supabase Auth (почта + пароль)
+
+Сайт не ходит в Supabase Auth из страниц. Только `src/lib/adapters/auth.ts`. Ключи уже в `.env.example`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. `AUTH_DRIVER=supabase` (или `none`, если вход надо выключить).
+
+В кабинете Supabase:
+
+1. **Authentication → Providers → Email** — включён. Confirm email — **включён** (после регистрации человек подтверждает почту по ссылке).
+2. **Authentication → URL Configuration**
+   - Site URL: локально `http://localhost:3000`, на проде `https://terrikon-rabota.vercel.app` (или актуальный `NEXT_PUBLIC_SITE_URL`).
+   - Redirect URLs (все добавить):
+     - `http://localhost:3000/auth/callback`
+     - `http://localhost:3000/auth/callback?next=/auth/confirmed`
+     - `http://localhost:3000/auth/callback?next=/auth/reset`
+     - те же три с адресом продакшена.
+3. Письма: на бесплатном тарифе — встроенная почта Supabase (лимит небольшой). Для продакшена позже можно свой SMTP; пока хватает.
+4. На Vercel те же `NEXT_PUBLIC_SUPABASE_URL` и `NEXT_PUBLIC_SUPABASE_ANON_KEY`, плюс `NEXT_PUBLIC_SITE_URL` без слэша на конце. `SUPABASE_SERVICE_ROLE_KEY` для входа **не нужен** (его не кладём в клиент и в адаптер входа не используем).
+5. Миграция `20260831180000_employer_auth`: поля `User.authId` и `Employer.userId`. Накатить: `npx prisma migrate deploy` (нужен `DIRECT_URL`).
+
+Проверка: регистрация → письмо → `/auth/confirmed` → вход → кабинет работодателя → вакансия с меткой «Размещено работодателем». Выбор Донецка в форме вакансии не сохраняет, текст про Горловку.
+
+Шаблон отметки:
+
+- Дата: 2026-08-31
+- Email-провайдер включён, confirm email: ☐
+- Redirect URLs (local + prod): ☐
+- Миграция `employer_auth` накатана на Supabase: ☐
+- `NEXT_PUBLIC_SITE_URL` на Vercel: ☐
 
 
 

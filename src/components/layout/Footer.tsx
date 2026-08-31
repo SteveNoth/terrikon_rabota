@@ -1,22 +1,25 @@
 import Link from "next/link";
 import { BrandLockup } from "@/components/brand/BrandLockup";
 import { Icon } from "@/components/ui/icon";
-import { Button } from "@/components/ui/button";
 import { Divider } from "@/components/ui/divider";
+import { AccountLinks } from "@/components/auth/AccountLinks";
 import { CitySelect } from "@/components/layout/CitySelect";
 import { LayoutSlot } from "@/components/layout/LayoutSlot";
 import { QualitySwitcher } from "@/components/quality/QualitySwitcher";
 import { TELEGRAM_CHANNEL_URL, telegramChannelTitle } from "@/lib/site";
+import type { AuthUser } from "@/lib/adapters/auth";
 import type { CityOption } from "@/lib/geo";
 
 export function Footer({
   citySlug,
   activeCities,
   soonCities,
+  user,
 }: {
   citySlug: string;
   activeCities: CityOption[];
   soonCities: CityOption[];
+  user: AuthUser | null;
 }) {
   return (
     <footer className="mt-8 border-t border-border bg-surface">
@@ -33,12 +36,7 @@ export function Footer({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <LayoutSlot />
-            <Button type="button" variant="ghost" size="sm" disabled>
-              Войти
-            </Button>
-            <Button type="button" variant="outline" size="sm" disabled>
-              Разместить вакансию
-            </Button>
+            <AccountLinks citySlug={citySlug} user={user} compact />
           </div>
         </div>
         <Divider />

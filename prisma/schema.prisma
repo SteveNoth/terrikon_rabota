@@ -283,6 +283,9 @@ model Employer {
   telegram    String?
   email       String?
   website     String?
+  /// Аккаунт, которому принадлежит карточка компании. У работодателей с парсеров пусто.
+  userId      String?  @unique
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -310,6 +313,8 @@ model Profession {
 
 model User {
   id            String   @id @default(cuid())
+  /// Id в сервисе входа (Supabase Auth). Свой id не меняем: сменим поставщика — таблица живая.
+  authId        String   @unique
   email         String   @unique
   name          String
   role          UserRole @default(SEEKER)
@@ -321,6 +326,7 @@ model User {
 
   applications Application[]
   favorites    Favorite[]
+  employer     Employer?
 }
 
 model Application {

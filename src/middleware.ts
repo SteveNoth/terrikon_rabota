@@ -16,6 +16,7 @@ import {
   PREFERENCE_HEADER,
   ULTRA_PATH_HEADER,
 } from "@/lib/quality/types";
+import { refreshAuthSession } from "@/lib/adapters/auth-edge";
 import { SESSION_COOKIE, SESSION_HEADER, SESSION_MAX_AGE, isSessionHash } from "@/lib/stats/session";
 
 function randomSessionHash(): string {
@@ -153,12 +154,21 @@ function shouldRewriteToUltra(pathname: string): boolean {
   if (pathname === "/u" || pathname.startsWith("/u/")) {
     return false;
   }
-  if (pathname.startsWith("/dev")) {
-    return false;
-  }
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    return false;
-  }
+    if (pathname.startsWith("/dev")) {
+      return false;
+    }
+    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+      return false;
+    }
+    if (pathname === "/auth" || pathname.startsWith("/auth/")) {
+      return false;
+    }
+    if (pathname === "/employer" || pathname.startsWith("/employer/")) {
+      return false;
+    }
+    if (pathname === "/login") {
+      return false;
+    }
   if (pathname.startsWith("/api/")) {
     return false;
   }
@@ -207,7 +217,28 @@ function passAdmin(request: NextRequest): NextResponse {
   return withSession(applyQuality(response, request, forced), session);
 }
 
-export function middleware(request: NextRequest) {
+function isAccountPath(pathname: string): boolean {
+  return (
+    pathname === "/auth" ||
+    pathname.startsWith("/auth/") ||
+    pathname === "/employer" ||
+    pathname.startsWith("/employer/") ||
+    pathname === "/login"
+  );
+}
+
+async function passAccount(request: NextRequest): Promise<NextResponse> {
+  const session = resolveSession(request);
+  const forced = { mode: "lite" as const, preference: "lite" as const, rememberPreference: false };
+  const response = NextResponse.next({
+    request: { headers: qualityRequestHeaders(request, forced, session) },
+  });
+  response.headers.set("Cache-Control", "private, no-store");
+  const next = withSession(applyQuality(response, request, forced), session);
+  return refreshAuthSession(request, next);
+}
+
+export async function middleware(request: NextRequest) {
   const url = request.nextUrl;
 
   // API само читает ?city= как фильтр. Иначе /api/vacancies?city=gorlovka
@@ -218,6 +249,10 @@ export function middleware(request: NextRequest) {
 
   if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) {
     return passAdmin(request);
+  }
+
+  if (isAccountPath(url.pathname)) {
+    return passAccount(request);
   }
 
   const selected = url.searchParams.get("city");

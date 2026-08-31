@@ -1,19 +1,22 @@
 import { BrandLockup } from "@/components/brand/BrandLockup";
 import { TelegramChannelLink } from "@/components/brand/TelegramChannelLink";
-import { Button } from "@/components/ui/button";
+import { AccountLinks } from "@/components/auth/AccountLinks";
 import { CitySelect } from "@/components/layout/CitySelect";
 import { LayoutSlot } from "@/components/layout/LayoutSlot";
 import { QualitySwitcher } from "@/components/quality/QualitySwitcher";
+import type { AuthUser } from "@/lib/adapters/auth";
 import type { CityOption } from "@/lib/geo";
 
 export function Header({
   citySlug,
   activeCities,
   soonCities,
+  user,
 }: {
   citySlug: string;
   activeCities: CityOption[];
   soonCities: CityOption[];
+  user: AuthUser | null;
 }) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-surface">
@@ -35,14 +38,7 @@ export function Header({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <LayoutSlot />
-          <Button type="button" variant="ghost" size="sm" disabled>
-            Войти
-          </Button>
-          <span className="hidden md:contents">
-            <Button type="button" variant="accent" size="sm" disabled>
-              Разместить вакансию
-            </Button>
-          </span>
+          <AccountLinks citySlug={citySlug} user={user} compact />
         </div>
       </div>
     </header>
