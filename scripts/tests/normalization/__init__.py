@@ -7,6 +7,7 @@ from pathlib import Path
 from extract import extract_phone
 
 SAMPLES = Path(__file__).resolve().parent / "samples.json"
+LEARNED = Path(__file__).resolve().parent / "learned.json"
 DEFAULT_SOURCE = {
     "name": "Работа Горловка",
     "default_city": "gorlovka",
@@ -14,10 +15,18 @@ DEFAULT_SOURCE = {
 }
 
 
-def load_normalize_samples() -> tuple[dict, list[dict]]:
+def load_canonical_samples() -> tuple[dict, list[dict]]:
     data = json.loads(SAMPLES.read_text(encoding="utf-8"))
     source = data.get("source") or DEFAULT_SOURCE
     return source, list(data["posts"])
+
+
+def load_normalize_samples() -> tuple[dict, list[dict]]:
+    source, posts = load_canonical_samples()
+    if LEARNED.exists():
+        learned = json.loads(LEARNED.read_text(encoding="utf-8"))
+        posts.extend(list(learned.get("posts") or []))
+    return source, posts
 
 
 def _haystack(record: dict[str, Any]) -> str:

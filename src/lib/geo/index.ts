@@ -182,6 +182,32 @@ export function getActiveCities(): City[] {
   return byPriority(CITIES.filter((city) => city.status === "active"));
 }
 
+/** Все города из geo.json, включая planned. Админка и счётчики — не селектор на сайте. */
+export function getAllCities(): City[] {
+  return byPriority(CITIES);
+}
+
+/** Имя для таблиц: неизвестный slug не бросаем — показываем как есть. */
+export function cityDisplayName(slug: string): string {
+  return getCity(slug)?.name.nom ?? slug;
+}
+
+/**
+ * Сообщение, когда пытаются сохранить вакансию в неактивный город.
+ * Падеж loc: «в Горловке».
+ */
+export function publishOnlyActiveMessage(): string {
+  const active = getActiveCities();
+  if (active.length === 0) {
+    return "Пока публикация недоступна: в geo.json нет города со статусом active.";
+  }
+  if (active.length === 1) {
+    return `Пока публикация доступна только в ${active[0]!.name.loc}`;
+  }
+  const names = active.map((city) => city.name.loc).join(", ");
+  return `Пока публикация доступна только в ${names}`;
+}
+
 export function getSelectableCities(): City[] {
   return byPriority(CITIES.filter((city) => city.status === "active" || city.status === "soon"));
 }

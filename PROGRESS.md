@@ -1,13 +1,13 @@
 # PROGRESS — Террикон Работа
 
-Последнее обновление: 2026-08-30
+Последнее обновление: 2026-08-31
 
 ## Где я сейчас
-- Текущий этап: 18A (парсер «Работы России» / ЦЗН, открытые данные) — **критерии «готово» закрыты** на ветке `stage-18-parser-web`
-- Последний завершённый этап: 18A (коммит, миграция на Supabase, первый живой прогон с `--limit 5`)
-- Последний коммит: Этап 18A на `stage-18-parser-web`
-- Ветка этапа: `stage-18-parser-web`
-- Порядок дальше: **этап 19** (админка). Код 19 не начинать, пока нет «готово».
+- Текущий этап: 19 (админка, очередь одобрения и модерация) — **критерии «готово» закрыты** на ветке `stage-19-admin`
+- Последний завершённый этап: 19
+- Последний коммит: Этап 19 на `stage-19-admin`
+- Ветка этапа: `stage-19-admin` (от `stage-18-parser-web`)
+- Порядок дальше: **этап 20** (вход и кабинет работодателя). Код 20 не начинать, пока нет «готово».
 
 ## Что уже работает
 - Установлены Node.js, Python, Git, Cursor
@@ -72,6 +72,7 @@
 - Этап 17: парсер Telegram. Telethon (MTProto client API), не Bot API и не HTML `t.me`. Список каналов `scripts/sources_tg.json` (2 горловских канала, `default_city=gorlovka`). `scripts/parser_tg.py` склеивает альбомы до `process_post`, URL картинок как у ВК, карточки нет. `FloodWait` — ждёт и продолжает. Сессию создаёт `scripts/make_tg_session.py` (StringSession, не файл `*.session`). Workflow `.github/workflows/parser-tg.yml` (cron `30 1,4,7,10,13,16,19,22 * * *`, Tesseract как у ВК, секреты `TG_API_ID` / `TG_API_HASH` / `TG_SESSION` / `CRON_SECRET` / `SITE_URL`). Выключатель `SOURCE_TG_ENABLED`. Инструкция: `docs/SETUP-LOG.md`. Решение: `docs/SOURCES-LEGAL.md`.
 - Этап 18: парсер сайтов предприятий. `scripts/config_web.json` (Вода Донбасса, Донбасстеплоэнерго / Горловкатеплосеть, Горловская мозаика, Работа ДНР / Горловка). `scripts/parser_web.py`: сначала requests + BeautifulSoup, Playwright только если страница без JS пустая и `javascript: true`. `robots.txt` до обхода. Пауза 1–3 с, честный User-Agent, лимит страниц, относительные ссылки → абсолютные. Сломанный селектор — явная строка в отчёте, не тихий ноль. Workflow `.github/workflows/parser-web.yml` (cron `0 5 * * *`, без Tesseract, Chromium только если `--needs-js` = true). Выключатель `SOURCE_WEB_ENABLED`. Avito, OK.ru и Мой ЦЗН в HTML-конфиг не входят — только официальный API / открытые данные. Инструкция по селекторам: `docs/SETUP-LOG.md`. Решение: `docs/SOURCES-LEGAL.md`.
 - Этап 18A: парсер открытых данных «Работы России». `scripts/parser_trudvsem.py`, география `scripts/sources_trudvsem.json` (регион `9300000000000` из поля `region.region_code` API, город gorlovka). Только GET JSON `opendata.trudvsem.ru`. `source=TRUDVSEM`, `salaryIsGross`, `employerInn`, снятие после двух успешных прогонов (`POST /api/parser/archive-missing`), пятый уровень дублей по ИНН в `scripts/employer_dedupe.py` + `shared/dedupe.json`. Карточка: «до вычета налога» + «Источник данных: Работа России». Workflow `.github/workflows/parser-trudvsem.yml` (cron `0 6 * * *`, без Tesseract и Chromium). Выключатель `SOURCE_TRUDVSEM_ENABLED`. HTML m-czn.ru и HTML trudvsem.ru не читаем. Тесты `scripts/tests/parser/test_parser_trudvsem.py`.
+- Этап 19: админка `/admin`. Один пароль `ADMIN_PASSWORD`, сессия HMAC-cookie `tr_admin` (7 дней), без ролей и 2FA. Всегда Lite, не уходит в Ultra, service worker `/admin` не кэширует. Очередь одобрения `/admin/queue` — три сомнения в одном списке, подсветка фраз, расшифровка зарплаты, вахта/дубли/история контакта, решения одной кнопкой и горячие клавиши. PENDING на сайте нет. «Мошенничество» → BLOCKED + чёрный список контакта. «Опубликовать и доверять» → ContactVerdict TRUSTED. Жёсткие флаги — отдельно в «Заблокировано». Модерация ParsedPost, качество (было/стало + NormalizationSample + выгрузка `learned.json`), статистика ParserRun, жалобы (в т.ч. «похоже на мошенничество» поднимает в очередь, 2+ скрывают до разбора), обзор с размером базы vs 500 МБ, города из geo.json без кнопки статуса. Точность правил и кандидаты на понижение веса. Решение: `docs/DECISIONS.md` 2026-08-31. Миграция `20260831150000_admin_parser_run_stats` накатана на Supabase.
 - 2026-08-30 в промты добавлены Этапы **14A**, **14B** и **18A**. Этап 14 закрыт тремя частями. Этап 15 — приём пачки. Этап 18A — после 18, до админки: `opendata.trudvsem.ru`, не HTML m-czn.ru.
 - Внешние картинки только с allowlist в `src/lib/images/remote.ts` / `next.config.ts` (ВК, Telegram, hhcdn, Wikimedia для сидов)
 - Спрайт `public/icons/sprite.svg?v=4`: ВК, сайт, карта, предупреждение, поделиться, флажок. Ultra по-прежнему отдаёт текстовый символ и спрайт не качает
@@ -102,6 +103,7 @@
 - Парсер Этапа 17: `scripts/parser_tg.py`, `scripts/sources_tg.json`, `scripts/make_tg_session.py`; workflow `.github/workflows/parser-tg.yml`; тесты `scripts/tests/parser/test_parser_tg.py`. Env: `TG_API_ID`, `TG_API_HASH`, `TG_SESSION`, `SOURCE_TG_ENABLED`, `TG_CHANNEL_GAP_SEC`. Альбом (`grouped_id`) склеивается до `process_post`. Строка сессии только в Secrets, `*.session` в gitignore.
 - Парсер Этапа 18: `scripts/parser_web.py`, `scripts/config_web.json`; workflow `.github/workflows/parser-web.yml`; тесты `scripts/tests/parser/test_parser_web.py`. Env: `SOURCE_WEB_ENABLED`, `WEB_PAUSE_SEC`. `source=WEBSITE`. Браузер в CI — только при `javascript: true`.
 - Парсер Этапа 18A: `scripts/parser_trudvsem.py`, `scripts/sources_trudvsem.json`; workflow `.github/workflows/parser-trudvsem.yml`; тесты `scripts/tests/parser/test_parser_trudvsem.py`. Env: `SOURCE_TRUDVSEM_ENABLED`, `TRUDVSEM_PAUSE_SEC`. `source=TRUDVSEM`. OCR и браузер не ставим. Код региона `9300000000000`. Дверь снятия: `POST /api/parser/archive-missing`. Пятый уровень дублей: `scripts/employer_dedupe.py`, `shared/dedupe.json`.
+- Админка Этапа 19: `src/app/admin/`, `src/lib/admin/`, вход `src/lib/admin/auth.ts`. Env: `ADMIN_PASSWORD` (≥ 8). Cookie `tr_admin`. Middleware не пускает `/admin` в Ultra. Выгрузка выборки `scripts/tests/normalization/learned.json` (gitignore). Миграция `prisma/migrations/20260831150000_admin_parser_run_stats/`.
 - Нарезка Этапа 14A часть 1: `scripts/split.py`, `extract_professions` в `extract.py`; правила `shared/split.json`; тесты `scripts/tests/split/`; отчёт `python scripts/tests/split_report.py`. Идентичность: неразрезанный `externalId` как в источнике, разрезанный `{id}` / `{id}#2` / `{id}#3`; `rawText` у всех детей полный.
 - Отсев СВО Этапа 14A часть 2: `scripts/svo.py` (`explicit_svo`, `hidden_svo`, `apply_svo_gate`); блок `svo` в `shared/keywords.json`; тесты `scripts/tests/svo/`; отчёт `python scripts/tests/svo_report.py`. Не вызывает `is_vacancy` и не вызывает `trust_score`. Четвёртого `workFormat` нет.
 - OCR Этапа 14B: `scripts/ocr.py` (`collect_analysis_text`, `assemble_post`), адаптер `scripts/ocr_provider.py`; правила `shared/ocr.json`; тесты `scripts/tests/ocr/`; живые фото `scripts/tests/fixtures/ocr/live/`; отчёт `python scripts/tests/ocr_report.py`. `rawText` = подпись, `ocrText` рядом. `OCR_PROVIDER=tesseract` на этой машине.
@@ -114,6 +116,7 @@
 - Проект Vercel: terrikon-rabota
 - Проект Supabase: terrikon-rabota (ref ptbtyfvszliqagnvpocf, регион eu-central-1)
 - Регион Vercel: `fra1` (Франкфурт)
+- Cookie админки: `tr_admin` (HMAC от пароля, 7 дней, httpOnly, SameSite=lax). Без `ADMIN_PASSWORD` (≥ 8 символов) админка закрыта. Не больше 10 попыток входа с IP за 15 минут.
 - Cookie города: `tr_city`
 - Cookie последнего поиска: `tr_search` (`v1|city|jobs|query`), 30 дней, httpOnly, пишет middleware при фильтрах на `/[city]/jobs` и `/[city]/vahta`; `?reset=1` чистит cookie и редиректит на чистый список
 - Cookie выбора режима: `tr_mode` (`auto` / `full` / `lite` / `ultra`), httpOnly, ставит middleware при `?mode=`
@@ -134,7 +137,7 @@
 - Кэш списков выдачи: нет (адрес — источник правды). На главной кэшируются свежие 6 карточек, счётчики сфер/профессий и справочники — 10 минут. Счётчики «местные / вахта» на вкладках — 10 минут
 - Бюджет `/api/vacancies`: ≤ 400 мс при 12 и ≤ 600 мс при 5000, когда функция и база в одном регионе (`fra1`). С домашнего ПК до Франкфурта Prisma RTT ~1.5–2 с, HTTP `/api/vacancies` ~2.7–3.5 с — это дорога. Сам SQL: `node scripts/bench-vacancies.mjs` (EXPLAIN ANALYZE + `--load` на 5000 с автоочисткой)
 - Как смотреть план: `node scripts/bench-vacancies.mjs` или в SQL Editor Supabase `EXPLAIN (ANALYZE, BUFFERS)` того же SELECT. В плане должен быть `Vacancy_citySlug_isActive_workFormat_publishedAt_idx` — он режет вахты и местные (Закон 17)
-- Service worker: `public/sw.js`, константа `CACHE_VERSION` (`tr-offline-v1`). Регистрация: `src/components/offline/ServiceWorkerRegistrar.tsx`, только `NODE_ENV=production`. `sw.js` не кэшируется (`Cache-Control: max-age=0, must-revalidate`)
+- Service worker: `public/sw.js`, константа `CACHE_VERSION` (`tr-offline-v1`). Регистрация: `src/components/offline/ServiceWorkerRegistrar.tsx`, только `NODE_ENV=production`. На `/admin` регистратор не ставится. `NEVER_CACHE_PREFIXES` включает `/admin`. `sw.js` не кэшируется (`Cache-Control: max-age=0, must-revalidate`)
 - Офлайн-хранилище: IndexedDB `terrikon-offline`, лимит 5 МБ. Очередь шлёт на `/api/offline/actions` (не кэшируется)
 - Иконки PWA: источник `public/icons/app.svg`, пересборка `npm run icons:pwa` (`scripts/generate-pwa-icons.mjs`)
 - Картинки: `src/lib/images/remote.ts` — allowlist доменов для `next/image`; `SmartImage` в `src/components/ui/SmartImage.tsx`; спрайт `/icons/sprite.svg?v=4`
@@ -161,6 +164,7 @@
 - Этап 17: в `scripts/sources_tg.json` 2 включённых канала. Секреты `TG_SESSION` / `TG_API_ID` / `TG_API_HASH` должны быть в GitHub Actions (локально пользователь уже записал). `rabota_gorlovkaw` пишет и по другим городам — чужой город отсеется на приёме.
 - Этап 18: если появятся свои страницы вакансий Стирола, Горловского машзавода и других заводов (HTML, не hh.ru и не Avito) — дописать `config_web.json`. ЮГМК ведёт на hh.ru. Avito / OK — не HTML. Мой ЦЗН закрыт Этапом 18A через `opendata.trudvsem.ru`, не селекторы.
 - Этап 18A: миграция `20260830230000_trudvsem` накатана на Supabase. Первый живой прогон локально (`--limit 5`) положил 5 горловских вакансий ЦЗН; на сайте их нет, пока новый телефон не TRUSTED (дверь Этапа 15). `CRON_SECRET` / `SITE_URL` в Vercel и GitHub Secrets по-прежнему ☐. С этой машины страница API `limit≥10` часто таймаутится; парсер уменьшает шаг до 5 и повторяет таймаут, прокси не используем.
+- Этап 19: `ADMIN_PASSWORD` в `.env.local`; в Vercel — Production (уже был) и Preview (добавлен 2026-08-31). Значение в git не попадает. Чтобы код админки оказался на https://terrikon-rabota.vercel.app, нужен деплой: GitHub к проекту всё ещё не привязан, после merge — `npx vercel --prod --yes`. Миграция `20260831150000_admin_parser_run_stats` накатана. Правки словаря с админки на Vercel не переживут деплой — вносить в git с машины, где файл живой.
 - Next.js 16 предупреждает, что `middleware.ts` устарел в пользу `proxy.ts`. Файл оставлен как `src/middleware.ts`, потому что так написано в ядре и на следующих этапах его дополняем.
 - Бюджеты 8.5 для **Lite** по JS/запросам/итогу пока не закрыты каркасом Next.js (~205 КБ gzip на Full/Lite главной). Карта в этот каркас не входит. Ultra закрыт тонким путём Этапа 10.
 - «Показать ещё» на сидах не видно: 12 местных при Full/Lite по 20 на страницу — одна страница. На Ultra (10 на страницу) есть `?page=2`. Проверка докидывания — после большего набора или с `?pageSize=` через API.

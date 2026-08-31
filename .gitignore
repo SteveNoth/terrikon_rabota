@@ -62,3 +62,6 @@ next-env.d.ts
 
 # MapLibre worker и CSS (копия из node_modules, собирается scripts/copy-maplibre-worker.mjs)
 /public/maplibre/
+
+# Выгрузка правок из админки. Не в git: это локальная обучающая выборка.
+scripts/tests/normalization/learned.json

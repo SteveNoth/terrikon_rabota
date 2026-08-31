@@ -236,12 +236,17 @@ export async function ingestVacancies(input: {
   let duplicates = 0;
   let pending = 0;
   let blocked = 0;
+  const rejectReasons: Record<string, number> = {};
+  const bumpReason = (reason: string, n = 1) => {
+    rejectReasons[reason] = (rejectReasons[reason] ?? 0) + n;
+  };
 
   const parsed: { index: number; record: ParserVacancyInput }[] = [];
   for (let index = 0; index < input.items.length; index += 1) {
     const result = parseVacancyRecord(input.items[index], index);
     if (!result.ok) {
       errorItems.push(result.error);
+      bumpReason("ошибка схемы");
       continue;
     }
     parsed.push({ index, record: result.data });
@@ -250,6 +255,7 @@ export async function ingestVacancies(input: {
   const vacancyBound = parsed.filter((item) => {
     if (isSvoRecord(item.record)) {
       discardedSvo += 1;
+      bumpReason("СВО");
       return false;
     }
     if (isMaybeRecord(item.record)) {
@@ -263,6 +269,7 @@ export async function ingestVacancies(input: {
         externalId: item.record.externalId,
         reason: city.reason,
       });
+      bumpReason("город не active");
       return false;
     }
     return true;
@@ -459,6 +466,8 @@ export async function ingestVacancies(input: {
     }
     if (decision.status === ModerationStatus.BLOCKED) {
       blocked += 1;
+      const hardId = flags.find((flag) => flag.hard || flag.id)?.id ?? "жёсткий флаг";
+      bumpReason(hardId);
       if (contact) {
         blockContacts.set(contact, blockReasonForFlags(flags.map((flag) => flag.id)));
       }
@@ -812,6 +821,9 @@ export async function ingestVacancies(input: {
   });
   maybeCount += maybeRows.length;
   pending += maybeRows.length;
+  if (maybeRows.length) {
+    bumpReason("возможно вакансия", maybeRows.length);
+  }
 
   const run = await prisma.parserRun.create({
     data: {
@@ -821,6 +833,9 @@ export async function ingestVacancies(input: {
       postsSeen: input.items.length,
       postsAccepted: added + updated,
       postsRejected: skippedCity + discardedSvo + maybeCount + errorItems.length,
+      postsPending: pending,
+      postsBlocked: blocked,
+      rejectReasons: Object.keys(rejectReasons).length ? jsonValue(rejectReasons) : undefined,
       vacanciesCreated: added,
       vacanciesUpdated: updated,
       errorsCount: errorItems.length,

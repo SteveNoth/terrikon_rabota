@@ -19,7 +19,7 @@ from normalize import (
     truncate_smart,
 )
 from process import process_post
-from tests.normalization import check_expected, load_normalize_samples
+from tests.normalization import check_expected, load_canonical_samples
 import shared_config
 
 
@@ -177,7 +177,7 @@ def test_missing_info_turns_gap_into_hint():
 
 
 def test_samples_match_expected():
-    source, posts = load_normalize_samples()
+    source, posts = load_canonical_samples()
     failures = []
     for post in posts:
         records = process_post(post["text"], source=source)

@@ -384,6 +384,12 @@ model ParserRun {
   postsSeen         Int       @default(0)
   postsAccepted     Int       @default(0)
   postsRejected     Int       @default(0)
+  /// Сколько из пачки ушло в очередь одобрения (PENDING). Для графика в админке.
+  postsPending      Int       @default(0)
+  /// Жёсткие флаги / чёрный список — в очередь не идут.
+  postsBlocked      Int       @default(0)
+  /// Снимок причин отказа: { "svo": 3, "город не active": 2 }.
+  rejectReasons     Json?
   vacanciesCreated  Int       @default(0)
   vacanciesUpdated  Int       @default(0)
   errorsCount       Int       @default(0)

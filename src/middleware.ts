@@ -156,6 +156,9 @@ function shouldRewriteToUltra(pathname: string): boolean {
   if (pathname.startsWith("/dev")) {
     return false;
   }
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return false;
+  }
   if (pathname.startsWith("/api/")) {
     return false;
   }
@@ -194,6 +197,16 @@ function qualityRequestHeaders(
   return requestHeaders;
 }
 
+function passAdmin(request: NextRequest): NextResponse {
+  const session = resolveSession(request);
+  const forced = { mode: "lite" as const, preference: "lite" as const, rememberPreference: false };
+  const response = NextResponse.next({
+    request: { headers: qualityRequestHeaders(request, forced, session) },
+  });
+  response.headers.set("Cache-Control", "private, no-store");
+  return withSession(applyQuality(response, request, forced), session);
+}
+
 export function middleware(request: NextRequest) {
   const url = request.nextUrl;
 
@@ -201,6 +214,10 @@ export function middleware(request: NextRequest) {
   // уехало бы редиректом на страницу города.
   if (url.pathname.startsWith("/api/")) {
     return NextResponse.next();
+  }
+
+  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) {
+    return passAdmin(request);
   }
 
   const selected = url.searchParams.get("city");

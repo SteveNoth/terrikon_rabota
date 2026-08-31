@@ -14,7 +14,7 @@ export function contactKey(phone: string | null | undefined, telegram: string | 
 }
 
 export function blockReasonForFlags(flagIds: string[]): string {
-  if (flagIds.some((id) => id.includes("predoplat") || id.includes("zalog") || id.includes("vznos") || id.includes("depozit"))) {
+  if (flagIds.some((id) => id.includes("predoplat") || id.includes("zalog") || id.includes("vznos") || id.includes("depozit") || id.includes("oplatit") || id.includes("obuchen"))) {
     return "предоплата от соискателя";
   }
   if (flagIds.some((id) => id.includes("kart") || id.includes("sim_") || id.includes("obnal") || id.includes("podstav"))) {

@@ -36,7 +36,7 @@ const CYR_TO_LAT: Record<string, string> = {
   я: "ya",
 };
 
-function slugPart(value: string): string {
+export function slugPart(value: string): string {
   const folded = value.trim().toLocaleLowerCase("ru-RU");
   let latin = "";
   for (const char of folded) {

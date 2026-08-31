@@ -615,5 +615,18 @@ GitHub Secrets те же `CRON_SECRET` и `SITE_URL`, новых ключей н
 - Ручной запуск `parser-trudvsem`: ☐
 - Миграция `trudvsem` накатана на Supabase: ☐
 
+---
+
+## 2026-08-31 — Этап 19: ADMIN_PASSWORD на Vercel
+
+Проект `terrikon/terrikon-rabota`. Значение — то же, что в `.env.local`, в этот журнал не копируем. Без переменной страница `/admin` на деплое закрыта.
+
+- **Production:** переменная уже была, повторно не перезаписывали.
+- **Preview:** добавлена 2026-08-31 через `vercel env add ADMIN_PASSWORD preview`.
+- **Development** на Vercel не ставили: локально читается `.env.local`.
+
+Код админки на живой сайт сам не попадёт, пока GitHub не привязан. После merge в `master`: `npx vercel --prod --yes`, либо Redeploy в кабинете. Production уже с паролем — вход заработает, как только выложится HTML `/admin`.
+
+
 
 
