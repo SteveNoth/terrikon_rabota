@@ -2,9 +2,14 @@ import { SiteChrome } from "@/components/layout/SiteChrome";
 import { CITY_COOKIE, getDefaultCity, isSelectableCity } from "@/lib/geo";
 import { cookies } from "next/headers";
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 async function citySlug(): Promise<string> {
   const jar = await cookies();

@@ -9,6 +9,7 @@ import { criticalCss } from "@/ultra/css";
 import { citySlugFromRequest, dispatchUltra } from "@/ultra/dispatch";
 import { documentPage, htmlHeaders, publicOrigin } from "@/ultra/html";
 import { renderChrome } from "@/ultra/chrome";
+import { canonicalPath } from "@/lib/seo/canonical";
 
 export function publicPathname(request: NextRequest): string {
   const fromHeader = request.headers.get(ULTRA_PATH_HEADER);
@@ -42,11 +43,20 @@ export async function handleUltraGet(request: NextRequest): Promise<Response> {
   const css = criticalCss();
   const origin = publicOrigin(request);
   const preferenceHeader = request.headers.get(PREFERENCE_HEADER);
+  const canon = canonicalPath(pathname, request.nextUrl.searchParams);
   const html = documentPage({
     title: page.title,
     description: page.description,
-    canonical: `${origin}${pathname}${request.nextUrl.search}`,
+    canonical: `${origin}${canon}`,
     css,
+    ogImage: page.view ? `${origin}${page.view.href}/opengraph-image` : `${origin}/opengraph-image`,
+    robots:
+      page.status >= 400 ||
+      page.view?.isClosed ||
+      pathname === "/login" ||
+      pathname === "/offline"
+        ? "noindex, nofollow"
+        : undefined,
     body: renderChrome({
       citySlug: page.citySlug,
       currentPath: pathname,

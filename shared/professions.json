@@ -1,15 +1,15 @@
 {
   "spheres": [
-    { "slug": "stroitelstvo", "name": "Строительство", "icon": "sphere-construction" },
-    { "slug": "transport", "name": "Транспорт", "icon": "sphere-transport" },
-    { "slug": "torgovlya", "name": "Торговля", "icon": "sphere-trade" },
-    { "slug": "proizvodstvo", "name": "Производство", "icon": "sphere-production" },
-    { "slug": "meditsina", "name": "Медицина", "icon": "sphere-medicine" },
-    { "slug": "obrazovanie", "name": "Образование", "icon": "sphere-education" },
-    { "slug": "obschepit", "name": "Общепит", "icon": "sphere-food" },
-    { "slug": "bezopasnost", "name": "Охрана", "icon": "sphere-security" },
-    { "slug": "it", "name": "IT", "icon": "sphere-it" },
-    { "slug": "uslugi", "name": "Услуги", "icon": "sphere-services" }
+    { "slug": "stroitelstvo", "name": "Строительство", "loc": "строительстве", "icon": "sphere-construction" },
+    { "slug": "transport", "name": "Транспорт", "loc": "транспорте", "icon": "sphere-transport" },
+    { "slug": "torgovlya", "name": "Торговля", "loc": "торговле", "icon": "sphere-trade" },
+    { "slug": "proizvodstvo", "name": "Производство", "loc": "производстве", "icon": "sphere-production" },
+    { "slug": "meditsina", "name": "Медицина", "loc": "медицине", "icon": "sphere-medicine" },
+    { "slug": "obrazovanie", "name": "Образование", "loc": "образовании", "icon": "sphere-education" },
+    { "slug": "obschepit", "name": "Общепит", "loc": "общепите", "icon": "sphere-food" },
+    { "slug": "bezopasnost", "name": "Охрана", "loc": "охране", "icon": "sphere-security" },
+    { "slug": "it", "name": "IT", "loc": "IT", "icon": "sphere-it" },
+    { "slug": "uslugi", "name": "Услуги", "loc": "услугах", "icon": "sphere-services" }
   ],
   "items": [
     { "slug": "svarshchik", "name": "Сварщик", "sphere": "stroitelstvo", "synonyms": ["сварной", "электросварщик", "газосварщик", "свар-к", "электрогазосварщик", "сварщик аргон"] },

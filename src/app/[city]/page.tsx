@@ -22,6 +22,8 @@ import {
   getLatestVacancies,
   HOME_LATEST_LIMIT,
 } from "@/lib/repo/vacancies";
+import { cityHomeMetadata } from "@/lib/seo/pages";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 /** Главная города: HTML можно переиспользовать 10 минут (ISR). */
@@ -32,6 +34,15 @@ export function generateStaticParams() {
 }
 
 export const dynamicParams = true;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ city: string }>;
+}): Promise<Metadata> {
+  const { city: slug } = await params;
+  return cityHomeMetadata(slug);
+}
 
 const SPHERE_TILES = 8;
 

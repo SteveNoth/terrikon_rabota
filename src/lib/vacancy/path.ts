@@ -7,7 +7,10 @@ export function vacancyApplyHref(vacancyId: string): string {
   return `/profile/apply/${vacancyId}`;
 }
 
-export function employerVacanciesHref(citySlug: string, employerSlug: string, vahta: boolean): string {
-  const section = vahta ? "vahta" : "jobs";
-  return `/${citySlug}/${section}?employer=${encodeURIComponent(employerSlug)}`;
+export function companyPath(citySlug: string, employerSlug: string): string {
+  return `/${citySlug}/company/${employerSlug}`;
+}
+
+export function employerVacanciesHref(citySlug: string, employerSlug: string, _vahta?: boolean): string {
+  return companyPath(citySlug, employerSlug);
 }

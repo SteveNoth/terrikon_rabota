@@ -15,6 +15,7 @@
     "test:blocks": "npx tsx src/lib/auth/run-block-tests.ts",
     "test:seeker": "npx tsx src/lib/seeker/run-tests.ts",
     "test:telegram": "npx tsx src/lib/telegram/run-tests.ts",
+    "test:seo": "npx tsx src/lib/seo/run-tests.ts",
     "telegram:webhook": "npx tsx scripts/telegram-webhook.ts"
   },
   "prisma": {

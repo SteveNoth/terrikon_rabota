@@ -7,6 +7,7 @@ import { plural } from "@/lib/format/plural";
 import { formatSource, openDataAttribution } from "@/lib/format/source";
 import { cityName, districtName, isCitySlug } from "@/lib/geo";
 import type { VacancyRecord } from "@/lib/repo/vacancies";
+import { vacancyTitleLine } from "@/lib/seo/titles";
 import { stripHtml, toParagraphs } from "@/lib/vacancy/sanitize";
 import { employerVacanciesHref, vacancyApplyHref, vacancyPath } from "@/lib/vacancy/path";
 
@@ -347,10 +348,13 @@ export function toVacancyView(record: VacancyRecord): VacancyView {
 }
 
 export function vacancyMetaTitle(view: VacancyView): string {
-  const place = view.isVahta && view.vahta
-    ? `вахта, ${view.vahta.workLocation}`
-    : `работа в ${isCitySlug(view.citySlug) ? cityName(view.citySlug, "loc") : view.cityName}`;
-  return `${view.title} — ${place}, ${view.salary} | Террикон Работа`;
+  return vacancyTitleLine({
+    title: view.title,
+    citySlug: view.citySlug,
+    salary: view.salary,
+    isVahta: view.isVahta,
+    workLocation: view.vahta?.workLocation,
+  });
 }
 
 export function vacancyMetaDescription(view: VacancyView): string {

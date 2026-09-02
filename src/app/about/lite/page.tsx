@@ -2,13 +2,15 @@ import { SiteChrome } from "@/components/layout/SiteChrome";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/format/cn";
 import { getDefaultCity } from "@/lib/geo";
+import { pageMetadata } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Почему наш сайт работает там, где другие нет | Террикон Работа",
   description: "Экономная версия без JavaScript: вакансии открываются на 2G и весят мало.",
-};
+  pathname: "/about/lite",
+});
 
 export default function AboutLitePage() {
   const city = getDefaultCity();

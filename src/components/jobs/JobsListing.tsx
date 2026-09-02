@@ -13,7 +13,6 @@ import { Pagination } from "@/components/ui/pagination";
 import { cn } from "@/lib/format/cn";
 import { foundVacancies } from "@/lib/format/plural";
 import {
-  cityName,
   getCitySelectGroups,
   getDistricts,
   isActiveCity,
@@ -41,6 +40,7 @@ import {
   type ListVacanciesParams,
 } from "@/lib/repo/vacancies";
 import { isFiltersOpen, parseVacancyQuery } from "@/lib/validation/vacancy-query";
+import { jobsHeading } from "@/lib/seo/titles";
 import { WorkFormat, type Source } from "@prisma/client";
 import { cookies } from "next/headers";
 import Link from "next/link";
@@ -152,8 +152,8 @@ export async function JobsListing({
 
   const title =
     section === "vahta"
-      ? `Вахта из ${cityName(citySlug, "gen")}`
-      : `Вакансии ${cityName(citySlug, "gen")}`;
+      ? jobsHeading(citySlug, "vahta", query.sphere)
+      : jobsHeading(citySlug, "jobs", query.sphere);
 
   const path = jobsPath(citySlug, section);
   const filterQuery = serializeVacancyQuery({ ...query, page: 1 }).toString();

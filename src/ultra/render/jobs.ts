@@ -35,6 +35,7 @@ import {
   type ListVacanciesParams,
 } from "@/lib/repo/vacancies";
 import { isFiltersOpen, parseVacancyQuery } from "@/lib/validation/vacancy-query";
+import { jobsDescription, jobsHeading, jobsTitle, vahtaDescription, vahtaTitle } from "@/lib/seo/titles";
 import { renderVacancyList } from "@/ultra/card";
 import { renderCityStub } from "@/ultra/render/stub";
 import { attr, esc } from "@/ultra/html";
@@ -158,12 +159,13 @@ export async function renderJobsPage({
       : null;
   const showContinue = Boolean(continueHref) && !filtered && query.page === 1 && !filtersOpen;
 
-  const title =
-    section === "vahta" ? `Вахта из ${cityName(citySlug, "gen")}` : `Вакансии ${cityName(citySlug, "gen")}`;
+  const heading = jobsHeading(citySlug, section, query.sphere);
   const description =
+    section === "vahta" ? vahtaDescription(citySlug) : jobsDescription(citySlug, query.sphere);
+  const seoTitle =
     section === "vahta"
-      ? `Вахтовые вакансии, набор из ${cityName(citySlug, "gen")}. Место работы — не здесь.`
-      : `Местная работа в ${cityName(citySlug, "loc")}. Вахта собрана отдельно.`;
+      ? vahtaTitle(citySlug, query.sphere, list.total)
+      : jobsTitle(citySlug, query.sphere, list.total);
 
   const path = jobsPath(citySlug, section);
   const shared = queryForTabSwitch(query);
@@ -348,7 +350,7 @@ ${section === "jobs" ? "<li>Вахта в общий список не попа�
   const body = `
 <div class="wrap stack">
 <header class="stack tight">
-<h1>${esc(title)}</h1>
+<h1>${esc(heading)}</h1>
 ${section === "jobs" && !cityInDevelopment ? `<p><a href="/${attr(citySlug)}/map">Карта вакансий</a></p>` : ""}
 <nav aria-label="Формат работы" class="chips">
 <a class="chip${section === "jobs" ? " chip-on" : ""}" href="${attr(jobsUrl)}"${section === "jobs" ? ' aria-current="page"' : ""}>Вакансии · ${localCount}</a>
@@ -368,5 +370,5 @@ ${filters}
 </div>
 </div>`;
 
-  return { title: `${title} | Террикон Работа`, description, body };
+  return { title: seoTitle, description, body };
 }

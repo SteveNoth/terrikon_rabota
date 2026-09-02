@@ -1,14 +1,16 @@
 import { SiteChrome } from "@/components/layout/SiteChrome";
 import { CITY_COOKIE, getDefaultCity, isSelectableCity } from "@/lib/geo";
+import { pageMetadata } from "@/lib/seo/meta";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import Link from "next/link";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Как не попасться при поиске работы | Террикон Работа",
   description:
     "Не платите за трудоустройство, не отдавайте паспорт, не оформляйте чужие карты. Региональные признаки обмана.",
-};
+  pathname: "/safety",
+});
 
 function cityFromCookie(value: string | undefined): string {
   if (value && isSelectableCity(value)) {

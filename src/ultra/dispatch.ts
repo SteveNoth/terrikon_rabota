@@ -4,8 +4,9 @@ import {
   isSelectableCity,
   type CitySlug,
 } from "@/lib/geo";
-import { renderAbout } from "@/ultra/render/about";
+import { renderAbout, renderContacts, renderHelp, renderTerms } from "@/ultra/render/about";
 import { renderAboutLite } from "@/ultra/render/about-lite";
+import { renderCompanyPage } from "@/ultra/render/company";
 import { renderGenericMissing, renderNotFound, renderServerError } from "@/ultra/render/error";
 import { renderCityHome } from "@/ultra/render/home";
 import { renderJobsPage } from "@/ultra/render/jobs";
@@ -65,6 +66,15 @@ export async function dispatchUltra(input: {
     }
     if (parts[0] === "about" && parts.length === 1) {
       return { ...renderAbout(), citySlug, status: 200, cache: "page" };
+    }
+    if (parts[0] === "help" && parts.length === 1) {
+      return { ...renderHelp(), citySlug, status: 200, cache: "page" };
+    }
+    if (parts[0] === "contacts" && parts.length === 1) {
+      return { ...renderContacts(), citySlug, status: 200, cache: "page" };
+    }
+    if (parts[0] === "terms" && parts.length === 1) {
+      return { ...renderTerms(), citySlug, status: 200, cache: "page" };
     }
     if (parts[0] === "safety" && parts.length === 1) {
       return { ...renderSafety(citySlug), citySlug, status: 200, cache: "page" };
@@ -148,6 +158,14 @@ export async function dispatchUltra(input: {
         citySlug: city,
         searchParams: input.search,
       });
+      return { ...page, citySlug: city, status: 200, cache: "page" };
+    }
+
+    if (parts[1] === "company" && parts[2] && parts.length === 3) {
+      const page = await renderCompanyPage({ citySlug: city, slug: parts[2] });
+      if (!page) {
+        return { ...renderGenericMissing(city), citySlug: city, status: 404, cache: "none" };
+      }
       return { ...page, citySlug: city, status: 200, cache: "page" };
     }
 

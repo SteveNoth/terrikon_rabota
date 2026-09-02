@@ -1,11 +1,41 @@
-import { getDefaultCity, getPlannedCities, getSoonCities } from "@/lib/geo";
+import {
+  ABOUT_COPY,
+  CONTACTS_COPY,
+  HELP_COPY,
+  TERMS_COPY,
+  type StaticPageCopy,
+} from "@/lib/content/pages";
+import { getPlannedCities, getSoonCities } from "@/lib/geo";
+import { TELEGRAM_CHANNEL_URL, telegramChannelTitle } from "@/lib/site";
 import { attr, esc } from "@/ultra/html";
 
+function renderCopy(copy: StaticPageCopy, extra = ""): { title: string; description: string; body: string } {
+  const sections = copy.sections
+    .map(
+      (section) =>
+        `<section class="stack tight"${section.id ? ` id="${attr(section.id)}"` : ""}>
+<h2>${esc(section.title)}</h2>
+${section.paragraphs.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("")}
+</section>`,
+    )
+    .join("");
+
+  const body = `<article class="wrap article">
+<header class="stack tight">
+<h1>${esc(copy.heading)}</h1>
+<p class="muted">${esc(copy.description)}</p>
+</header>
+${sections}
+${extra}
+<p class="small"><a href="${attr(TELEGRAM_CHANNEL_URL)}" rel="noopener noreferrer">${esc(telegramChannelTitle())}</a></p>
+</article>`;
+
+  return { title: copy.title, description: copy.description, body };
+}
+
 export function renderAbout(): { title: string; description: string; body: string } {
-  const city = getDefaultCity();
   const soon = getSoonCities();
   const planned = getPlannedCities();
-
   const list = (items: typeof soon, link: boolean) =>
     items.length === 0
       ? `<p class="muted small">Пока нет городов в этой очереди.</p>`
@@ -17,17 +47,8 @@ export function renderAbout(): { title: string; description: string; body: strin
           )
           .join("")}</ul>`;
 
-  const body = `<article class="wrap article">
-<header class="stack tight">
-<h1>О проекте</h1>
-<p class="muted">Террикон Работа собирает вакансии одного региона в одном месте: местную работу отдельно от вахты, без платы за просмотр контактов.</p>
-<p><a href="/about/lite">Почему наш сайт работает там, где другие нет</a></p>
-</header>
-<section class="stack tight">
-<h2>Откуда вакансии</h2>
-<p>Часть объявлений — открытые данные портала «Работа России» (центры занятости). Мы указываем источник и не пересчитываем зарплату «до вычета налога» в сумму «на руки».</p>
+  const extra = `<p><a href="/about/lite">Почему наш сайт работает там, где другие нет</a></p>
 <p><a href="https://trudvsem.ru" rel="noopener noreferrer">Источник данных: Работа России</a></p>
-</section>
 <section id="plans" class="stack tight">
 <h2>Планы развития</h2>
 <p class="muted small">Города и их статусы живут в общем справочнике географии. Пока город в статусе «скоро», на его адресе — заглушка с формой «сообщить об открытии». Пока «в планах» — выбрать его в селекторе нельзя, он виден только здесь.</p>
@@ -35,13 +56,28 @@ export function renderAbout(): { title: string; description: string; body: strin
 ${list(soon, true)}
 <h3>В планах</h3>
 ${list(planned, false)}
-</section>
-<p class="small"><a href="/${city.slug}">К вакансиям ${esc(city.name.gen)}</a></p>
-</article>`;
+</section>`;
 
-  return {
-    title: "О проекте | Террикон Работа",
-    description: "Региональный агрегатор вакансий: как устроен сайт и какие города подключим дальше.",
-    body,
-  };
+  return renderCopy(ABOUT_COPY, extra);
+}
+
+export function renderHelp(): { title: string; description: string; body: string } {
+  return renderCopy(
+    HELP_COPY,
+    `<p class="small"><a href="/safety">Как не попасться при поиске работы</a> · <a href="/contacts">Контакты</a></p>`,
+  );
+}
+
+export function renderContacts(): { title: string; description: string; body: string } {
+  return renderCopy(
+    CONTACTS_COPY,
+    `<p class="small"><a href="/help">Помощь</a> · <a href="/terms">Правила</a></p>`,
+  );
+}
+
+export function renderTerms(): { title: string; description: string; body: string } {
+  return renderCopy(
+    TERMS_COPY,
+    `<p class="small"><a href="/contacts">Как связаться</a> · <a href="/safety">Как не попасться</a></p>`,
+  );
 }

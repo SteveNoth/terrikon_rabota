@@ -7,6 +7,7 @@ import {
   getLatestVacancies,
   HOME_LATEST_LIMIT,
 } from "@/lib/repo/vacancies";
+import { cityHomeDescription, cityHomeTitle } from "@/lib/seo/titles";
 import { pluralVacancies } from "@/lib/format/plural";
 import { renderVacancyCard } from "@/ultra/card";
 import { attr, esc } from "@/ultra/html";
@@ -153,8 +154,8 @@ ${planList("В планах", plannedCities)}
 `;
 
   return {
-    title: `Работа в ${loc} | Террикон Работа`,
-    description: `Вакансии ${gen}`,
+    title: cityHomeTitle(citySlug, "active"),
+    description: cityHomeDescription(citySlug, "active"),
     body,
   };
 }

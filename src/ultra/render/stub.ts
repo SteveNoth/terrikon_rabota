@@ -1,4 +1,5 @@
 import { cityName, getCity, getDefaultCity, type CitySlug } from "@/lib/geo";
+import { cityHomeDescription, cityHomeTitle } from "@/lib/seo/titles";
 import { attr, esc } from "@/ultra/html";
 
 export function renderCityStub(
@@ -39,8 +40,8 @@ ${form}
 </div>`;
 
   return {
-    title: `Скоро в ${loc} | Террикон Работа`,
-    description: `Вакансии ${gen} появятся, когда откроем город.`,
+    title: cityHomeTitle(citySlug, "soon"),
+    description: cityHomeDescription(citySlug, "soon"),
     body,
   };
 }

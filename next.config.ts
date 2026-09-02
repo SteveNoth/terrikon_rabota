@@ -13,6 +13,8 @@ const nextConfig: NextConfig = {
   outputFileTracingIncludes: {
     "/u": ["./src/styles/tokens.css", "./src/styles/modes.css"],
     "/u/[[...path]]": ["./src/styles/tokens.css", "./src/styles/modes.css"],
+    "/opengraph-image": ["./src/styles/tokens.css"],
+    "/[city]/job/[slug]/opengraph-image": ["./src/styles/tokens.css"],
   },
   /**
    * Картинки только с чужих CDN. Файлы логотипов мы не храним (Закон 10).
@@ -29,9 +31,15 @@ const nextConfig: NextConfig = {
   async rewrites() {
     // Браузер всё равно спрашивает /favicon.ico. Не отдаём тяжёлый растр из app/icon —
     // тот же лёгкий SVG, что в metadata (бюджет Lite ≤ 60 КБ на картинки).
-    return [{ source: "/favicon.ico", destination: "/icons/app.svg" }];
+    return [
+      { source: "/favicon.ico", destination: "/icons/app.svg" },
+      { source: "/yandex_:code.html", destination: "/seo-verify/yandex/:code" },
+      { source: "/google:code.html", destination: "/seo-verify/google/:code" },
+    ];
   },
   async headers() {
+    const noIndex = { key: "X-Robots-Tag", value: "noindex, nofollow" };
+    const privateStore = { key: "Cache-Control", value: "private, no-store" };
     return [
       {
         source: "/sw.js",
@@ -46,39 +54,43 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/admin",
-        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+        headers: [privateStore, noIndex],
       },
       {
         source: "/admin/:path*",
-        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+        headers: [privateStore, noIndex],
+      },
+      {
+        source: "/api/:path*",
+        headers: [noIndex],
       },
       {
         source: "/auth",
-        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+        headers: [privateStore, noIndex],
       },
       {
         source: "/auth/:path*",
-        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+        headers: [privateStore, noIndex],
       },
       {
         source: "/employer",
-        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+        headers: [privateStore, noIndex],
       },
       {
         source: "/employer/:path*",
-        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+        headers: [privateStore, noIndex],
       },
       {
         source: "/profile",
-        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+        headers: [privateStore, noIndex],
       },
       {
         source: "/profile/:path*",
-        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+        headers: [privateStore, noIndex],
       },
       {
         source: "/login",
-        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+        headers: [privateStore, noIndex],
       },
     ];
   },

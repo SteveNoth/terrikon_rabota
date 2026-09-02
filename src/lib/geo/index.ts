@@ -4,6 +4,7 @@ export const CITY_COOKIE = "tr_city";
 
 export type GeoFile = typeof geoJson;
 export type GeoCityJson = GeoFile["cities"][number];
+export type GeoRegionJson = GeoFile["regions"][number];
 export type GeoDistrictJson = GeoCityJson["districts"][number];
 export type GeoDestinationJson = GeoFile["externalDestinations"][number];
 export type NameCase = keyof GeoCityJson["name"];
@@ -93,6 +94,10 @@ function readCity(city: GeoCityJson): City {
 const CITIES: City[] = geoJson.cities.map(readCity).sort((a, b) => a.priority - b.priority);
 
 const CITIES_BY_SLUG = new Map<string, City>(CITIES.map((city) => [city.slug, city]));
+
+const REGIONS_BY_CODE = new Map<string, GeoRegionJson>(
+  geoJson.regions.map((region) => [region.code, region]),
+);
 
 type AliasHit = {
   alias: string;
@@ -280,6 +285,14 @@ export function cityName(slug: CitySlug, form: NameCase): string {
     throw new Error(`Неизвестный slug города: ${slug}`);
   }
   return city.name[form];
+}
+
+export function cityRegion(slug: string): GeoRegionJson | undefined {
+  const city = getCity(slug);
+  if (!city) {
+    return undefined;
+  }
+  return REGIONS_BY_CODE.get(city.region);
 }
 
 export function resolveCityFromText(text: string): CitySlug | null {

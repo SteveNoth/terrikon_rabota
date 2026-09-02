@@ -7,6 +7,8 @@ export type ProfessionJson = ProfessionsFile["items"][number];
 export type Sphere = {
   slug: string;
   name: string;
+  /** Предложный падеж: «в строительстве». Для IT совпадает с name. */
+  loc: string;
   icon: string;
 };
 
@@ -20,6 +22,7 @@ export type Profession = {
 const SPHERES: Sphere[] = professionsJson.spheres.map((sphere) => ({
   slug: sphere.slug,
   name: sphere.name,
+  loc: sphere.loc,
   icon: sphere.icon,
 }));
 

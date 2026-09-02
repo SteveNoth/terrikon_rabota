@@ -13,6 +13,7 @@ import { listSpheres } from "@/lib/professions";
 import { listMapVacancies } from "@/lib/repo/vacancies";
 import { vacancyPath } from "@/lib/vacancy/path";
 import { parseVacancyQuery } from "@/lib/validation/vacancy-query";
+import { mapDescription, mapTitle } from "@/lib/seo/titles";
 import { renderCityStub } from "@/ultra/render/stub";
 import { attr, esc } from "@/ultra/html";
 
@@ -26,13 +27,13 @@ export async function renderMapPage(input: {
 }): Promise<{ title: string; description: string; body: string }> {
   const { citySlug } = input;
   const gen = cityName(citySlug, "gen");
-  const title = `Карта вакансий ${gen} | Террикон Работа`;
-  const description = `Адреса местных вакансий ${gen}. В текстовой версии карты нет.`;
+  const title = mapTitle(citySlug);
+  const description = mapDescription(citySlug);
 
   if (!isActiveCity(citySlug)) {
     const stub = renderCityStub(citySlug, false, "section");
     return {
-      title: `Карта вакансий ${gen} | Террикон Работа`,
+      title: mapTitle(citySlug),
       description: stub.description,
       body: `<div class="wrap stack"><h1>Карта вакансий ${esc(gen)}</h1>${stub.body}</div>`,
     };

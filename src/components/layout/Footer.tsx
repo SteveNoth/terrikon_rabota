@@ -48,6 +48,18 @@ export function Footer({
           >
             Карта вакансий
           </Link>
+          <Link href="/about" className="text-brand underline-offset-2 hover:underline">
+            О проекте
+          </Link>
+          <Link href="/help" className="text-brand underline-offset-2 hover:underline">
+            Помощь
+          </Link>
+          <Link href="/contacts" className="text-brand underline-offset-2 hover:underline">
+            Контакты
+          </Link>
+          <Link href="/terms" className="text-brand underline-offset-2 hover:underline">
+            Правила
+          </Link>
           <Link href="/safety" className="text-brand underline-offset-2 hover:underline">
             Как не попасться при поиске работы
           </Link>

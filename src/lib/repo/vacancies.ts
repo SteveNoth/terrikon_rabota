@@ -117,6 +117,7 @@ export type VacancyRecord = VacancyListItem & {
     isVerified: boolean;
     logoUrl: string | null;
     description: string | null;
+    website: string | null;
   } | null;
   group: {
     postingsCount: number;
@@ -203,6 +204,7 @@ const detailSelect = {
       isVerified: true,
       logoUrl: true,
       description: true,
+      website: true,
     },
   },
   group: {

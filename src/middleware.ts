@@ -33,6 +33,17 @@ function resolveCity(request: NextRequest): string {
   return getDefaultCity().slug;
 }
 
+/** Яндекс.Вебмастер качает `/`, а не `/gorlovka`. Редирект 307 без HTML — метатег он не видит. */
+function isOwnershipProbe(request: NextRequest): boolean {
+  const ua = (request.headers.get("user-agent") ?? "").trim();
+  if (!ua) {
+    return true;
+  }
+  return /YandexWebmaster|YandexBot|YandexMetrika|Googlebot|Google-InspectionTool|Google-Site-Verification|AdsBot-Google|bingbot|BingPreview|DuckDuckBot|Slurp|facebookexternalhit|Twitterbot|TelegramBot|WhatsApp|LinkedInBot|Applebot|Baiduspider|Mail\.RU_Bot/i.test(
+    ua,
+  );
+}
+
 function cookieSecure(): boolean {
   return process.env.NODE_ENV === "production";
 }
@@ -152,6 +163,18 @@ function withLastSearch(request: NextRequest, response: NextResponse): NextRespo
 
 function shouldRewriteToUltra(pathname: string): boolean {
   if (pathname === "/u" || pathname.startsWith("/u/")) {
+    return false;
+  }
+  if (
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    pathname.startsWith("/sitemaps/") ||
+    pathname === "/opengraph-image" ||
+    pathname.endsWith("/opengraph-image") ||
+    pathname.startsWith("/seo-verify/") ||
+    /^\/yandex_[a-z0-9]+\.html$/i.test(pathname) ||
+    /^\/google[a-z0-9]+\.html$/i.test(pathname)
+  ) {
     return false;
   }
     if (pathname.startsWith("/dev")) {
@@ -284,7 +307,10 @@ export async function middleware(request: NextRequest) {
     const city = resolveCity(request);
     const target = url.clone();
     target.pathname = `/${city}`;
-    return applyQuality(withCityCookie(NextResponse.redirect(target), city, request), request);
+    const toCity = isOwnershipProbe(request)
+      ? NextResponse.rewrite(target)
+      : NextResponse.redirect(target);
+    return applyQuality(withCityCookie(toCity, city, request), request);
   }
 
   const resolved = resolveMode(request);

@@ -790,5 +790,102 @@ curl -X POST http://127.0.0.1:3000/api/telegram/notify -H "Authorization: Bearer
 - Код Этапа 22 на https://terrikon-rabota.vercel.app/api/telegram/webhook (не 404): ☐
 - `/start` отвечает: ☐
 
+---
+
+## 2026-09-02 — Этап 23: SEO, Яндекс.Вебмастер и Google Search Console
+
+Сайт: https://terrikon-rabota.vercel.app  
+Карта сайта: https://terrikon-rabota.vercel.app/sitemap.xml  
+Правила для роботов: https://terrikon-rabota.vercel.app/robots.txt
+
+Код этапа закрывает заголовки с падежами, JobPosting JSON-LD, канон, превью, `/about` `/help` `/contacts` `/terms`. Ниже — что сделать руками в кабинетах поисковиков. Коды в git не кладём: только в `.env.local` и Vercel.
+
+### Как посмотреть, что видит поисковик
+
+1. Открой карточку вакансии (например `/gorlovka/job/...`).
+2. В Chrome: меню → **Дополнительные инструменты** → **Инструменты разработчика** → вкладка **Elements**. Найди `<title>`, `<meta name="description">`, `<link rel="canonical">`, `<script type="application/ld+json">`.
+3. Без DevTools: в адресной строке то же самое «просмотреть код страницы» (Ctrl+U). Ищи `JobPosting`.
+4. Экономная версия (`?mode=ultra`) — тот же адрес, другой HTML. Канон без `mode` и `page`.
+
+### Валидатор структурированных данных
+
+**Google**
+
+1. https://search.google.com/test/rich-results
+2. Вставь URL живой карточки вакансии (не localhost).
+3. Должен найтись тип **Job posting**. Ошибок быть не должно. Предупреждения про необязательные поля допустимы.
+4. Локально, если сайт ещё не в индексе: кнопка **Проверить код** — вставь HTML карточки (Ctrl+U, скопировать).
+
+**Яндекс**
+
+1. https://webmaster.yandex.ru/tools/microtest/ (или в Вебмастере: **Инструменты** → **Валидатор микроразметки**)
+2. URL карточки или HTML.
+3. Тип **JobPosting**. Источник вакансии должен быть в разметке/описании — мы не выдаём чужое объявление за вакансию Террикон Работа.
+
+**Превью для мессенджеров**
+
+1. Картинка: `https://terrikon-rabota.vercel.app/gorlovka/job/<slug>/opengraph-image` — название, зарплата, город.
+2. Telegram: отправь ссылку на карточку себе в Saved Messages. Если превью старое — бот @webpagebot, команда с URL.
+3. WhatsApp иногда кэширует дольше. Новый slug проверяется быстрее.
+
+### Добавить сайт в Яндекс.Вебмастер
+
+1. Войти: https://webmaster.yandex.ru/ (тот же Яндекс, что для почты).
+2. **Добавить сайт** → `https://terrikon-rabota.vercel.app`
+3. Способ **Метатег** (проще, чем файл):
+   - Яндекс покажет содержимое вроде `content="abc123..."`.
+   - В Vercel → проект `terrikon-rabota` → Settings → Environment Variables:
+     - `NEXT_PUBLIC_YANDEX_VERIFICATION` = этот код (без кавычек), Production и Preview.
+     - `NEXT_PUBLIC_SITE_URL` = `https://terrikon-rabota.vercel.app` (если ещё не задан).
+   - В `.env.local` то же самое.
+   - Новый деплой (`npx vercel --prod --yes` или push, когда GitHub привязан).
+4. В исходнике главной должен появиться `<meta name="yandex-verification" content="...">`.
+   Корень `https://terrikon-rabota.vercel.app/` для людей — редирект на `/gorlovka`. Вебмастер качает `/` без HTML, поэтому после деплоя этапа 23 робот получает ту же главную через rewrite. Запасной файл: `https://terrikon-rabota.vercel.app/yandex_<код>.html` (способ «HTML-файл» в кабинете).
+5. В Вебмастере нажать **Проверить**.
+6. После подтверждения: **Индексирование** → **Файлы Sitemap** → добавить `https://terrikon-rabota.vercel.app/sitemap.xml`
+7. **Индексирование** → **Переобход страниц** — главная `/gorlovka` и `/robots.txt`.
+
+Если метатег неудобен: Яндекс даёт файл `yandex_<код>.html` в корень `public/`. В git его не коммитим, если это одноразовый секрет; метатег через env надёжнее.
+
+### Добавить сайт в Google Search Console
+
+1. https://search.google.com/search-console
+2. **Добавить ресурс** → тип **Префикс URL** → `https://terrikon-rabota.vercel.app`
+3. Способ **Метатег HTML**:
+   - Код из атрибута `content`.
+   - Vercel и `.env.local`: `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` = этот код.
+   - Тот же деплой, что для Яндекса.
+4. В HTML: `<meta name="google-site-verification" content="...">`.
+5. **Подтвердить**.
+6. **Файлы Sitemap** → `https://terrikon-rabota.vercel.app/sitemap.xml`
+
+Альтернатива: подтверждение через DNS у регистратора — для домена на Vercel не обязательно, пока живём на `*.vercel.app`.
+
+### Что должно открываться без кабинета
+
+| Адрес | Ожидание |
+|-------|----------|
+| `/robots.txt` | `Disallow: /admin`, `/api`, `/profile`, `/employer`; строка `Sitemap:` |
+| `/sitemap.xml` | список URL; если вакансий больше 5000 — индекс со ссылками на `/sitemaps/0`, `/sitemaps/1`, … |
+| `/gorlovka` | title «Работа в Горловке — свежие вакансии \| Террикон Работа» |
+| `/donetsk` | title «Работа в Донецке — скоро на Террикон Работа» |
+| `/about#plans` | блок городов soon/planned |
+| `/help`, `/contacts`, `/terms` | тексты про источники и удаление вакансии |
+
+Сфера в адресе — `stroitelstvo`, не `stroy`: `/gorlovka/jobs?sphere=stroitelstvo`.
+
+Локально (2026-09-02, `npx next start` после сборки): заголовки с падежами совпали с шаблонами; в sitemap столько же активных вакансий, сколько отдаёт `/api/vacancies`; на карточке есть `JobPosting`; картинка `/gorlovka/job/<slug>/opengraph-image` — PNG ~21 КБ; `/admin` отдаёт заголовок `X-Robots-Tag: noindex, nofollow`. Живой Telegram и кабинеты Яндекса/Google — после деплоя, шаги выше.
+
+Шаблон отметки:
+
+- Дата:
+- `NEXT_PUBLIC_SITE_URL` на Vercel: ☐
+- Сайт в Яндекс.Вебмастере: ☐
+- Sitemap добавлен в Вебмастер: ☐
+- `NEXT_PUBLIC_YANDEX_VERIFICATION` в Vercel: ☐
+- Сайт в Google Search Console: ☐
+- `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` в Vercel: ☐
+- Rich Results / валидатор Яндекса по карточке вакансии без ошибок: ☐
+- Превью ссылки в Telegram: ☐
 
 

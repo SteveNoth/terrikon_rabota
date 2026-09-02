@@ -1,5 +1,6 @@
 import { MapPage } from "@/components/map/MapPage";
-import { cityName, cityStaticParams, isSelectableCity } from "@/lib/geo";
+import { cityStaticParams, isSelectableCity } from "@/lib/geo";
+import { mapRouteMetadata } from "@/lib/seo/pages";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
@@ -17,13 +18,7 @@ export async function generateMetadata({
   params: Promise<{ city: string }>;
 }): Promise<Metadata> {
   const { city: slug } = await params;
-  if (!isSelectableCity(slug)) {
-    return { title: "Карта вакансий" };
-  }
-  return {
-    title: `Карта вакансий ${cityName(slug, "gen")} | Террикон Работа`,
-    description: `Адреса местных вакансий ${cityName(slug, "gen")} на карте.`,
-  };
+  return mapRouteMetadata(slug);
 }
 
 export default async function CityMapRoute({

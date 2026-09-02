@@ -1,3 +1,4 @@
+import { JsonLd } from "@/components/seo/JsonLd";
 import { ViewBeacon } from "@/components/vacancy/ViewBeacon";
 import { VacancyPage } from "@/components/vacancy/VacancyPage";
 import { getUser } from "@/lib/adapters/auth";
@@ -5,9 +6,13 @@ import { isActiveCity, isSelectableCity } from "@/lib/geo";
 import { getRequestQuality } from "@/lib/quality/request";
 import { getApplyUiState } from "@/lib/repo/seeker";
 import { getSimilarVacancies, getVacancyBySlug } from "@/lib/repo/vacancies";
+import { jobPostingFromVacancy } from "@/lib/seo/job-posting";
+import { pageMetadata } from "@/lib/seo/meta";
+import { absoluteUrl, siteOrigin } from "@/lib/seo/origin";
 import { deviceClassFromUserAgent, isDoNotTrack } from "@/lib/stats/device";
 import { recordVacancyView } from "@/lib/stats/events";
 import { SESSION_HEADER, isSessionHash } from "@/lib/stats/session";
+import { vacancyPath } from "@/lib/vacancy/path";
 import { toVacancyView, vacancyMetaDescription, vacancyMetaTitle } from "@/lib/vacancy/view";
 import type { Metadata } from "next";
 import { after } from "next/server";
@@ -24,18 +29,6 @@ function reportStatusFrom(value: string | string[] | undefined): "ok" | "error" 
   return undefined;
 }
 
-function publicOrigin(headerList: Headers): string {
-  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
-  const proto = headerList.get("x-forwarded-proto") ?? "http";
-  if (host) {
-    return `${proto}://${host}`;
-  }
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  return "http://localhost:3000";
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -43,28 +36,26 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { city, slug } = await params;
   if (!isSelectableCity(city)) {
-    return { title: "Вакансия" };
+    return { title: "Вакансия", robots: { index: false, follow: false } };
   }
 
   const record = await getVacancyBySlug(slug, { allowClosed: true });
   if (!record || record.citySlug !== city) {
-    return { title: "Вакансия не найдена" };
+    return { title: "Вакансия не найдена", robots: { index: false, follow: false } };
   }
 
   const view = toVacancyView(record);
+  const path = vacancyPath(city, slug);
   const title = vacancyMetaTitle(view);
   const description = vacancyMetaDescription(view);
 
-  return {
+  return pageMetadata({
     title,
     description,
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      locale: "ru_RU",
-    },
-  };
+    pathname: path,
+    index: view.isClosed ? false : true,
+    ogType: "article",
+  });
 }
 
 export default async function VacancyJobPage({
@@ -94,8 +85,10 @@ export default async function VacancyJobPage({
   ]);
 
   const view = toVacancyView(record);
-  const shareUrl = `${publicOrigin(headerList)}${view.href}`;
+  const path = vacancyPath(city, slug);
+  const shareUrl = `${siteOrigin()}${path}`;
   const reportStatus = reportStatusFrom(query.report);
+  const jobPosting = jobPostingFromVacancy(record, view, absoluteUrl(path));
 
   const sessionHash = headerList.get(SESSION_HEADER);
   const skipTrack = isDoNotTrack(headerList.get("dnt") ?? headerList.get("DNT"));
@@ -118,6 +111,7 @@ export default async function VacancyJobPage({
 
   return (
     <>
+      <JsonLd data={jobPosting} />
       {features.analytics && !skipTrack && !view.isClosed ? <ViewBeacon vacancyId={view.id} /> : null}
       <VacancyPage
         view={view}

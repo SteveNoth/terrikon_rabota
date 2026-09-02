@@ -101,10 +101,13 @@ ${qualityForm("u-quality-header", formAction, selected, true)}
 <a class="brand" href="${attr(homeHref)}" aria-label="Террикон Работа">${TERRICON_LOGO_SVG}</a>
 ${cityForm("u-city-footer", citySlug, active, soon)}
 <div class="footer-links">
+<a href="/about">О проекте</a>
+<a href="/help">Помощь</a>
+<a href="/contacts">Контакты</a>
+<a href="/terms">Правила</a>
 <a href="/safety">Как не попасться при поиске работы</a>
 <a href="/offline">Без интернета</a>
 <a href="${attr(TELEGRAM_CHANNEL_URL)}" rel="noopener noreferrer">${esc(telegramChannelTitle())}</a>
-<a href="/about">О проекте</a>
 <a href="/about/lite">Почему сайт лёгкий</a>
 <a href="${attr(mapHref)}">Карта вакансий</a>
 </div>

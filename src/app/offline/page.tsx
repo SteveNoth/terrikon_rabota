@@ -8,6 +8,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Без интернета | Террикон Работа",
   description: "Что доступно без сети: сохранённые вакансии, избранное и последние поиски.",
+  robots: { index: false, follow: false },
 };
 
 function cityFromCookie(value: string | undefined): string {

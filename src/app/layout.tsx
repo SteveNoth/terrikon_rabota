@@ -11,16 +11,17 @@ import {
   MODE_HEADER,
   PREFERENCE_HEADER,
 } from "@/lib/quality/types";
+import { defaultRootMetadata, verificationMetadata } from "@/lib/seo/meta";
+import { SITE_NAME } from "@/lib/seo/brand";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "Террикон Работа",
-  description: "Региональный агрегатор вакансий",
+  ...defaultRootMetadata(),
   manifest: "/manifest.webmanifest",
-  applicationName: "Террикон Работа",
+  verification: verificationMetadata(),
   appleWebApp: {
     capable: true,
-    title: "Террикон Работа",
+    title: SITE_NAME,
     statusBarStyle: "default",
   },
   icons: {
