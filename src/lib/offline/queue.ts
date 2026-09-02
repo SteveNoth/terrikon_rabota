@@ -43,7 +43,7 @@ async function withFlushLock<T>(work: () => Promise<T>): Promise<T> {
 }
 
 export async function enqueueAction(
-  input: Pick<QueuedAction, "type" | "op" | "vacancyId" | "title" | "href">,
+  input: Pick<QueuedAction, "type" | "op" | "vacancyId" | "title" | "href" | "message">,
 ): Promise<QueuedAction> {
   const all = await listQueue();
   const oppositeOp = input.op === "add" ? "remove" : "add";
@@ -88,10 +88,18 @@ export async function enqueueAction(
     vacancyId: input.vacancyId,
     title: input.title,
     href: input.href,
+    message: input.message,
     createdAt: Date.now(),
     status: "pending",
   };
   await putQueueAction(action);
+  if (typeof navigator !== "undefined" && navigator.onLine === false) {
+    if (action.type === "apply") {
+      emit({ kind: "apply-queued", vacancyId: action.vacancyId });
+    } else {
+      emit({ kind: "favorite-queued", vacancyId: action.vacancyId });
+    }
+  }
   return action;
 }
 
@@ -99,6 +107,7 @@ export async function enqueueApply(input: {
   vacancyId: string;
   title: string;
   href?: string;
+  message?: string;
 }): Promise<QueuedAction> {
   return enqueueAction({ type: "apply", op: "add", ...input });
 }
@@ -141,9 +150,19 @@ async function sendAction(action: QueuedAction): Promise<boolean> {
         type: latest.type,
         op: latest.op,
         vacancyId: latest.vacancyId,
+        message: latest.message ?? "",
       }),
     });
 
+    if (response.status === 401 && latest.type === "apply") {
+      await putQueueAction({ ...latest, status: "pending" });
+      emit({ kind: "apply-need-login", vacancyId: latest.vacancyId });
+      return false;
+    }
+    if (response.status === 403 || response.status === 409) {
+      await deleteQueueAction(latest.id);
+      return true;
+    }
     if (!response.ok) {
       await putQueueAction({ ...latest, status: "pending" });
       return false;

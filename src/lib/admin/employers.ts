@@ -5,7 +5,7 @@ export async function listAdminEmployers() {
     orderBy: [{ isVerified: "desc" }, { createdAt: "desc" }],
     take: 200,
     include: {
-      user: { select: { email: true, name: true, role: true } },
+      user: { select: { id: true, email: true, name: true, role: true, publishBlocked: true, applyBlocked: true, loginBlocked: true } },
       _count: { select: { vacancies: true } },
     },
   });

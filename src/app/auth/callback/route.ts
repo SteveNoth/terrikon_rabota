@@ -7,7 +7,9 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = safeNextPath(url.searchParams.get("next"), "/auth/confirmed");
+  const next = url.pathname.replace(/\/$/, "").endsWith("/reset")
+    ? "/auth/reset"
+    : safeNextPath(url.searchParams.get("next"), "/auth/confirmed");
   const errorDescription = url.searchParams.get("error_description") || url.searchParams.get("error");
 
   if (errorDescription) {

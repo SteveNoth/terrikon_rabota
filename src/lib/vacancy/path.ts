@@ -3,9 +3,8 @@ export function vacancyPath(citySlug: string, slug: string): string {
   return `/${citySlug}/job/${slug}`;
 }
 
-export function vacancyApplyHref(citySlug: string, slug: string): string {
-  const next = vacancyPath(citySlug, slug);
-  return `/auth/login?next=${encodeURIComponent(next)}`;
+export function vacancyApplyHref(vacancyId: string): string {
+  return `/profile/apply/${vacancyId}`;
 }
 
 export function employerVacanciesHref(citySlug: string, employerSlug: string, vahta: boolean): string {

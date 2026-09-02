@@ -13,6 +13,15 @@ import {
   publishVacancy,
   unblockToQueue,
 } from "@/lib/admin/decisions";
+import {
+  disableEmployerPublish,
+  markForbiddenText,
+  publishCabinetVacancy,
+  rejectCabinetVacancy,
+} from "@/lib/admin/employer-decisions";
+import { AccountBlockScope } from "@prisma/client";
+import { imposeAccountBlock, liftAccountBlock } from "@/lib/auth/blocks";
+import { POLICY_PHRASES } from "@/lib/policy/messages";
 import { bulkVacancies, saveVacancyFromForm } from "@/lib/admin/vacancies";
 import { approvePostAsVacancy, rejectPost } from "@/lib/admin/posts";
 import { acceptQuality, exportLearnedSamples } from "@/lib/admin/quality";
@@ -141,7 +150,7 @@ export async function unblockAction(formData: FormData) {
   if (!result.ok) {
     failNotice("/admin/blocked", result.error);
   }
-  redirectNotice("/admin/blocked", result.message);
+  redirectNotice(result.next || "/admin/blocked", result.message);
 }
 
 export async function saveVacancyAction(formData: FormData) {
@@ -269,4 +278,158 @@ export async function employerVerifyAction(formData: FormData) {
     failNotice("/admin/employers", result.error);
   }
   redirectNotice("/admin/employers", next ? "Отметка «проверен» поставлена." : "Отметка «проверен» снята.");
+}
+
+function cabinetQueuePath(formData: FormData): string {
+  const employerId = String(formData.get("employerId") ?? "");
+  const id = String(formData.get("id") ?? "");
+  const params = new URLSearchParams();
+  if (employerId) {
+    params.set("employerId", employerId);
+  }
+  if (id) {
+    params.set("id", id);
+  }
+  const query = params.toString();
+  return query ? `/admin/employers/queue?${query}` : "/admin/employers/queue";
+}
+
+export async function cabinetPublishAction(formData: FormData) {
+  await guard();
+  const id = String(formData.get("id") ?? "");
+  const result = await publishCabinetVacancy(id, {});
+  if (!result.ok) {
+    failNotice(cabinetQueuePath(formData), result.error);
+  }
+  redirectNotice("/admin/employers/queue", result.message);
+}
+
+export async function cabinetPublishTrustAction(formData: FormData) {
+  await guard();
+  const id = String(formData.get("id") ?? "");
+  const result = await publishCabinetVacancy(id, { trustContact: true });
+  if (!result.ok) {
+    failNotice(cabinetQueuePath(formData), result.error);
+  }
+  redirectNotice("/admin/employers/queue", result.message);
+}
+
+export async function cabinetPublishVerifyAction(formData: FormData) {
+  await guard();
+  const id = String(formData.get("id") ?? "");
+  const result = await publishCabinetVacancy(id, { verifyCompany: true });
+  if (!result.ok) {
+    failNotice(cabinetQueuePath(formData), result.error);
+  }
+  redirectNotice("/admin/employers/queue", result.message);
+}
+
+export async function cabinetRejectAction(formData: FormData) {
+  await guard();
+  const id = String(formData.get("id") ?? "");
+  const note = String(formData.get("note") ?? "");
+  const result = await rejectCabinetVacancy(id, note);
+  if (!result.ok) {
+    failNotice(cabinetQueuePath(formData), result.error);
+  }
+  redirectNotice("/admin/employers/queue", result.message);
+}
+
+export async function cabinetForbiddenAction(formData: FormData) {
+  await guard();
+  const id = String(formData.get("id") ?? "");
+  const result = await markForbiddenText(id);
+  if (!result.ok) {
+    failNotice(cabinetQueuePath(formData), result.error);
+  }
+  redirectNotice("/admin/employers/queue", result.message);
+}
+
+export async function cabinetDisablePublishAction(formData: FormData) {
+  await guard();
+  const id = String(formData.get("id") ?? "");
+  const result = await disableEmployerPublish(id);
+  if (!result.ok) {
+    failNotice(cabinetQueuePath(formData), result.error);
+  }
+  redirectNotice("/admin/employers/queue", result.message);
+}
+
+export async function cabinetRestoreAction(formData: FormData) {
+  await guard();
+  const id = String(formData.get("id") ?? "");
+  const result = await unblockToQueue(id);
+  if (!result.ok) {
+    failNotice(cabinetQueuePath(formData), result.error);
+  }
+  redirectNotice(result.next || "/admin/employers/queue", result.message);
+}
+
+export async function employerPublishBlockAction(formData: FormData) {
+  await guard();
+  const userId = String(formData.get("userId") ?? "");
+  const result = await imposeAccountBlock({
+    userId,
+    scope: AccountBlockScope.PUBLISH,
+    reason: "админка работодателей",
+    publicNote: POLICY_PHRASES.publishBlocked,
+  });
+  if (!result.ok) {
+    failNotice("/admin/employers", result.error);
+  }
+  redirectNotice("/admin/employers", result.message);
+}
+
+export async function employerPublishLiftAction(formData: FormData) {
+  await guard();
+  const userId = String(formData.get("userId") ?? "");
+  const result = await liftAccountBlock({ userId, scope: AccountBlockScope.PUBLISH });
+  if (!result.ok) {
+    failNotice("/admin/employers", result.error);
+  }
+  redirectNotice("/admin/employers", result.message);
+}
+
+export async function userBlockAction(formData: FormData) {
+  await guard();
+  const userId = String(formData.get("userId") ?? "");
+  const scopeRaw = String(formData.get("scope") ?? "");
+  const scope =
+    scopeRaw === "APPLY" ? AccountBlockScope.APPLY : scopeRaw === "LOGIN" ? AccountBlockScope.LOGIN : null;
+  if (!scope) {
+    failNotice("/admin/users", "Неизвестная область блока.");
+  }
+  const publicNote = scope === AccountBlockScope.LOGIN ? "Этот аккаунт заблокирован" : "Отклик с этого аккаунта сейчас недоступен. Если это ошибка — напишите нам.";
+  const result = await imposeAccountBlock({
+    userId,
+    scope,
+    reason: "админка аккаунтов",
+    publicNote,
+  });
+  if (!result.ok) {
+    failNotice("/admin/users", result.error);
+  }
+  redirectNotice("/admin/users", result.message);
+}
+
+export async function userLiftAction(formData: FormData) {
+  await guard();
+  const userId = String(formData.get("userId") ?? "");
+  const scopeRaw = String(formData.get("scope") ?? "");
+  const scope =
+    scopeRaw === "APPLY"
+      ? AccountBlockScope.APPLY
+      : scopeRaw === "LOGIN"
+        ? AccountBlockScope.LOGIN
+        : scopeRaw === "PUBLISH"
+          ? AccountBlockScope.PUBLISH
+          : null;
+  if (!scope) {
+    failNotice("/admin/users", "Неизвестная область блока.");
+  }
+  const result = await liftAccountBlock({ userId, scope });
+  if (!result.ok) {
+    failNotice("/admin/users", result.error);
+  }
+  redirectNotice("/admin/users", result.message);
 }

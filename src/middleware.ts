@@ -166,6 +166,9 @@ function shouldRewriteToUltra(pathname: string): boolean {
     if (pathname === "/employer" || pathname.startsWith("/employer/")) {
       return false;
     }
+    if (pathname === "/profile" || pathname.startsWith("/profile/")) {
+      return false;
+    }
     if (pathname === "/login") {
       return false;
     }
@@ -223,6 +226,8 @@ function isAccountPath(pathname: string): boolean {
     pathname.startsWith("/auth/") ||
     pathname === "/employer" ||
     pathname.startsWith("/employer/") ||
+    pathname === "/profile" ||
+    pathname.startsWith("/profile/") ||
     pathname === "/login"
   );
 }
@@ -230,8 +235,9 @@ function isAccountPath(pathname: string): boolean {
 async function passAccount(request: NextRequest): Promise<NextResponse> {
   const session = resolveSession(request);
   const forced = { mode: "lite" as const, preference: "lite" as const, rememberPreference: false };
+  const path = `${request.nextUrl.pathname}${request.nextUrl.search}`;
   const response = NextResponse.next({
-    request: { headers: qualityRequestHeaders(request, forced, session) },
+    request: { headers: qualityRequestHeaders(request, forced, session, { "x-tr-path": path }) },
   });
   response.headers.set("Cache-Control", "private, no-store");
   const next = withSession(applyQuality(response, request, forced), session);

@@ -657,5 +657,28 @@ GitHub Secrets те же `CRON_SECRET` и `SITE_URL`, новых ключей н
 - Миграция `employer_auth` накатана на Supabase: ☐
 - `NEXT_PUBLIC_SITE_URL` на Vercel: ☐
 
+## 2026-08-31 — Этап 20A часть 2: очередь кабинета и блок аккаунта
+
+Миграция `20260831200000_account_blocks`: enum `AccountBlockScope`, таблица `AccountBlock`, флаги `User.publishBlocked` / `applyBlocked` / `loginBlocked`. Накатить: `npx prisma migrate deploy` (нужен `DIRECT_URL`).
+
+Бан в панели Supabase Auth не ставим: источник правды — наша база. Снятие PUBLISH телефон само не белит.
+
+Шаблон отметки:
+
+- Дата: 2026-08-31
+- Миграция `account_blocks` накатана на Supabase: ☑ (локально, 2026-08-31)
+
+## 2026-08-31 — Этап 21: кабинет соискателя
+
+Миграция `20260831210000_seeker_profile`: поля `User.resumeText`, `resumeUrl`, `notifyTelegram`, `telegramLinkCode`. Накатить: `npx prisma migrate deploy` (нужен `DIRECT_URL`).
+
+Имя бота `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` (без @) нужно только для ссылки `t.me/<бот>?start=<код>`. Пока пусто — в профиле виден код, ссылка появится на Этапе 22. Webhook и рассылку на этом этапе не ставим.
+
+Шаблон отметки:
+
+- Дата: 2026-08-31
+- Миграция `seeker_profile` накатана на Supabase: ☑ (локально, 2026-08-31)
+- `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` (можно пустым до этапа 22): ☐
+
 
 

@@ -1,17 +1,21 @@
-import { ContactVerdictKind, ModerationStatus, Prisma, ReportStatus } from "@prisma/client";
-import { revalidatePath } from "next/cache";
-import { clearMemoryCache } from "@/lib/adapters/cache";
+import { ContactVerdictKind, ModerationStatus, Prisma, ReportStatus, Source } from "@prisma/client";
 import { prisma } from "@/lib/adapters/db";
 import { AUTO_PUBLISH_SCORE, REVIEWED_BY } from "@/lib/admin/constants";
 import { addFraudPhrase, addStopWord } from "@/lib/admin/dictionaries";
 import { parseTrustFlags } from "@/lib/admin/flags";
+import { touchSite } from "@/lib/admin/touch";
 import { contactKey } from "@/lib/parser/contact";
 
 export type DecisionCode =
   | "PUBLISH"
   | "PUBLISH_TRUST"
+  | "PUBLISH_VERIFY"
   | "FRAUD"
   | "NOT_VACANCY"
+  | "REJECT_CABINET"
+  | "FORBIDDEN_TEXT"
+  | "DISABLE_PUBLISH"
+  | "RESTORE_PENDING"
   | "MERGE_DUPLICATE"
   | "APPROVE_GROUP"
   | "UNBLOCK_TO_QUEUE"
@@ -22,6 +26,7 @@ export type DecisionResult = {
   ok: true;
   message: string;
   dictWarning?: string;
+  next?: string;
 } | {
   ok: false;
   error: string;
@@ -31,23 +36,7 @@ function jsonFlags(value: Prisma.JsonValue): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
 }
 
-async function touchSite(citySlug: string, slug?: string) {
-  clearMemoryCache();
-  try {
-    revalidatePath(`/${citySlug}`);
-    revalidatePath(`/${citySlug}/jobs`);
-    revalidatePath(`/${citySlug}/vahta`);
-    if (slug) {
-      revalidatePath(`/${citySlug}/job/${slug}`);
-    }
-    revalidatePath("/admin");
-    revalidatePath("/admin/queue");
-  } catch {
-    // Вне запроса Next (скрипты проверки) кэш страниц не сбросить — решение в базе уже есть.
-  }
-}
-
-async function recordDecision(input: {
+export async function recordDecision(input: {
   vacancyId: string;
   decision: DecisionCode;
   flags: Prisma.JsonValue;
@@ -64,7 +53,7 @@ async function recordDecision(input: {
   });
 }
 
-async function loadVacancy(id: string) {
+export async function loadVacancy(id: string) {
   return prisma.vacancy.findUnique({
     where: { id },
     select: {
@@ -80,6 +69,9 @@ async function loadVacancy(id: string) {
       groupId: true,
       moderationStatus: true,
       isActive: true,
+      source: true,
+      employerId: true,
+      employer: { select: { id: true, userId: true, isVerified: true } },
     },
   });
 }
@@ -324,15 +316,26 @@ export async function unblockToQueue(id: string): Promise<DecisionResult> {
     },
   });
   const key = contactKey(row.contactPhone, row.contactTelegram);
-  if (key) {
+  const fromCabinet = row.source === Source.EMPLOYER;
+  if (!fromCabinet && key) {
     const verdict = await prisma.contactVerdict.findUnique({ where: { contact: key } });
     if (verdict?.verdict === ContactVerdictKind.BLOCKED) {
       await prisma.contactVerdict.delete({ where: { contact: key } });
     }
   }
-  await recordDecision({ vacancyId: id, decision: "UNBLOCK_TO_QUEUE", flags: row.trustFlags });
+  await recordDecision({
+    vacancyId: id,
+    decision: fromCabinet ? "RESTORE_PENDING" : "UNBLOCK_TO_QUEUE",
+    flags: row.trustFlags,
+  });
   await touchSite(row.citySlug);
-  return { ok: true, message: "Вернули в очередь одобрения. На сайте по-прежнему нет." };
+  return {
+    ok: true,
+    message: fromCabinet
+      ? "Вернули на проверку в очередь кабинета. Контакт в чёрном списке не трогали."
+      : "Вернули в очередь одобрения. На сайте по-прежнему нет.",
+    next: fromCabinet ? `/admin/employers/queue?id=${id}` : undefined,
+  };
 }
 
 export { touchSite };

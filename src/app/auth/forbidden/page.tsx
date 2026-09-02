@@ -28,7 +28,7 @@ export default async function ForbiddenPage({
       <p className="text-md text-muted">{text}</p>
       {user?.role === "SEEKER" ? (
         <p className="text-md text-muted">
-          Кабинет соискателя появится отдельно. Сейчас можно смотреть вакансии без ограничений.
+          Кабинет соискателя — <Link href="/profile">/profile</Link>. Смотреть вакансии можно без ограничений.
         </p>
       ) : null}
       <p>

@@ -2,7 +2,7 @@ import {
   ContactVerdictKind,
   ModerationStatus,
   Prisma,
-  type Source,
+  Source,
   type Vacancy,
 } from "@prisma/client";
 import { prisma } from "@/lib/adapters/db";
@@ -129,14 +129,37 @@ const queueSelect = {
 
 type QueueRow = Prisma.VacancyGetPayload<{ select: typeof queueSelect }>;
 
-function queueWhere(): Prisma.VacancyWhereInput {
+/** Очередь постов. Карточки кабинета сюда не попадают. */
+export function parserQueueWhere(): Prisma.VacancyWhereInput {
   return {
+    source: { not: Source.EMPLOYER },
     moderationStatus: { notIn: [ModerationStatus.BLOCKED, ModerationStatus.REJECTED] },
     OR: [
       { moderationStatus: ModerationStatus.PENDING },
       { reports: { some: { reason: "fraud", status: "NEW" } } },
     ],
   };
+}
+
+/** Очередь кабинета: PENDING или жалобы «похоже на мошенничество». Жёсткий BLOCKED — в /admin/blocked. */
+export function employerQueueWhere(employerId?: string): Prisma.VacancyWhereInput {
+  return {
+    source: Source.EMPLOYER,
+    ...(employerId ? { employerId } : {}),
+    OR: [
+      { moderationStatus: ModerationStatus.PENDING },
+      {
+        AND: [
+          { moderationStatus: { notIn: [ModerationStatus.BLOCKED, ModerationStatus.REJECTED] } },
+          { reports: { some: { reason: "fraud", status: "NEW" } } },
+        ],
+      },
+    ],
+  };
+}
+
+function queueWhere(): Prisma.VacancyWhereInput {
+  return parserQueueWhere();
 }
 
 function toItem(
@@ -358,7 +381,7 @@ export async function listQueue(tab: QueueTab = "all"): Promise<QueueItem[]> {
 export async function getQueueItem(id: string): Promise<QueueItem | null> {
   const now = new Date();
   const row = await prisma.vacancy.findUnique({ where: { id }, select: queueSelect });
-  if (!row) {
+  if (!row || row.source === Source.EMPLOYER) {
     return null;
   }
   const [item] = await enrich([row], now);

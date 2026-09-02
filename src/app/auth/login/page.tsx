@@ -6,7 +6,8 @@ import { FIELD_CLASS } from "@/lib/auth/constants";
 import { firstQuery, safeNextPath } from "@/lib/auth/next-path";
 import { getDefaultCity } from "@/lib/geo";
 import { signInAction } from "@/app/auth/actions";
-import { getUser } from "@/lib/adapters/auth";
+import { getUser, auth } from "@/lib/adapters/auth";
+import { LOGIN_BLOCKED_MESSAGE } from "@/lib/auth/blocks";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -25,15 +26,19 @@ export default async function LoginPage({
   const user = await getUser();
   const query = await searchParams;
   const next = safeNextPath(firstQuery(query.next), `/${getDefaultCity().slug}`);
-  if (user && !firstQuery(query.error)) {
+  if (user?.loginBlocked) {
+    await auth.signOut();
+  }
+  if (user && !user.loginBlocked && !firstQuery(query.error)) {
     redirect(user.role === "EMPLOYER" ? "/employer/dashboard" : next);
   }
+  const loginError = firstQuery(query.error) || (user?.loginBlocked ? LOGIN_BLOCKED_MESSAGE : undefined);
 
   return (
     <>
       <h1 className="font-display text-2xl font-medium">Вход</h1>
       <p className="text-md text-muted">Смотреть вакансии можно без регистрации.</p>
-      <AuthNotice query={query} />
+      <AuthNotice query={{ ...query, error: loginError }} />
       <form action={signInAction} className="flex min-w-0 flex-col gap-4">
         <input type="hidden" name="next" value={next} />
         <div className="flex min-w-0 flex-col gap-2">

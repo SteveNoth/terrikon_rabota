@@ -6,6 +6,7 @@ import { cn } from "@/lib/format/cn";
 import { enqueueApply, flushQueue, hasPendingApply, hasSentApply } from "@/lib/offline/queue";
 import { OFFLINE_EVENT, type OfflineEventDetail } from "@/lib/offline/types";
 import { useOnline } from "@/lib/offline/use-online";
+import { appliedAgoLabel } from "@/lib/seeker/labels";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -15,15 +16,29 @@ export function ApplyButton({
   href,
   vacancyId,
   title,
+  signedIn,
+  appliedAt,
+  blocked,
+  blockedMessage,
+  closed,
 }: {
   href: string;
   vacancyId: string;
   title: string;
+  signedIn: boolean;
+  appliedAt?: Date | string | null;
+  blocked?: boolean;
+  blockedMessage?: string;
+  closed?: boolean;
 }) {
   const online = useOnline();
-  const [state, setState] = useState<ApplyState>("idle");
+  const [state, setState] = useState<ApplyState>(appliedAt ? "sent" : "idle");
 
   useEffect(() => {
+    if (appliedAt) {
+      setState("sent");
+      return;
+    }
     let cancelled = false;
     void Promise.all([hasSentApply(vacancyId), hasPendingApply(vacancyId)]).then(([sent, pending]) => {
       if (cancelled) {
@@ -38,7 +53,7 @@ export function ApplyButton({
     return () => {
       cancelled = true;
     };
-  }, [vacancyId, online]);
+  }, [vacancyId, online, appliedAt]);
 
   useEffect(() => {
     function onEvent(event: Event) {
@@ -59,6 +74,22 @@ export function ApplyButton({
     }
   }
 
+  if (closed) {
+    return null;
+  }
+
+  if (blocked) {
+    return <p className="text-md text-muted">{blockedMessage}</p>;
+  }
+
+  if (appliedAt) {
+    return (
+      <p className="text-md text-muted" role="status">
+        {appliedAgoLabel(appliedAt)}
+      </p>
+    );
+  }
+
   if (state === "sent") {
     return (
       <Button type="button" variant="primary" disabled>
@@ -67,10 +98,25 @@ export function ApplyButton({
     );
   }
 
-  if (!online || state === "queued") {
+  if (!online) {
+    if (!signedIn) {
+      return (
+        <p className="text-md text-muted">
+          Нет сети. Сохраните вакансию в избранное — отклик отправим после входа, когда появится интернет.
+        </p>
+      );
+    }
     return (
       <Button type="button" variant="primary" onClick={() => void queueApply()} disabled={state === "queued"}>
         {state === "queued" ? "Отклик отправится, как появится интернет" : "Откликнуться"}
+      </Button>
+    );
+  }
+
+  if (state === "queued") {
+    return (
+      <Button type="button" variant="primary" disabled>
+        Отклик отправится, как появится интернет
       </Button>
     );
   }

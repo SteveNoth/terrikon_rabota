@@ -1,0 +1,170 @@
+{
+  "market": {
+    "byProfession": {
+      "ohrannik": {
+        "LOCAL": { "median": 28000, "sample": 10 },
+        "median": 28000,
+        "sample": 10
+      },
+      "prodavets": {
+        "LOCAL": { "median": 35000, "sample": 47 }
+      },
+      "povar": {
+        "LOCAL": { "median": 32000, "sample": 8 },
+        "VAHTA": { "median": 180000, "sample": 8 }
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "prepaid",
+      "note": "предоплата / залог за форму → BLOCKED, в очередь не идёт",
+      "input": {
+        "title": "Продавец",
+        "description": "Требуется продавец в магазин, оклад 40 000 руб, график 2/2. Для выхода внести залог за форму 3000 руб. Горловка.",
+        "professionSlug": "prodavets",
+        "salaryFrom": 40000,
+        "workFormat": "LOCAL"
+      },
+      "expect": { "status": "BLOCKED", "goesToQueue": false, "shouldBlacklistContact": true }
+    },
+    {
+      "id": "oformit-kartu",
+      "note": "оформить карту на себя → BLOCKED",
+      "input": {
+        "title": "Сотрудник",
+        "description": "Требуется сотрудник, доход 80 000 руб. Нужно оформить карту на себя. Горловка.",
+        "professionSlug": "prodavets",
+        "salaryFrom": 80000,
+        "workFormat": "LOCAL"
+      },
+      "expect": { "status": "BLOCKED", "goesToQueue": false }
+    },
+    {
+      "id": "explicit-svo",
+      "note": "явный набор на СВО в описании → отказ",
+      "input": {
+        "title": "Повар",
+        "description": "Набор на СВО. Служба по контракту, денежное довольствие 200 000 руб.",
+        "professionSlug": "prodavets",
+        "salaryFrom": 40000,
+        "workFormat": "LOCAL"
+      },
+      "expect": { "status": "REJECTED", "goesToQueue": false, "rule": "explicit_svo" }
+    },
+    {
+      "id": "hidden-svo-guard",
+      "note": "охранник 250 000, LOCAL, без вахты — отказ, не очередь",
+      "input": {
+        "title": "Охранник",
+        "description": "Охранник на объект. График 2/2. Горловка.",
+        "professionSlug": "ohrannik",
+        "salaryFrom": 250000,
+        "workFormat": "LOCAL"
+      },
+      "expect": { "status": "REJECTED", "goesToQueue": false, "rule": "hidden_svo" }
+    },
+    {
+      "id": "local-guard-ok",
+      "note": "местный охранник 28 000 — не СВО",
+      "input": {
+        "title": "Охранник",
+        "description": "Охранник на магазин. График 2/2. Горловка.",
+        "professionSlug": "ohrannik",
+        "salaryFrom": 28000,
+        "workFormat": "LOCAL"
+      },
+      "expect": { "notStatus": "REJECTED", "notRule": "hidden_svo" }
+    },
+    {
+      "id": "vahta-cook",
+      "note": "вахта повара 180 000 — не СВО",
+      "input": {
+        "title": "Повар",
+        "description": "Повар на вахту. Проживание на объекте. График 60/30.",
+        "professionSlug": "povar",
+        "salaryFrom": 180000,
+        "workFormat": "VAHTA",
+        "housingProvided": true,
+        "rotationPattern": "60/30"
+      },
+      "expect": { "notStatus": "REJECTED", "notRule": "hidden_svo" }
+    },
+    {
+      "id": "new-phone",
+      "note": "новый телефон при чистом тексте → PENDING, не AUTO_OK",
+      "input": {
+        "title": "Продавец",
+        "description": "Продавец в продуктовый магазин. График 2/2. Оклад 35 000 рублей. Горловка, район Центральный.",
+        "professionSlug": "prodavets",
+        "salaryFrom": 35000,
+        "workFormat": "LOCAL"
+      },
+      "context": { "contactVerdict": null, "isVerified": false },
+      "expect": { "status": "PENDING", "notStatus": "AUTO_OK" }
+    },
+    {
+      "id": "trusted-verified",
+      "note": "TRUSTED + isVerified + балл ≥ 70 → AUTO_OK",
+      "input": {
+        "title": "Продавец",
+        "description": "Продавец в продуктовый магазин. График 2/2. Оклад 35 000 рублей. Горловка, район Центральный. Обязанности: касса, выкладка, общение с покупателями.",
+        "professionSlug": "prodavets",
+        "salaryFrom": 35000,
+        "workFormat": "LOCAL"
+      },
+      "context": { "contactVerdict": "TRUSTED", "isVerified": true },
+      "expect": { "status": "AUTO_OK", "minScore": 70 }
+    },
+    {
+      "id": "short-hr",
+      "note": "короткая кадровая формулировка без «требуется» — не отказ как мусор",
+      "input": {
+        "title": "Продавец",
+        "description": "Продавец в магазин. График 2/2. Оклад 35 000.",
+        "professionSlug": "prodavets",
+        "salaryFrom": 35000,
+        "workFormat": "LOCAL"
+      },
+      "expect": { "notStatus": "REJECTED", "notStatus2": "BLOCKED" }
+    },
+    {
+      "id": "courses",
+      "note": "набор курсов — отказ как содержание, не как is_vacancy",
+      "input": {
+        "title": "Курсы",
+        "description": "Набор курсов по английскому языку. Пассивный доход без опыта не обещаем — учим языку.",
+        "professionSlug": "prodavets",
+        "salaryFrom": 35000,
+        "workFormat": "LOCAL"
+      },
+      "expect": { "status": "REJECTED", "goesToQueue": false }
+    },
+    {
+      "id": "blacklisted",
+      "note": "контакт из чёрного списка — отказ до словарей",
+      "input": {
+        "title": "Продавец",
+        "description": "Продавец в магазин. Для выхода внести залог за форму 3000.",
+        "professionSlug": "prodavets",
+        "salaryFrom": 40000,
+        "workFormat": "LOCAL"
+      },
+      "context": { "contactVerdict": "BLOCKED" },
+      "expect": { "status": "REJECTED", "rule": "blacklisted_contact", "usedDictionaries": false, "notRule": "zalog_za_formu" }
+    },
+    {
+      "id": "publish-blocked",
+      "note": "аккаунт без PUBLISH — отказ до словарей",
+      "input": {
+        "title": "Продавец",
+        "description": "Продавец в магазин. Для выхода внести залог за форму 3000.",
+        "professionSlug": "prodavets",
+        "salaryFrom": 40000,
+        "workFormat": "LOCAL"
+      },
+      "context": { "publishBlocked": true },
+      "expect": { "status": "REJECTED", "rule": "publish_blocked", "usedDictionaries": false, "notRule": "zalog_za_formu" }
+    }
+  ]
+}

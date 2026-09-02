@@ -1,4 +1,5 @@
 import { Label } from "@/components/ui/label";
+import { Alert } from "@/components/ui/alert";
 import { FIELD_CLASS } from "@/lib/auth/constants";
 import { citySelectOptions } from "@/lib/auth/schemas";
 import { getAllCities, getDistricts, publishOnlyActiveMessage } from "@/lib/geo";
@@ -7,13 +8,16 @@ import { saveVacancyAction } from "@/app/employer/actions";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/format/cn";
 import type { EmployerVacancyInput } from "@/lib/auth/schemas";
+import type { CabinetVacancyStatus } from "@/lib/policy/status";
 
 export function EmployerVacancyForm({
   id,
   values,
+  status,
 }: {
   id?: string;
   values: EmployerVacancyInput;
+  status?: CabinetVacancyStatus;
 }) {
   const cities = citySelectOptions();
   const spheres = listSpheres();
@@ -26,6 +30,12 @@ export function EmployerVacancyForm({
   return (
     <form action={saveVacancyAction} className="flex min-w-0 flex-col gap-4">
       {id ? <input type="hidden" name="id" value={id} /> : null}
+      {status ? (
+        <Alert tone={status.listed ? "success" : status.label === "На проверке" ? "info" : "warning"}>
+          <p>{status.label}</p>
+          {status.hint ? <p className="mt-1">{status.hint}</p> : null}
+        </Alert>
+      ) : null}
       <div className="flex min-w-0 flex-col gap-2">
         <Label htmlFor="vac-title">Название</Label>
         <input id="vac-title" name="title" required defaultValue={values.title} className={FIELD_CLASS} />
@@ -256,7 +266,7 @@ export function EmployerVacancyForm({
       </fieldset>
 
       <button type="submit" className={cn(buttonVariants({ variant: "primary" }), "self-start")}>
-        {id ? "Сохранить вакансию" : "Опубликовать"}
+        {id ? "Сохранить вакансию" : "Сохранить"}
       </button>
     </form>
   );

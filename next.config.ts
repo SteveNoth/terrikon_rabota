@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   agentRules: false,
   // Prisma — нативный модуль, Next не должен упаковывать его в бандл сервера.
   serverExternalPackages: ["@prisma/client"],
+  // Dev-ресурсы по умолчанию только с localhost. Браузер на 127.0.0.1 иначе
+  // не получает JS, и формы входа/регистрации выглядят «сломанными».
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   // Тонкий путь читает tokens.css / modes.css с диска — файлы должны попасть в серверный бандл.
   outputFileTracingIncludes: {
     "/u": ["./src/styles/tokens.css", "./src/styles/modes.css"],
@@ -63,6 +66,14 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/employer/:path*",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/profile",
+        headers: [{ key: "Cache-Control", value: "private, no-store" }],
+      },
+      {
+        source: "/profile/:path*",
         headers: [{ key: "Cache-Control", value: "private, no-store" }],
       },
       {

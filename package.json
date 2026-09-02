@@ -11,7 +11,9 @@
     "check:design": "node scripts/check-design.mjs",
     "icons:pwa": "node scripts/generate-pwa-icons.mjs",
     "measure:ultra": "node scripts/measure-ultra.mjs",
-    "analyze": "echo Bundle analysis not configured yet"
+    "test:policy": "npx tsx src/lib/policy/run-tests.ts",
+    "test:blocks": "npx tsx src/lib/auth/run-block-tests.ts",
+    "test:seeker": "npx tsx src/lib/seeker/run-tests.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

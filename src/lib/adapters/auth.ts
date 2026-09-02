@@ -14,10 +14,11 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import type { UserRole } from "@prisma/client";
 import { cache } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/adapters/db";
 import { isAuthConfigured, supabaseAnonKey, supabaseUrl } from "@/lib/adapters/auth-edge";
 import { AUTH_NOT_CONFIGURED, authErrorMessage } from "@/lib/auth/messages";
+import { LOGIN_BLOCKED_MESSAGE } from "@/lib/auth/blocks";
 import { getDefaultCity, isCitySlug } from "@/lib/geo";
 import { employerSlug } from "@/lib/parser/slug";
 
@@ -29,6 +30,9 @@ export type AuthUser = {
   role: UserRole;
   citySlug: string;
   employerId: string | null;
+  publishBlocked: boolean;
+  applyBlocked: boolean;
+  loginBlocked: boolean;
 };
 
 export type SignUpInput = {
@@ -116,6 +120,35 @@ function nameFromMeta(user: SupabaseUser, fallbackEmail: string): string {
   return local.slice(0, 80) || "Пользователь";
 }
 
+function toAuthUser(
+  row: {
+    id: string;
+    authId: string;
+    email: string;
+    name: string;
+    role: UserRole;
+    citySlug: string;
+    publishBlocked?: boolean;
+    applyBlocked?: boolean;
+    loginBlocked?: boolean;
+    employer?: { id: string } | null;
+  },
+  employerId?: string | null,
+): AuthUser {
+  return {
+    id: row.id,
+    authId: row.authId,
+    email: row.email,
+    name: row.name,
+    role: row.role,
+    citySlug: row.citySlug,
+    employerId: employerId !== undefined ? employerId : (row.employer?.id ?? null),
+    publishBlocked: Boolean(row.publishBlocked),
+    applyBlocked: Boolean(row.applyBlocked),
+    loginBlocked: Boolean(row.loginBlocked),
+  };
+}
+
 async function uniqueEmployerSlug(base: string): Promise<string> {
   let slug = base.slice(0, 80) || "employer";
   let n = 2;
@@ -153,28 +186,12 @@ async function ensureAppUser(authUser: SupabaseUser): Promise<AuthUser | null> {
   if (existing) {
     if (existing.role === "EMPLOYER" && !existing.employer) {
       const employer = await createEmployerForUser(existing);
-      return {
-        id: existing.id,
-        authId: existing.authId,
-        email: existing.email,
-        name: existing.name,
-        role: existing.role,
-        citySlug: existing.citySlug,
-        employerId: employer.id,
-      };
+      return toAuthUser(existing, employer.id);
     }
     if (existing.email !== email) {
       await prisma.user.update({ where: { id: existing.id }, data: { email } });
     }
-    return {
-      id: existing.id,
-      authId: existing.authId,
-      email,
-      name: existing.name,
-      role: existing.role,
-      citySlug: existing.citySlug,
-      employerId: existing.employer?.id ?? null,
-    };
+    return toAuthUser({ ...existing, email }, existing.employer?.id ?? null);
   }
 
   const byEmail = await prisma.user.findUnique({
@@ -187,15 +204,7 @@ async function ensureAppUser(authUser: SupabaseUser): Promise<AuthUser | null> {
       data: { authId: authUser.id },
       include: { employer: { select: { id: true } } },
     });
-    return {
-      id: updated.id,
-      authId: updated.authId,
-      email: updated.email,
-      name: updated.name,
-      role: updated.role,
-      citySlug: updated.citySlug,
-      employerId: updated.employer?.id ?? null,
-    };
+    return toAuthUser(updated);
   }
 
   const role = roleFromMeta(authUser.user_metadata?.role);
@@ -214,15 +223,7 @@ async function ensureAppUser(authUser: SupabaseUser): Promise<AuthUser | null> {
   if (role === "EMPLOYER") {
     employerId = (await createEmployerForUser(created)).id;
   }
-  return {
-    id: created.id,
-    authId: created.authId,
-    email: created.email,
-    name: created.name,
-    role: created.role,
-    citySlug: created.citySlug,
-    employerId,
-  };
+  return toAuthUser(created, employerId);
 }
 
 function looksLikeExistingAccount(user: SupabaseUser | null): boolean {
@@ -254,12 +255,26 @@ class SupabaseAuth implements AuthAdapter {
       },
     });
     if (error) {
+      console.error(
+        "[auth] signUp",
+        error.code ?? "",
+        error.status ?? "",
+        error.message ?? "",
+        "redirect",
+        input.emailRedirectTo,
+      );
       return { ok: false, error: authErrorMessage(error) };
     }
     if (looksLikeExistingAccount(data.user)) {
       return { ok: false, error: "Такой email уже зарегистрирован" };
     }
-    const user = data.user ? await ensureAppUser(data.user) : null;
+    let user: AuthUser | null = null;
+    try {
+      user = data.user ? await ensureAppUser(data.user) : null;
+    } catch (cause) {
+      console.error("[auth] signUp ensureAppUser", cause);
+      return { ok: false, error: "Не получилось создать аккаунт. Если ошибка повторяется — напишите администратору" };
+    }
     const needsEmailConfirmation = !data.session;
     return { ok: true, needsEmailConfirmation, user };
   }
@@ -282,6 +297,10 @@ class SupabaseAuth implements AuthAdapter {
     const user = await ensureAppUser(data.user);
     if (!user) {
       return { ok: false, error: "Не получилось открыть аккаунт. Попробуйте ещё раз" };
+    }
+    if (user.loginBlocked) {
+      await supabase.auth.signOut();
+      return { ok: false, error: LOGIN_BLOCKED_MESSAGE };
     }
     return { ok: true, user };
   }
@@ -406,4 +425,51 @@ export function publicSiteUrl(): string {
     return fromEnv;
   }
   return "http://localhost:3000";
+}
+
+function loopbackOrigin(host: string): string | null {
+  const port = host.match(/:(\d+)$/)?.[1] ?? "3000";
+  const name = host.replace(/:\d+$/, "").replace(/^\[|\]$/g, "");
+  if (name === "localhost" || name === "127.0.0.1" || name === "::1") {
+    return `http://localhost:${port}`;
+  }
+  return null;
+}
+
+/**
+ * Ссылка возврата из письма. Без `?next=` — иначе запрос к Auth ломается.
+ * Локально всегда localhost, даже если открыли 127.0.0.1.
+ * Подтверждение: /auth/callback. Сброс пароля: /auth/callback/reset.
+ */
+export async function authCallbackUrl(nextPath: "/auth/confirmed" | "/auth/reset"): Promise<string> {
+  const fallback = publicSiteUrl();
+  let origin = fallback;
+  try {
+    const headerList = await headers();
+    const host = (headerList.get("x-forwarded-host") || headerList.get("host") || "").split(",")[0].trim().toLowerCase();
+    if (host) {
+      const local = loopbackOrigin(host);
+      if (local) {
+        origin = local;
+      } else {
+        const proto = (headerList.get("x-forwarded-proto") || "https").split(",")[0].trim();
+        let fallbackHost = "";
+        try {
+          fallbackHost = new URL(fallback).host.toLowerCase();
+        } catch {
+          fallbackHost = "";
+        }
+        const vercel = (process.env.VERCEL_URL ?? "").toLowerCase();
+        if (host === fallbackHost || (vercel && host === vercel)) {
+          origin = `${proto}://${host}`;
+        }
+      }
+    }
+  } catch {
+    origin = fallback;
+  }
+  if (nextPath === "/auth/reset") {
+    return `${origin}/auth/callback/reset`;
+  }
+  return `${origin}/auth/callback`;
 }

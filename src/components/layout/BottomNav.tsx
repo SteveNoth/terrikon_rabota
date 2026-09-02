@@ -14,14 +14,22 @@ type NavItem = {
   href?: string;
 };
 
-export function BottomNav({ citySlug, accountHref }: { citySlug: string; accountHref: string }) {
+export function BottomNav({
+  citySlug,
+  accountHref,
+  favoritesHref,
+}: {
+  citySlug: string;
+  accountHref: string;
+  favoritesHref: string;
+}) {
   const pathname = usePathname();
 
   const items: NavItem[] = [
     { id: "home", label: "Главная", icon: "home", href: `/${citySlug}` },
     { id: "search", label: "Поиск", icon: "search", href: `/${citySlug}/jobs` },
     { id: "map", label: "Карта", icon: "map", href: `/${citySlug}/map` },
-    { id: "saved", label: "Избранное", icon: "star", href: "/offline#favorites" },
+    { id: "saved", label: "Избранное", icon: "star", href: favoritesHref },
     { id: "profile", label: "Профиль", icon: "profile", href: accountHref },
   ];
 
@@ -47,8 +55,11 @@ export function BottomNav({ citySlug, accountHref }: { citySlug: string; account
                 : item.id === "profile"
                   ? pathname === hrefPath ||
                     pathname.startsWith("/employer/") ||
+                    pathname.startsWith("/profile") ||
                     pathname.startsWith("/auth/")
-                  : pathname === hrefPath || pathname.startsWith(`${hrefPath}/`)
+                  : item.id === "saved"
+                    ? pathname.startsWith("/profile/favorites") || pathname === "/offline"
+                    : pathname === hrefPath || pathname.startsWith(`${hrefPath}/`)
             : false;
           const className = cn(
             "flex h-full min-h-tap flex-col items-center justify-center gap-1 px-1 text-xs",

@@ -102,6 +102,8 @@ export type VacancyView = {
   latitude: number | null;
   longitude: number | null;
   applyHref: string;
+  /** Снята с публикации. Ссылку из откликов всё равно показываем. */
+  isClosed: boolean;
   sphere: string;
   professionSlug: string | null;
   districtSlug: string | null;
@@ -336,7 +338,8 @@ export function toVacancyView(record: VacancyRecord): VacancyView {
     address: isVahta ? null : record.address?.trim() || null,
     latitude: isVahta ? null : record.latitude,
     longitude: isVahta ? null : record.longitude,
-    applyHref: vacancyApplyHref(record.citySlug, record.slug),
+    applyHref: vacancyApplyHref(record.id),
+    isClosed: record.isActive === false,
     sphere: record.sphere,
     professionSlug: record.professionSlug,
     districtSlug: record.districtSlug,

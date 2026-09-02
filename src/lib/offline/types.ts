@@ -60,6 +60,7 @@ export type QueuedAction = {
   vacancyId: string;
   title: string;
   href?: string;
+  message?: string;
   createdAt: number;
   status: QueueStatus;
   sentAt?: number;
@@ -67,7 +68,10 @@ export type QueuedAction = {
 
 export type OfflineEventDetail =
   | { kind: "apply-sent"; vacancyId: string; title: string }
+  | { kind: "apply-need-login"; vacancyId: string }
+  | { kind: "apply-queued"; vacancyId: string }
   | { kind: "favorite-sent"; vacancyId: string }
+  | { kind: "favorite-queued"; vacancyId: string }
   | { kind: "back-online" };
 
 export type OfflineDictsPayload = {

@@ -20,6 +20,7 @@ export type AdminReport = {
   createdAt: Date;
   waitLabel: string;
   stale: boolean;
+  fromCabinet: boolean;
 };
 
 export async function listReports(): Promise<AdminReport[]> {
@@ -29,7 +30,7 @@ export async function listReports(): Promise<AdminReport[]> {
     orderBy: { createdAt: "asc" },
     take: 200,
     include: {
-      vacancy: { select: { title: true, slug: true, citySlug: true } },
+      vacancy: { select: { title: true, slug: true, citySlug: true, source: true } },
     },
   });
   return rows.map((row) => {
@@ -48,6 +49,7 @@ export async function listReports(): Promise<AdminReport[]> {
       createdAt: row.createdAt,
       waitLabel: formatWait(row.createdAt, now),
       stale: ageMs > 86_400_000,
+      fromCabinet: row.vacancy.source === "EMPLOYER",
     };
   });
 }

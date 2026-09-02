@@ -4,6 +4,7 @@ import { unblockAction } from "@/app/admin/actions";
 import { AdminNotice } from "@/app/admin/notice";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatDate } from "@/lib/format/date";
+import Link from "next/link";
 
 export default async function BlockedPage({
   searchParams,
@@ -47,6 +48,11 @@ export default async function BlockedPage({
               Это ошибка, вернуть в очередь
             </button>
           </form>
+          {item.source === "EMPLOYER" ? (
+            <p className="mt-2">
+              <Link href={`/admin/employers/queue?id=${item.id}`}>Открыть в очереди кабинета</Link>
+            </p>
+          ) : null}
         </article>
       ))}
     </>

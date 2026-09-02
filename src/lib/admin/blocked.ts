@@ -10,6 +10,7 @@ export type BlockedItem = {
   title: string;
   rawText: string;
   cityName: string;
+  source: string;
   sourceLabel: string;
   sourceName: string | null;
   contactPhone: string | null;
@@ -44,6 +45,7 @@ export async function listBlocked(): Promise<BlockedItem[]> {
       title: row.title,
       rawText: row.rawText ?? "",
       cityName: cityDisplayName(row.citySlug),
+      source: row.source,
       sourceLabel: SOURCE_LABEL[row.source],
       sourceName: row.sourceName,
       contactPhone: row.contactPhone,

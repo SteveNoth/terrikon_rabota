@@ -81,6 +81,7 @@ export type VacancyListItem = {
   source: Source;
   sourceName: string | null;
   salaryIsGross: boolean | null;
+  isActive: boolean;
   employer: {
     slug: string;
     name: string;
@@ -162,6 +163,7 @@ const listSelect = {
   source: true,
   sourceName: true,
   salaryIsGross: true,
+  isActive: true,
   employer: {
     select: {
       slug: true,
@@ -218,10 +220,16 @@ const detailSelect = {
   },
 } satisfies Prisma.VacancySelect;
 
+function approvedWhere(): Prisma.VacancyWhereInput {
+  return {
+    moderationStatus: { in: [ModerationStatus.AUTO_OK, ModerationStatus.APPROVED] },
+  };
+}
+
 function publishedWhere(): Prisma.VacancyWhereInput {
   return {
     isActive: true,
-    moderationStatus: { in: [ModerationStatus.AUTO_OK, ModerationStatus.APPROVED] },
+    ...approvedWhere(),
   };
 }
 
@@ -412,10 +420,13 @@ export async function listVacancies(params: ListVacanciesParams): Promise<ListVa
   }
 }
 
-export async function getVacancyBySlug(slug: string): Promise<VacancyRecord | null> {
+export async function getVacancyBySlug(
+  slug: string,
+  options?: { allowClosed?: boolean },
+): Promise<VacancyRecord | null> {
   try {
     const vacancy = await prisma.vacancy.findFirst({
-      where: { slug, ...publishedWhere() },
+      where: { slug, ...(options?.allowClosed ? approvedWhere() : publishedWhere()) },
       select: detailSelect,
     });
     return vacancy;

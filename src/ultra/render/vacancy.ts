@@ -1,5 +1,9 @@
 import { navigatorAnchorExtras, navigatorHrefFor } from "@/lib/maps/points";
 import { getSimilarVacancies, getVacancyBySlug } from "@/lib/repo/vacancies";
+import { getUser } from "@/lib/adapters/auth";
+import { getApplyUiState } from "@/lib/repo/seeker";
+import { appliedAgoLabel } from "@/lib/seeker/labels";
+import { VACANCY_CLOSED_LABEL } from "@/lib/seeker/constants";
 import { REPORT_REASONS } from "@/lib/vacancy/reports";
 import { toVacancyView, vacancyMetaDescription, vacancyMetaTitle, type VacancyView } from "@/lib/vacancy/view";
 import { renderVacancyCard } from "@/ultra/card";
@@ -103,13 +107,23 @@ export async function renderVacancyPage({
   slug: string;
   reportStatus?: "ok" | "error";
 }): Promise<{ title: string; description: string; body: string; view: VacancyView } | null> {
-  const record = await getVacancyBySlug(slug);
+  const record = await getVacancyBySlug(slug, { allowClosed: true });
   if (!record || record.citySlug !== citySlug) {
     return null;
   }
 
   const view = toVacancyView(record);
   const similar = await getSimilarVacancies(slug, 3);
+  const user = await getUser();
+  const applyState = await getApplyUiState(user?.id ?? null, view.id);
+
+  const applyBlock = view.isClosed
+    ? `<p class="muted">${esc(VACANCY_CLOSED_LABEL)}</p>`
+    : applyState.blocked
+      ? `<p class="muted">${esc(applyState.blockedMessage)}</p>`
+      : applyState.appliedAt
+        ? `<p class="muted">${esc(appliedAgoLabel(applyState.appliedAt))}</p>`
+        : `<p><a class="btn btn-primary" href="${attr(view.applyHref)}">Откликнуться</a> <a class="btn btn-ghost" href="#report">Пожаловаться</a></p>`;
 
   const vahtaBlock = view.vahta
     ? `<div>
@@ -187,7 +201,7 @@ ${view.facts.map((fact) => `<p><span class="muted">${esc(fact.label)}: </span>${
     view.freshnessLabel ? ` · ${esc(view.freshnessLabel)}` : ""
   }</p>
 </header>
-<p><a class="btn btn-primary" href="${attr(view.applyHref)}">Откликнуться</a> <a class="btn btn-ghost" href="#report">Пожаловаться</a></p>
+${applyBlock}
 ${contacts}
 ${renderDescription(view)}
 ${renderSource(view)}

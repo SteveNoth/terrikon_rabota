@@ -30,13 +30,12 @@ export function AccountLinks({
     );
   }
 
-  const cabinetHref = user.role === "EMPLOYER" ? "/employer/dashboard" : "/auth/account";
-  const cabinetLabel = user.role === "EMPLOYER" ? "Кабинет" : "Аккаунт";
+  const cabinetHref = user.role === "EMPLOYER" ? "/employer/dashboard" : "/profile";
 
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-2">
       <Link href={cabinetHref} className={cn(buttonVariants({ variant: "ghost", size }))}>
-        {cabinetLabel}
+        Кабинет
       </Link>
       {user.role === "EMPLOYER" ? (
         <Link

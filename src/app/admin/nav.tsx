@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 const NAV = [
   { href: "/admin", label: "Обзор" },
   { href: "/admin/queue", label: "Очередь одобрения" },
+  { href: "/admin/employers/queue", label: "Очередь кабинета" },
   { href: "/admin/vacancies", label: "Вакансии" },
   { href: "/admin/blocked", label: "Заблокировано" },
   { href: "/admin/posts", label: "Модерация постов" },
@@ -16,9 +17,16 @@ const NAV = [
   { href: "/admin/reports", label: "Жалобы" },
   { href: "/admin/cities", label: "Города" },
   { href: "/admin/employers", label: "Работодатели" },
+  { href: "/admin/users", label: "Аккаунты" },
 ];
 
-export function AdminNav({ queueSize }: { queueSize: number }) {
+export function AdminNav({
+  queueSize,
+  employerQueueSize,
+}: {
+  queueSize: number;
+  employerQueueSize: number;
+}) {
   const path = usePathname();
   return (
     <nav className="admin-nav" aria-label="Админка">
@@ -27,6 +35,7 @@ export function AdminNav({ queueSize }: { queueSize: number }) {
         <Link key={item.href} href={item.href} aria-current={path === item.href ? "page" : undefined}>
           <span>{item.label}</span>
           {item.href === "/admin/queue" ? <span className="admin-badge">{queueSize}</span> : null}
+          {item.href === "/admin/employers/queue" ? <span className="admin-badge">{employerQueueSize}</span> : null}
         </Link>
       ))}
       <form action={logoutAction} className="mt-5">

@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { auth, publicSiteUrl } from "@/lib/adapters/auth";
+import { auth, authCallbackUrl } from "@/lib/adapters/auth";
 import { forgotSchema, loginSchema, registerSchema, resetPasswordSchema, firstZodMessage } from "@/lib/auth/schemas";
 import { cityMustBeKnown } from "@/lib/auth/schemas";
 import { getDefaultCity } from "@/lib/geo";
@@ -43,6 +43,9 @@ function afterLoginPath(userRole: string, next: string): string {
   if (userRole === "EMPLOYER") {
     return "/employer/dashboard";
   }
+  if (userRole === "SEEKER") {
+    return "/profile";
+  }
   return next || "/";
 }
 
@@ -59,11 +62,16 @@ export async function registerAction(formData: FormData) {
     fail("/auth/register", firstZodMessage(parsed.error), {
       email: formString(formData, "email"),
       role: formString(formData, "role"),
+      next: formString(formData, "next"),
     });
   }
   const cityError = cityMustBeKnown(parsed.data.citySlug);
   if (cityError) {
-    fail("/auth/register", cityError, { email: parsed.data.email, role: parsed.data.role });
+    fail("/auth/register", cityError, {
+      email: parsed.data.email,
+      role: parsed.data.role,
+      next: parsed.data.next ?? "",
+    });
   }
 
   const next = safeNextPath(parsed.data.next, parsed.data.role === "EMPLOYER" ? "/employer/dashboard" : "/");
@@ -73,10 +81,14 @@ export async function registerAction(formData: FormData) {
     name: parsed.data.name,
     role: parsed.data.role,
     citySlug: parsed.data.citySlug,
-    emailRedirectTo: `${publicSiteUrl()}/auth/callback?next=${encodeURIComponent("/auth/confirmed")}`,
+    emailRedirectTo: await authCallbackUrl("/auth/confirmed"),
   });
   if (!result.ok) {
-    fail("/auth/register", result.error, { email: parsed.data.email, role: parsed.data.role });
+    fail("/auth/register", result.error, {
+      email: parsed.data.email,
+      role: parsed.data.role,
+      next,
+    });
   }
   if (result.needsEmailConfirmation) {
     notice("/auth/confirm", "Мы отправили письмо со ссылкой. Перейдите по ней, чтобы подтвердить почту.", {
@@ -123,7 +135,7 @@ export async function forgotAction(formData: FormData) {
   }
   const result = await auth.requestPasswordReset(
     parsed.data.email.trim().toLowerCase(),
-    `${publicSiteUrl()}/auth/callback?next=${encodeURIComponent("/auth/reset")}`,
+    await authCallbackUrl("/auth/reset"),
   );
   if (!result.ok) {
     fail("/auth/forgot", result.error, { email: parsed.data.email });

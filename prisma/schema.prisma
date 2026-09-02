@@ -71,6 +71,12 @@ enum UserRole {
   ADMIN
 }
 
+enum AccountBlockScope {
+  PUBLISH
+  APPLY
+  LOGIN
+}
+
 enum ApplicationStatus {
   SENT
   VIEWED
@@ -321,12 +327,42 @@ model User {
   phone         String?
   citySlug      String
   preferredMode String   @default("lite")
+  /// Текст резюме. Файлы не храним (Закон 10).
+  resumeText    String?  @db.Text
+  /// Ссылка на внешнее резюме (hh, Google Docs и т.п.).
+  resumeUrl     String?
+  notifyTelegram Boolean @default(false)
+  /// Код привязки к Telegram-боту. Ссылка с этим кодом живёт в кабинете.
+  telegramLinkCode String? @unique
+  /// Дешёвая проверка в гардах. Смена флага всегда пишет AccountBlock.
+  publishBlocked Boolean @default(false)
+  applyBlocked   Boolean @default(false)
+  loginBlocked   Boolean @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  applications Application[]
-  favorites    Favorite[]
-  employer     Employer?
+  applications  Application[]
+  favorites     Favorite[]
+  employer      Employer?
+  accountBlocks AccountBlock[]
+}
+
+/// Журнал блока аккаунта. Флаги на User — для проверки, эта таблица — источник правды.
+model AccountBlock {
+  id         String            @id @default(cuid())
+  userId     String
+  user       User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scope      AccountBlockScope
+  /// Внутренняя пометка, не для кабинета.
+  reason     String
+  /// Фраза человеку. Для PUBLISH показывается в кабинете.
+  publicNote String
+  decidedBy  String
+  createdAt  DateTime          @default(now())
+  liftedAt   DateTime?
+  liftedBy   String?
+
+  @@index([userId, scope, liftedAt])
 }
 
 model Application {

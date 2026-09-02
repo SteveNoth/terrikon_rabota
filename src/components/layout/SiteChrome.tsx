@@ -15,16 +15,17 @@ export async function SiteChrome({
 }) {
   const { active, soon } = getCitySelectGroups();
   const user = await getUser();
-  const accountHref =
-    user?.role === "EMPLOYER" ? "/employer/dashboard" : user ? "/auth/account" : "/auth/login";
+  const visible = user && !user.loginBlocked ? user : null;
+  const accountHref = visible?.role === "EMPLOYER" ? "/employer/dashboard" : "/profile";
+  const favoritesHref = visible ? "/profile/favorites" : "/offline#favorites";
 
   return (
     <div className="flex min-h-full flex-col pb-bottomnav-plus md:pb-0">
       <OfflineBanner />
-      <Header citySlug={citySlug} activeCities={active} soonCities={soon} user={user} />
+      <Header citySlug={citySlug} activeCities={active} soonCities={soon} user={visible} />
       <main className="flex-1">{children}</main>
-      <Footer citySlug={citySlug} activeCities={active} soonCities={soon} user={user} />
-      <BottomNav citySlug={citySlug} accountHref={accountHref} />
+      <Footer citySlug={citySlug} activeCities={active} soonCities={soon} user={visible} />
+      <BottomNav citySlug={citySlug} accountHref={accountHref} favoritesHref={favoritesHref} />
     </div>
   );
 }

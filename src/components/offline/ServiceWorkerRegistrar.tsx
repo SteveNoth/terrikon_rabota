@@ -13,7 +13,7 @@ export function ServiceWorkerRegistrar() {
     if (process.env.NODE_ENV !== "production") {
       return;
     }
-    if (pathname.startsWith("/dev") || pathname.startsWith("/admin") || pathname.startsWith("/auth") || pathname.startsWith("/employer")) {
+    if (pathname.startsWith("/dev") || pathname.startsWith("/admin") || pathname.startsWith("/auth") || pathname.startsWith("/employer") || pathname.startsWith("/profile")) {
       return;
     }
     if (!("serviceWorker" in navigator)) {

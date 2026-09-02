@@ -32,3 +32,13 @@ export function employmentLabel(value: EmploymentType | null | undefined): strin
 export function employerKindLabel(value: EmployerKind | null | undefined): string | null {
   return value ? EMPLOYER_KIND_LABEL[value] : null;
 }
+
+export function workFormatAdminLabel(value: string | null | undefined): string {
+  if (value === "VAHTA") {
+    return "вахта";
+  }
+  if (value === "REMOTE") {
+    return "удалённо";
+  }
+  return "местная";
+}

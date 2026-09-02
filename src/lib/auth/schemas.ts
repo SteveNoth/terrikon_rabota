@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getAllCities, getCity, getDistricts, isCitySlug, publishOnlyActiveMessage } from "@/lib/geo";
 import { getProfession, getSphere, listSpheres } from "@/lib/professions";
 import { MAX_DESCRIPTION_CHARS } from "@/lib/parser/limits";
+import { RESUME_MAX_CHARS } from "@/lib/seeker/constants";
 
 const EMAIL = z
   .string({ required_error: "Укажите email" })
@@ -195,6 +196,31 @@ export function firstZodMessage(error: z.ZodError): string {
   return error.issues[0]?.message ?? "Проверьте форму";
 }
 
+export const seekerProfileSchema = z.object({
+  name: NAME,
+  phone: z.string().trim().max(32, "Телефон слишком длинный").optional().default(""),
+  citySlug: z.string().trim().min(1, "Выберите город"),
+  resumeText: z
+    .string()
+    .trim()
+    .max(RESUME_MAX_CHARS, `Резюме не длиннее ${RESUME_MAX_CHARS} символов`)
+    .optional()
+    .default(""),
+  resumeUrl: optionalUrl,
+  preferredMode: z.enum(["auto", "full", "lite", "ultra"]).default("lite"),
+  notifyTelegram: z.boolean().default(false),
+});
+
+export const applyMessageSchema = z.object({
+  vacancyId: z.string().trim().min(8, "Не указана вакансия").max(64, "Некорректная вакансия"),
+  message: z
+    .string()
+    .trim()
+    .max(RESUME_MAX_CHARS, `Сообщение не длиннее ${RESUME_MAX_CHARS} символов`)
+    .optional()
+    .default(""),
+});
+
 export function citySelectOptions(): { slug: string; label: string }[] {
   return getAllCities().map((city) => {
     const extra =
@@ -207,3 +233,5 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type CompanyProfileInput = z.infer<typeof companyProfileSchema>;
 export type EmployerVacancyInput = z.infer<typeof employerVacancySchema>;
+export type SeekerProfileInput = z.infer<typeof seekerProfileSchema>;
+export type ApplyMessageInput = z.infer<typeof applyMessageSchema>;

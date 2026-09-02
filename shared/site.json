@@ -1,5 +1,6 @@
 {
   "telegram": {
-    "url": "https://t.me/terrikonmedia"
+    "url": "https://t.me/terrikonmedia",
+    "botUsername": ""
   }
 }

@@ -1,7 +1,8 @@
 import type { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
-import { getUser, type AuthUser } from "@/lib/adapters/auth";
+import { getUser, type AuthUser, auth } from "@/lib/adapters/auth";
 import { EMPLOYER_ONLY_MESSAGE } from "@/lib/auth/constants";
+import { LOGIN_BLOCKED_MESSAGE } from "@/lib/auth/blocks";
 
 function loginHref(next?: string): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) {
@@ -10,11 +11,15 @@ function loginHref(next?: string): string {
   return `/auth/login?next=${encodeURIComponent(next)}`;
 }
 
-/** Нужен любой вошедший. Нет сессии — на форму входа. */
+/** Нужен любой вошедший. Нет сессии — на форму входа. LOGIN-блок снимает сессию. */
 export async function requireUser(next?: string): Promise<AuthUser> {
   const user = await getUser();
   if (!user) {
     redirect(loginHref(next));
+  }
+  if (user.loginBlocked) {
+    await auth.signOut();
+    redirect(`/auth/login?error=${encodeURIComponent(LOGIN_BLOCKED_MESSAGE)}`);
   }
   return user;
 }

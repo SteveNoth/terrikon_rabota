@@ -10,6 +10,7 @@ import { VacancyMap } from "@/components/vacancy/VacancyMap";
 import { VacancyReport } from "@/components/vacancy/VacancyReport";
 import { VacancySource } from "@/components/vacancy/VacancySource";
 import type { QualityFeatures } from "@/lib/quality/types";
+import type { ApplyUiState } from "@/lib/seeker/labels";
 import type { VacancyListItem } from "@/lib/repo/vacancies";
 import type { VacancyView } from "@/lib/vacancy/view";
 import Link from "next/link";
@@ -20,12 +21,14 @@ export function VacancyPage({
   features,
   shareUrl,
   reportStatus,
+  applyState,
 }: {
   view: VacancyView;
   similar: VacancyListItem[];
   features: QualityFeatures;
   shareUrl: string;
   reportStatus?: "ok" | "error";
+  applyState: ApplyUiState;
 }) {
   const snapshot = offlineVacancyFromView(view);
 
@@ -53,6 +56,8 @@ export function VacancyPage({
         shareTitle={view.title}
         vacancyId={view.id}
         snapshot={snapshot}
+        applyState={applyState}
+        closed={view.isClosed}
       />
       <VacancyContacts
         phone={view.phone}

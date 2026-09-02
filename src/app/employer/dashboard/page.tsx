@@ -8,6 +8,7 @@ import { vacancyPath } from "@/lib/vacancy/path";
 import { TELEGRAM_CHANNEL_URL, telegramChannelTitle } from "@/lib/site";
 import { MAX_ACTIVE_VACANCIES, VERIFY_HINT } from "@/lib/auth/constants";
 import { APPLICATION_STATUS_LABEL, APPLICATION_STATUS_OPTIONS } from "@/lib/employer/labels";
+import { cabinetVacancyStatus } from "@/lib/policy";
 import { getUser } from "@/lib/adapters/auth";
 import {
   countActiveVacancies,
@@ -15,6 +16,7 @@ import {
   listEmployerApplications,
   listEmployerVacancies,
 } from "@/lib/repo/employer";
+import { activePublishNote } from "@/lib/auth/blocks";
 import { activateVacancyAction, applicationStatusAction, deactivateVacancyAction } from "@/app/employer/actions";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -34,11 +36,12 @@ export default async function EmployerDashboardPage({
   if (!user?.employerId) {
     notFound();
   }
-  const [company, vacancies, applications, activeCount] = await Promise.all([
+  const [company, vacancies, applications, activeCount, publishNote] = await Promise.all([
     getEmployerCompany(user.employerId),
     listEmployerVacancies(user.employerId),
     listEmployerApplications(user.employerId),
     countActiveVacancies(user.employerId),
+    user.publishBlocked ? activePublishNote(user.id) : Promise.resolve(null),
   ]);
   if (!company) {
     notFound();
@@ -54,6 +57,10 @@ export default async function EmployerDashboardPage({
         </p>
       </header>
       <AuthNotice query={query} />
+
+      {user.publishBlocked ? (
+        <Alert tone="danger">{publishNote || "Публикация с этого аккаунта отключена. Если это ошибка — напишите нам."}</Alert>
+      ) : null}
 
       <section className="flex min-w-0 flex-col gap-3">
         <h2 className="font-display text-xl font-medium">Проверка компании</h2>
@@ -85,7 +92,8 @@ export default async function EmployerDashboardPage({
           </Link>
         </div>
         <p className="text-sm text-muted">
-          Активных: {activeCount} из {MAX_ACTIVE_VACANCIES}. Больше 20 сразу держать нельзя — защита от спама.
+          На сайте и на проверке: {activeCount} из {MAX_ACTIVE_VACANCIES}. Отклонённые слот не занимают — текст
+          можно исправить и сохранить снова.
         </p>
         {vacancies.length === 0 ? (
           <p className="text-md text-muted">Пока нет ни одной вакансии.</p>
@@ -103,19 +111,28 @@ export default async function EmployerDashboardPage({
                 </tr>
               </thead>
               <tbody>
-                {vacancies.map((row) => (
+                {vacancies.map((row) => {
+                  const status = cabinetVacancyStatus(row);
+                  return (
                   <tr key={row.id} className="border-b border-border align-top">
                     <td className="py-3 pr-3">
-                      <Link
-                        href={vacancyPath(row.citySlug, row.slug)}
-                        className="text-brand underline-offset-2 hover:underline"
-                      >
-                        {row.title}
-                      </Link>
+                      {status.listed ? (
+                        <Link
+                          href={vacancyPath(row.citySlug, row.slug)}
+                          className="text-brand underline-offset-2 hover:underline"
+                        >
+                          {row.title}
+                        </Link>
+                      ) : (
+                        <span>{row.title}</span>
+                      )}
                       <p className="text-muted">{formatDate(row.publishedAt)}</p>
                     </td>
                     <td className="py-3 pr-3">{row.cityName}</td>
-                    <td className="py-3 pr-3">{row.isActive ? "активна" : "снята"}</td>
+                    <td className="py-3 pr-3">
+                      <p>{status.label}</p>
+                      {status.label !== "На сайте" ? <p className="text-muted">{status.hint}</p> : null}
+                    </td>
                     <td className="py-3 pr-3">{row.viewsCount}</td>
                     <td className="py-3 pr-3">{row.applicationsCount}</td>
                     <td className="py-3">
@@ -126,7 +143,7 @@ export default async function EmployerDashboardPage({
                         >
                           Редактировать
                         </Link>
-                        {row.isActive ? (
+                        {row.isActive && status.label !== "Не опубликовано" ? (
                           <form action={deactivateVacancyAction}>
                             <input type="hidden" name="id" value={row.id} />
                             <button type="submit" className="text-danger underline-offset-2 hover:underline">
@@ -137,14 +154,15 @@ export default async function EmployerDashboardPage({
                           <form action={activateVacancyAction}>
                             <input type="hidden" name="id" value={row.id} />
                             <button type="submit" className="text-brand underline-offset-2 hover:underline">
-                              Опубликовать снова
+                              Снова на сайте
                             </button>
                           </form>
                         )}
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

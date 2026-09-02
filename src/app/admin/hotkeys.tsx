@@ -38,6 +38,39 @@ export function QueueHotkeys() {
   return null;
 }
 
+/**
+ * Очередь кабинета: P опубликовать · T доверять контакту · V проверить компанию
+ * R отклонить · B запрещённый текст · U отключить публикацию · E вернуть на проверку
+ */
+export function CabinetQueueHotkeys() {
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT")) {
+        return;
+      }
+      const map: Record<string, string> = {
+        p: "cabinet-publish",
+        t: "cabinet-trust",
+        v: "cabinet-verify",
+        r: "cabinet-reject",
+        b: "cabinet-forbidden",
+        u: "cabinet-disable-publish",
+        e: "cabinet-restore",
+      };
+      const id = map[event.key.toLowerCase()];
+      if (!id) {
+        return;
+      }
+      event.preventDefault();
+      (document.getElementById(id) as HTMLButtonElement | null)?.click();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  return null;
+}
+
 export function PostsHotkeys() {
   useEffect(() => {
     function onKey(event: KeyboardEvent) {

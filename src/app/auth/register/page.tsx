@@ -26,7 +26,7 @@ export default async function RegisterPage({
   const user = await getUser();
   const query = await searchParams;
   const next = safeNextPath(firstQuery(query.next), "/");
-  if (user) {
+  if (user && !user.loginBlocked) {
     redirect(user.role === "EMPLOYER" ? "/employer/dashboard" : next);
   }
 

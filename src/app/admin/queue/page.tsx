@@ -44,7 +44,8 @@ export default async function QueuePage({
       </p>
       <p className="mt-2 text-sm">
         Если очередь растёт быстрее, чем её разбирать — это признак слишком строгих правил, а не повод её отключить.{" "}
-        <a href="#rules">К списку неточных правил</a>.
+        Карточки из кабинета работодателя сюда не попадают — они в{" "}
+        <Link href="/admin/employers/queue">очереди кабинета</Link>. <a href="#rules">К списку неточных правил</a>.
       </p>
 
       <div className="admin-tabs">

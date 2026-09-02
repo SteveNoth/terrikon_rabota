@@ -24,7 +24,6 @@ export function OfflineBanner() {
   useEffect(() => {
     if (!online) {
       setWasOffline(true);
-      setToast(null);
       return;
     }
     void flushQueue();
@@ -48,13 +47,28 @@ export function OfflineBanner() {
       if (detail.kind === "apply-sent") {
         setToast({ text: "Отклик отправлен", tone: "success" });
       }
+      if (detail.kind === "apply-queued") {
+        setToast({
+          text: "Отклик в очереди. Уйдёт один раз, когда появится интернет.",
+          tone: "info",
+        });
+      }
+      if (detail.kind === "apply-need-login") {
+        setToast({ text: "Чтобы отклик дошёл, войдите в аккаунт", tone: "info" });
+      }
+      if (detail.kind === "favorite-queued") {
+        setToast({
+          text: "Избранное сохранили на этом устройстве. Когда будет сеть, отправим.",
+          tone: "info",
+        });
+      }
     }
     window.addEventListener(OFFLINE_EVENT, onOfflineEvent);
     return () => window.removeEventListener(OFFLINE_EVENT, onOfflineEvent);
   }, []);
 
   useEffect(() => {
-    if (!toast || toast.text !== "Отклик отправлен") {
+    if (!toast) {
       return;
     }
     const hide = window.setTimeout(() => setToast(null), 5000);
@@ -64,18 +78,25 @@ export function OfflineBanner() {
   if (!online) {
     const stamp = lastUpdated ? formatTimeShort(new Date(lastUpdated)) : null;
     return (
-      <Alert tone="warning" data-offline-banner role="status" aria-live="polite">
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
-          <p>
-            {stamp
-              ? `Нет сети. Показываем сохранённые вакансии от ${stamp}`
-              : "Нет сети. Показываем сохранённые вакансии"}
-          </p>
-          <Button type="button" variant="outline" size="sm" onClick={() => window.location.reload()}>
-            Обновить
-          </Button>
-        </div>
-      </Alert>
+      <div className="flex min-w-0 flex-col gap-2">
+        <Alert tone="warning" data-offline-banner role="status" aria-live="polite">
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
+            <p>
+              {stamp
+                ? `Нет сети. Показываем сохранённые вакансии от ${stamp}`
+                : "Нет сети. Показываем сохранённые вакансии"}
+            </p>
+            <Button type="button" variant="outline" size="sm" onClick={() => window.location.reload()}>
+              Обновить
+            </Button>
+          </div>
+        </Alert>
+        {toast ? (
+          <Alert tone={toast.tone === "success" ? "success" : "info"} role="status" aria-live="polite">
+            <p>{toast.text}</p>
+          </Alert>
+        ) : null}
+      </div>
     );
   }
 

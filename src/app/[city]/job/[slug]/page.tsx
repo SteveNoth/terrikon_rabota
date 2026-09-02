@@ -1,7 +1,9 @@
 import { ViewBeacon } from "@/components/vacancy/ViewBeacon";
 import { VacancyPage } from "@/components/vacancy/VacancyPage";
+import { getUser } from "@/lib/adapters/auth";
 import { isActiveCity, isSelectableCity } from "@/lib/geo";
 import { getRequestQuality } from "@/lib/quality/request";
+import { getApplyUiState } from "@/lib/repo/seeker";
 import { getSimilarVacancies, getVacancyBySlug } from "@/lib/repo/vacancies";
 import { deviceClassFromUserAgent, isDoNotTrack } from "@/lib/stats/device";
 import { recordVacancyView } from "@/lib/stats/events";
@@ -44,7 +46,7 @@ export async function generateMetadata({
     return { title: "Вакансия" };
   }
 
-  const record = await getVacancyBySlug(slug);
+  const record = await getVacancyBySlug(slug, { allowClosed: true });
   if (!record || record.citySlug !== city) {
     return { title: "Вакансия не найдена" };
   }
@@ -77,16 +79,18 @@ export default async function VacancyJobPage({
     notFound();
   }
 
-  const record = await getVacancyBySlug(slug);
+  const record = await getVacancyBySlug(slug, { allowClosed: true });
   if (!record || record.citySlug !== city) {
     notFound();
   }
 
-  const [{ mode, features }, similar, headerList, query] = await Promise.all([
+  const user = await getUser();
+  const [{ mode, features }, similar, headerList, query, applyState] = await Promise.all([
     getRequestQuality(),
     getSimilarVacancies(slug, 3),
     headers(),
     searchParams,
+    getApplyUiState(user?.id ?? null, record.id),
   ]);
 
   const view = toVacancyView(record);
@@ -96,7 +100,7 @@ export default async function VacancyJobPage({
   const sessionHash = headerList.get(SESSION_HEADER);
   const skipTrack = isDoNotTrack(headerList.get("dnt") ?? headerList.get("DNT"));
 
-  if (!skipTrack && isSessionHash(sessionHash) && !features.analytics) {
+  if (!view.isClosed && !skipTrack && isSessionHash(sessionHash) && !features.analytics) {
     const deviceClass = deviceClassFromUserAgent(headerList.get("user-agent"));
     after(() =>
       recordVacancyView({
@@ -114,13 +118,14 @@ export default async function VacancyJobPage({
 
   return (
     <>
-      {features.analytics && !skipTrack ? <ViewBeacon vacancyId={view.id} /> : null}
+      {features.analytics && !skipTrack && !view.isClosed ? <ViewBeacon vacancyId={view.id} /> : null}
       <VacancyPage
         view={view}
         similar={similar}
         features={features}
         shareUrl={shareUrl}
         reportStatus={reportStatus}
+        applyState={applyState}
       />
     </>
   );

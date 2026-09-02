@@ -21,9 +21,11 @@ export default async function AdminHomePage({
       <AdminNotice query={query} />
       <h1 className="text-xl">Обзор</h1>
       <p className="admin-kicker mt-2">
-        Очередь одобрения: {data.queueSize}
-        {data.oldestQueue ? ` · самый старый пункт ждёт ${data.oldestQueue}` : ""}. Это то, что нужно видеть каждый
-        день.
+        Очередь постов: {data.queueSize}
+        {data.oldestQueue ? ` · самый старый пункт ждёт ${data.oldestQueue}` : ""}. Очередь кабинета:{" "}
+        {data.employerQueueSize}
+        {data.oldestEmployerQueue ? ` · самый старый пункт ждёт ${data.oldestEmployerQueue}` : ""}. Это то, что нужно
+        видеть каждый день.
       </p>
       <div className="mt-4 grid grid-cols-2 gap-3">
         <Stat label="Активных вакансий" value={String(data.activeTotal)} />

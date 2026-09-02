@@ -1,4 +1,4 @@
-import { ApplicationStatus, EmployerKind, Prisma, Source, WorkFormat } from "@prisma/client";
+import { ApplicationStatus, ContactVerdictKind, EmployerKind, ModerationStatus, Prisma, Source, WorkFormat } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { clearMemoryCache } from "@/lib/adapters/cache";
 import { prisma } from "@/lib/adapters/db";
@@ -21,11 +21,21 @@ import {
 } from "@/lib/auth/schemas";
 import { applyVacancyGeocode } from "@/lib/geo/geocode";
 import { formatPhone } from "@/lib/format/phone";
+import { blockReasonForFlags, contactKey } from "@/lib/parser/contact";
 import { contentHash } from "@/lib/parser/dedupe";
 import { qualityScoreFrom } from "@/lib/parser/quality";
 import { truncateDescription } from "@/lib/parser/schema";
 import { uniqueSlug, vacancySlug } from "@/lib/parser/slug";
 import { cityDisplayName } from "@/lib/geo";
+import { userPublishBlocked } from "@/lib/auth/blocks";
+import {
+  evaluateEmployerVacancy,
+  loadProfessionMarket,
+  occupiesEmployerLimit,
+  saveNoticeFor,
+  type PolicyDecision,
+  type PolicyVacancyInput,
+} from "@/lib/policy";
 
 export const ACTIVE_VACANCY_LIMIT = MAX_ACTIVE_VACANCIES;
 
@@ -51,6 +61,8 @@ export type EmployerVacancyRow = {
   citySlug: string;
   cityName: string;
   isActive: boolean;
+  moderationStatus: ModerationStatus;
+  trustFlags: { id: string }[];
   viewsCount: number;
   publishedAt: Date;
   applicationsCount: number;
@@ -69,7 +81,22 @@ export type EmployerApplicationRow = {
   applicantEmail: string;
 };
 
-export type SaveResult = { ok: true } | { ok: false; error: string };
+export type SaveResult =
+  | { ok: true; id?: string; notice?: string; noticeKind?: "notice" | "review" | "error" }
+  | { ok: false; error: string };
+
+function flagIds(value: Prisma.JsonValue | null | undefined): { id: string }[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const out: { id: string }[] = [];
+  for (const item of value) {
+    if (item && typeof item === "object" && !Array.isArray(item) && typeof (item as { id?: unknown }).id === "string") {
+      out.push({ id: (item as { id: string }).id });
+    }
+  }
+  return out;
+}
 
 function emptyToNull(value: string | undefined): string | null {
   const trimmed = value?.trim() ?? "";
@@ -116,6 +143,8 @@ export async function listEmployerVacancies(employerId: string): Promise<Employe
       title: true,
       citySlug: true,
       isActive: true,
+      moderationStatus: true,
+      trustFlags: true,
       viewsCount: true,
       publishedAt: true,
       _count: { select: { applications: true } },
@@ -128,17 +157,23 @@ export async function listEmployerVacancies(employerId: string): Promise<Employe
     citySlug: row.citySlug,
     cityName: cityDisplayName(row.citySlug),
     isActive: row.isActive,
+    moderationStatus: row.moderationStatus,
+    trustFlags: flagIds(row.trustFlags),
     viewsCount: row.viewsCount,
     publishedAt: row.publishedAt,
     applicationsCount: row._count.applications,
   }));
 }
 
+/** Лимит 20: хочет на сайт (isActive) и статус PENDING / AUTO_OK / APPROVED. BLOCKED и REJECTED слот не занимают. */
 export async function countActiveVacancies(employerId: string, exceptId?: string): Promise<number> {
   return prisma.vacancy.count({
     where: {
       employerId,
       isActive: true,
+      moderationStatus: {
+        in: [ModerationStatus.PENDING, ModerationStatus.AUTO_OK, ModerationStatus.APPROVED],
+      },
       ...(exceptId ? { id: { not: exceptId } } : {}),
     },
   });
@@ -334,10 +369,106 @@ function parseVacancyForm(form: FormData): { ok: true; data: EmployerVacancyInpu
   return { ok: true, data: parsed.data };
 }
 
+export type PolicyActor = {
+  userId: string;
+  publishBlocked?: boolean;
+};
+
+async function lookupContactVerdict(phone: string | null, telegram: string | null): Promise<ContactVerdictKind | null> {
+  const key = contactKey(phone, telegram);
+  if (!key) {
+    return null;
+  }
+  const row = await prisma.contactVerdict.findUnique({ where: { contact: key } });
+  return row?.verdict ?? null;
+}
+
+async function blacklistContact(phone: string | null, telegram: string | null, reason: string): Promise<void> {
+  const key = contactKey(phone, telegram);
+  if (!key) {
+    return;
+  }
+  await prisma.contactVerdict.upsert({
+    where: { contact: key },
+    create: { contact: key, verdict: ContactVerdictKind.BLOCKED, reason, vacanciesCount: 1 },
+    update: { verdict: ContactVerdictKind.BLOCKED, reason, decidedAt: new Date(), vacanciesCount: { increment: 1 } },
+  });
+}
+
+function toPolicyInput(
+  input: {
+    title: string;
+    description: string;
+    professionSlug: string | null;
+    sphere: string;
+    salaryFrom: number | null;
+    salaryTo: number | null;
+    salaryPeriod: string;
+    workFormat: WorkFormat | string;
+    citySlug: string;
+    contactPhone: string | null;
+    contactTelegram: string | null;
+    contactEmail: string | null;
+    housingProvided: boolean;
+    rotationPattern: string | null;
+    vahtaDays: number | null;
+    workLocationText: string | null;
+  },
+  company: EmployerCompany,
+  employerId: string,
+  userId: string,
+): PolicyVacancyInput {
+  return {
+    title: input.title,
+    description: input.description,
+    professionSlug: input.professionSlug,
+    sphere: input.sphere,
+    salaryFrom: input.salaryFrom,
+    salaryTo: input.salaryTo,
+    salaryPeriod: input.salaryPeriod,
+    workFormat: input.workFormat,
+    citySlug: input.citySlug,
+    contactPhone: input.contactPhone,
+    contactTelegram: input.contactTelegram,
+    contactEmail: input.contactEmail,
+    employerName: company.name,
+    employerId,
+    userId,
+    housingProvided: input.housingProvided,
+    rotationPattern: input.rotationPattern,
+    vahtaDays: input.vahtaDays,
+    workLocationText: input.workLocationText,
+  };
+}
+
+async function runCabinetPolicy(input: PolicyVacancyInput, company: EmployerCompany, exceptId: string | undefined, publishBlocked: boolean): Promise<PolicyDecision> {
+  const [contactVerdict, market, blocked] = await Promise.all([
+    lookupContactVerdict(input.contactPhone, input.contactTelegram),
+    loadProfessionMarket(input.professionSlug, input.workFormat, exceptId),
+    userPublishBlocked(input.userId),
+  ]);
+  return evaluateEmployerVacancy(input, {
+    publishBlocked: Boolean(publishBlocked || blocked),
+    contactVerdict,
+    isVerified: company.isVerified,
+    market,
+  });
+}
+
+function noticeFrom(decision: PolicyDecision): { notice: string; noticeKind: "notice" | "review" | "error" } {
+  const mapped = saveNoticeFor(decision.moderationStatus, decision.publicMessage);
+  return { notice: mapped.text, noticeKind: mapped.kind };
+}
+
+/**
+ * Дверь кабинета. Поля формы не перезаписываем разбором поста:
+ * работодатель уже указал профессию, зарплату и формат. Политика только решает статус.
+ */
 export async function saveEmployerVacancy(
   employerId: string,
   form: FormData,
   existingId?: string,
+  actor?: PolicyActor,
 ): Promise<SaveResult & { id?: string }> {
   const company = await getEmployerCompany(employerId);
   if (!company) {
@@ -369,25 +500,72 @@ export async function saveEmployerVacancy(
   const contactPhone = input.contactPhone ? formatPhone(input.contactPhone) : null;
   const professionSlug = emptyToNull(input.professionSlug);
   const workFormat = input.workFormat as WorkFormat;
+  const contactTelegram = emptyToNull(input.contactTelegram);
+  const contactEmail = emptyToNull(input.contactEmail);
+  const rotationPattern = workFormat === WorkFormat.VAHTA ? emptyToNull(input.rotationPattern) : null;
+  const workLocationText = workFormat === WorkFormat.VAHTA ? emptyToNull(input.workLocationText) : null;
+  const housingProvided = workFormat === WorkFormat.VAHTA ? input.housingProvided : false;
+
+  const decision = await runCabinetPolicy(
+    toPolicyInput(
+      {
+        title: input.title,
+        description,
+        professionSlug,
+        sphere: input.sphere,
+        salaryFrom: input.salaryFrom,
+        salaryTo: input.salaryTo,
+        salaryPeriod: input.salaryPeriod,
+        workFormat,
+        citySlug: input.citySlug,
+        contactPhone,
+        contactTelegram,
+        contactEmail,
+        housingProvided,
+        rotationPattern,
+        vahtaDays: workFormat === WorkFormat.VAHTA ? input.vahtaDays : null,
+        workLocationText,
+      },
+      company,
+      employerId,
+      actor?.userId ?? "",
+    ),
+    company,
+    existing?.id,
+    Boolean(actor?.publishBlocked),
+  );
+
+  const wantsSlot = occupiesEmployerLimit(decision.moderationStatus, true);
+  if (wantsSlot) {
+    const active = await countActiveVacancies(employerId, existing?.id);
+    if (active >= MAX_ACTIVE_VACANCIES) {
+      return { ok: false, error: MAX_ACTIVE_VACANCIES_MESSAGE };
+    }
+  }
+
+  if (decision.shouldBlacklistContact) {
+    await blacklistContact(contactPhone, contactTelegram, blockReasonForFlags(decision.ruleIds));
+  }
+
   const completeness = employerCompleteness({
     salaryFrom: input.salaryFrom,
     salaryTo: input.salaryTo,
     schedule: emptyToNull(input.schedule),
-    rotationPattern: emptyToNull(input.rotationPattern),
+    rotationPattern,
     address: emptyToNull(input.address),
     districtSlug: emptyToNull(input.districtSlug),
     experience: emptyToNull(input.experience),
     employmentType: emptyToNull(input.employmentType),
     contactPhone,
-    contactTelegram: emptyToNull(input.contactTelegram),
-    contactEmail: emptyToNull(input.contactEmail),
+    contactTelegram,
+    contactEmail,
     description,
     employerName: company.name,
   });
   const qualityScore = qualityScoreFrom({
     completeness,
     hasSalary: input.salaryFrom != null || input.salaryTo != null,
-    hasContact: Boolean(contactPhone || input.contactTelegram || input.contactEmail),
+    hasContact: Boolean(contactPhone || contactTelegram || contactEmail),
     descriptionLength: description.length,
   });
   const salaryText =
@@ -411,10 +589,10 @@ export async function saveEmployerVacancy(
     districtSlug: emptyToNull(input.districtSlug),
     address: emptyToNull(input.address),
     workFormat,
-    workLocationText: workFormat === WorkFormat.VAHTA ? emptyToNull(input.workLocationText) : null,
-    rotationPattern: workFormat === WorkFormat.VAHTA ? emptyToNull(input.rotationPattern) : null,
+    workLocationText,
+    rotationPattern,
     vahtaDays: workFormat === WorkFormat.VAHTA ? input.vahtaDays : null,
-    housingProvided: workFormat === WorkFormat.VAHTA ? input.housingProvided : false,
+    housingProvided,
     mealsProvided: workFormat === WorkFormat.VAHTA ? input.mealsProvided : false,
     travelPaid: workFormat === WorkFormat.VAHTA ? input.travelPaid : false,
     employerKind: EmployerKind.DIRECT,
@@ -422,15 +600,17 @@ export async function saveEmployerVacancy(
     professionSlug,
     schedule: workFormat === WorkFormat.VAHTA ? null : emptyToNull(input.schedule),
     contactPhone,
-    contactTelegram: emptyToNull(input.contactTelegram),
-    contactEmail: emptyToNull(input.contactEmail),
+    contactTelegram,
+    contactEmail,
     source: Source.EMPLOYER,
     sourceName: company.name,
     contentHash: contentHash(description, contactPhone),
     signature: [professionSlug || "unknown", workFormat, input.citySlug, contactPhone || "none", company.id].join("|"),
     qualityScore,
-    trustScore: 80,
-    trustFlags: [] as Prisma.InputJsonValue,
+    trustScore: decision.trustScore,
+    trustFlags: decision.trustFlags as Prisma.InputJsonValue,
+    moderationStatus: decision.moderationStatus,
+    hoursPerDay: decision.hoursPerDay != null ? Math.round(decision.hoursPerDay) : null,
     employerId,
     isActive: true,
     experience:
@@ -450,26 +630,21 @@ export async function saveEmployerVacancy(
         : null,
   };
 
-  const data = shared;
+  const feedback = noticeFrom(decision);
 
   if (existing) {
     await prisma.vacancy.update({
       where: { id: existing.id },
       data: {
-        ...data,
+        ...shared,
         lastSeenAt: new Date(),
       },
     });
-    if (data.address && data.address !== existing.address) {
+    if (shared.address && shared.address !== existing.address) {
       await applyVacancyGeocode(existing.id);
     }
     touchPublic(input.citySlug, existing.slug);
-    return { ok: true, id: existing.id };
-  }
-
-  const active = await countActiveVacancies(employerId);
-  if (active >= MAX_ACTIVE_VACANCIES) {
-    return { ok: false, error: MAX_ACTIVE_VACANCIES_MESSAGE };
+    return { ok: true, id: existing.id, ...feedback };
   }
 
   const taken = new Set((await prisma.vacancy.findMany({ select: { slug: true }, take: 8000 })).map((row) => row.slug));
@@ -486,44 +661,100 @@ export async function saveEmployerVacancy(
   );
   const created = await prisma.vacancy.create({
     data: {
-      ...data,
+      ...shared,
       slug,
       rawText: description,
       sourcePostExternalId: externalId,
       externalId,
       publishedAt: new Date(),
-      moderationStatus: "APPROVED",
       isActive: true,
     },
   });
-  if (data.address) {
+  if (shared.address) {
     await applyVacancyGeocode(created.id);
   }
   touchPublic(input.citySlug, created.slug);
-  return { ok: true, id: created.id };
+  return { ok: true, id: created.id, ...feedback };
 }
 
 export async function setVacancyActive(
   employerId: string,
   vacancyId: string,
   isActive: boolean,
+  actor?: PolicyActor,
 ): Promise<SaveResult> {
   const found = await getOwnVacancy(employerId, vacancyId);
   if (!found.ok) {
     return found;
   }
-  if (isActive) {
+  const company = await getEmployerCompany(employerId);
+  if (!company) {
+    return { ok: false, error: "Сначала заполните профиль компании." };
+  }
+
+  if (!isActive) {
+    await prisma.vacancy.update({
+      where: { id: vacancyId },
+      data: { isActive: false, lastSeenAt: new Date() },
+    });
+    touchPublic(found.vacancy.citySlug, found.vacancy.slug);
+    return { ok: true, notice: "Вакансия снята с публикации.", noticeKind: "notice" };
+  }
+
+  const row = found.vacancy;
+  const decision = await runCabinetPolicy(
+    toPolicyInput(
+      {
+        title: row.title,
+        description: row.description,
+        professionSlug: row.professionSlug,
+        sphere: row.sphere,
+        salaryFrom: row.salaryFrom,
+        salaryTo: row.salaryTo,
+        salaryPeriod: row.salaryPeriod,
+        workFormat: row.workFormat,
+        citySlug: row.citySlug,
+        contactPhone: row.contactPhone,
+        contactTelegram: row.contactTelegram,
+        contactEmail: row.contactEmail,
+        housingProvided: row.housingProvided,
+        rotationPattern: row.rotationPattern,
+        vahtaDays: row.vahtaDays,
+        workLocationText: row.workLocationText,
+      },
+      company,
+      employerId,
+      actor?.userId ?? "",
+    ),
+    company,
+    row.id,
+    Boolean(actor?.publishBlocked),
+  );
+
+  if (occupiesEmployerLimit(decision.moderationStatus, true)) {
     const active = await countActiveVacancies(employerId, vacancyId);
     if (active >= MAX_ACTIVE_VACANCIES) {
       return { ok: false, error: MAX_ACTIVE_VACANCIES_MESSAGE };
     }
   }
+
+  if (decision.shouldBlacklistContact) {
+    await blacklistContact(row.contactPhone, row.contactTelegram, blockReasonForFlags(decision.ruleIds));
+  }
+
   await prisma.vacancy.update({
     where: { id: vacancyId },
-    data: { isActive, lastSeenAt: new Date() },
+    data: {
+      isActive: true,
+      lastSeenAt: new Date(),
+      moderationStatus: decision.moderationStatus,
+      trustScore: decision.trustScore,
+      trustFlags: decision.trustFlags as Prisma.InputJsonValue,
+      hoursPerDay: decision.hoursPerDay != null ? Math.round(decision.hoursPerDay) : row.hoursPerDay,
+    },
   });
-  touchPublic(found.vacancy.citySlug, found.vacancy.slug);
-  return { ok: true };
+  touchPublic(row.citySlug, row.slug);
+  return { ok: true, ...noticeFrom(decision) };
 }
 
 export async function setApplicationStatus(

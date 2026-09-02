@@ -4,6 +4,7 @@ import { DB_LIMIT_BYTES } from "@/lib/admin/constants";
 import { cityDisplayName } from "@/lib/geo";
 import { listSpheres } from "@/lib/professions";
 import { queueSummary } from "@/lib/admin/queue";
+import { employerQueueSummary } from "@/lib/admin/employer-queue";
 import { formatBytes, formatPercent } from "@/lib/admin/format";
 
 export type Overview = {
@@ -18,6 +19,8 @@ export type Overview = {
   botSubscribers: number;
   queueSize: number;
   oldestQueue: string | null;
+  employerQueueSize: number;
+  oldestEmployerQueue: string | null;
 };
 
 export async function loadOverview(): Promise<Overview> {
@@ -26,7 +29,7 @@ export async function loadOverview(): Promise<Overview> {
     isActive: true,
     moderationStatus: { in: [ModerationStatus.AUTO_OK, ModerationStatus.APPROVED] },
   };
-  const [activeTotal, byCityRows, bySphereRows, new7d, botSubscribers, queue, dbBytes] = await Promise.all([
+  const [activeTotal, byCityRows, bySphereRows, new7d, botSubscribers, queue, employerQueue, dbBytes] = await Promise.all([
     prisma.vacancy.count({ where: published }),
     prisma.vacancy.groupBy({
       by: ["citySlug"],
@@ -41,6 +44,7 @@ export async function loadOverview(): Promise<Overview> {
     prisma.vacancy.count({ where: { ...published, publishedAt: { gte: weekAgo } } }),
     prisma.telegramUser.count({ where: { isActive: true } }),
     queueSummary(),
+    employerQueueSummary(),
     readDatabaseBytes(),
   ]);
 
@@ -70,6 +74,8 @@ export async function loadOverview(): Promise<Overview> {
     botSubscribers,
     queueSize: queue.total,
     oldestQueue: queue.oldestLabel,
+    employerQueueSize: employerQueue.total,
+    oldestEmployerQueue: employerQueue.oldestLabel,
   };
 }
 

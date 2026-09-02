@@ -3,6 +3,7 @@ import { EmployerVacancyForm } from "@/components/employer/EmployerVacancyForm";
 import { getUser } from "@/lib/adapters/auth";
 import { FOREIGN_VACANCY_MESSAGE } from "@/lib/auth/constants";
 import { getOwnVacancy, vacancyToFormValues } from "@/lib/repo/employer";
+import { cabinetVacancyStatus } from "@/lib/policy";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -52,7 +53,11 @@ export default async function EditVacancyPage({
       </p>
       <h1 className="font-display text-2xl font-medium">Редактирование вакансии</h1>
       <AuthNotice query={query} />
-      <EmployerVacancyForm id={found.vacancy.id} values={vacancyToFormValues(found.vacancy)} />
+      <EmployerVacancyForm
+        id={found.vacancy.id}
+        values={vacancyToFormValues(found.vacancy)}
+        status={cabinetVacancyStatus(found.vacancy)}
+      />
     </>
   );
 }

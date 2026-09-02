@@ -19,8 +19,9 @@ export default async function ReportsPage({
       <AdminNotice query={query} />
       <h1 className="text-xl">Жалобы</h1>
       <p className="mt-2">
-        Срок реакции виден в каждой строке. Жалоба «похоже на мошенничество» поднимает объявление наверх очереди
-        одобрения, а несколько таких жалоб скрывают его до разбора. Люди замечают то, чего не заметит ни одно правило.
+        Срок реакции виден в каждой строке. Жалоба «похоже на мошенничество» поднимает объявление наверх своей очереди:
+        посты — в очередь одобрения, карточки кабинета — в очередь кабинета. Несколько таких жалоб скрывают карточку до
+        разбора. Люди замечают то, чего не заметит ни одно правило.
       </p>
       {items.length === 0 ? <p className="mt-4">Новых жалоб нет.</p> : null}
       {items.map((item) => (
@@ -30,7 +31,11 @@ export default async function ReportsPage({
           </p>
           <p>
             {item.reasonLabel}
-            {item.reason === "fraud" ? " · в очереди одобрения выше" : ""}
+            {item.reason === "fraud"
+              ? item.fromCabinet
+                ? " · в очереди кабинета выше"
+                : " · в очереди одобрения выше"
+              : ""}
           </p>
           {item.comment ? <p>{item.comment}</p> : null}
           <p className={item.stale ? "admin-badge admin-badge-warn" : "admin-kicker"}>
@@ -50,8 +55,11 @@ export default async function ReportsPage({
                 Отклонить жалобу
               </button>
             </form>
-            <Link href={`/admin/queue?id=${item.vacancyId}`} className={buttonVariants({ variant: "outline", size: "sm" })}>
-              В очередь одобрения
+            <Link
+              href={item.fromCabinet ? `/admin/employers/queue?id=${item.vacancyId}` : `/admin/queue?id=${item.vacancyId}`}
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              {item.fromCabinet ? "В очередь кабинета" : "В очередь одобрения"}
             </Link>
           </div>
         </article>
