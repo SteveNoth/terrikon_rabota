@@ -1,0 +1,5 @@
+#!/bin/sh
+# Этап 24: перед коммитом — токены и бюджеты 8.5.
+cd "$(git rev-parse --show-toplevel)" || exit 1
+npm run check:design || exit 1
+npm run check:budget || exit 1

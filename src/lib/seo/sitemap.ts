@@ -12,8 +12,8 @@ import {
   listSitemapSpheres,
   listSitemapVacancies,
 } from "@/lib/repo/sitemap";
-import { companyPath } from "@/lib/vacancy/path";
-import { vacancyPath } from "@/lib/vacancy/path";
+import { companyPath, vacancyPath } from "@/lib/vacancy/path";
+import { log } from "@/lib/log";
 
 const STATIC_PATHS = ["/about", "/help", "/contacts", "/terms", "/safety", "/about/lite"];
 
@@ -73,7 +73,7 @@ export async function collectSitemapEntries(): Promise<SitemapEntry[]> {
       });
     }
   } catch (cause) {
-    console.error("[sitemap]", cause);
+    log.error("sitemap", "не удалось собрать адреса", cause);
   }
 
   return entries;

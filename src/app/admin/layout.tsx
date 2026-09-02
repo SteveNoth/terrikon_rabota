@@ -3,6 +3,7 @@ import { isAdminRequest } from "@/lib/admin/auth";
 import { queueSummary } from "@/lib/admin/queue";
 import { employerQueueSummary } from "@/lib/admin/employer-queue";
 import { AdminNav } from "@/app/admin/nav";
+import { log } from "@/lib/log";
 import "./admin.css";
 
 export const metadata: Metadata = {
@@ -26,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     queueSize = parser.total;
     employerQueueSize = cabinet.total;
   } catch (cause) {
-    console.error("[admin] очередь", cause);
+    log.error("admin", "очередь", cause);
   }
 
   return (

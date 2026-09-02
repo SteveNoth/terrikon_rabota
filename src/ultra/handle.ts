@@ -5,6 +5,8 @@ import { ULTRA_PATH_HEADER, PREFERENCE_HEADER, isQualityPreference } from "@/lib
 import { deviceClassFromUserAgent, isDoNotTrack } from "@/lib/stats/device";
 import { recordVacancyView } from "@/lib/stats/events";
 import { SESSION_HEADER, isSessionHash } from "@/lib/stats/session";
+import { log } from "@/lib/log";
+import { recordRumSample } from "@/lib/rum/record";
 import { criticalCss } from "@/ultra/css";
 import { citySlugFromRequest, dispatchUltra } from "@/ultra/dispatch";
 import { documentPage, htmlHeaders, publicOrigin } from "@/ultra/html";
@@ -65,9 +67,14 @@ export async function handleUltraGet(request: NextRequest): Promise<Response> {
     }),
   });
 
+  const skipTrack = isDoNotTrack(request.headers.get("dnt") ?? request.headers.get("DNT"));
+  const sessionHash = request.headers.get(SESSION_HEADER);
+
+  if (!skipTrack) {
+    after(() => recordRumSample({ qualityMode: "ultra", lcpMs: null, cls: null, inpMs: null }));
+  }
+
   if (page.view) {
-    const sessionHash = request.headers.get(SESSION_HEADER);
-    const skipTrack = isDoNotTrack(request.headers.get("dnt") ?? request.headers.get("DNT"));
     if (!skipTrack && isSessionHash(sessionHash)) {
       const view = page.view;
       const deviceClass = deviceClassFromUserAgent(request.headers.get("user-agent"));
@@ -97,8 +104,7 @@ export async function handleUltraPost(request: NextRequest): Promise<Response> {
   }
 
   const city = String(form.get("city") ?? "");
-  const contact = String(form.get("contact") ?? "").trim();
-  console.log("[notify-city-open]", { city, contact });
+  log.info("notify-city-open", "заявка на открытие города", { city });
 
   const origin = publicOrigin(request);
   if (isSelectableCity(city)) {

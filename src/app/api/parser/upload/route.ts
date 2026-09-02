@@ -10,6 +10,7 @@ import {
   MAX_BODY_BYTES,
 } from "@/lib/parser/limits";
 import { parseEnvelope } from "@/lib/parser/schema";
+import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
       errors: stats.errors,
     });
   } catch (cause) {
-    console.error("[api/parser/upload]", cause);
-    return json({ error: "Не удалось принять пачку." }, 500);
+    log.error("api/parser/upload", "пачка не принята", cause);
+    return json({ ok: false, code: "INTERNAL", message: "Не удалось принять пачку." }, 500);
   }
 }

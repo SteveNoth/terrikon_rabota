@@ -678,3 +678,23 @@ model SearchQueryStat {
 
   @@unique([month, citySlug, queryNormalized])
 }
+
+/// Замер реальной загрузки (Этап 24). Только числа и режим, без сессии и IP.
+model RumSample {
+  id          String   @id @default(cuid())
+  qualityMode String
+  lcpMs       Int?
+  cls         Float?
+  inpMs       Int?
+  createdAt   DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([qualityMode, createdAt])
+}
+
+/// Чтобы одно и то же «парсер затих» не слать в Telegram каждый час.
+model OpsAlert {
+  id       String   @id @default(cuid())
+  alertKey String   @unique
+  sentAt   DateTime
+}

@@ -11,6 +11,7 @@ import {
   MODE_HEADER,
   PREFERENCE_HEADER,
 } from "@/lib/quality/types";
+import { RumReporter } from "@/components/rum/RumReporter";
 import { defaultRootMetadata, verificationMetadata } from "@/lib/seo/meta";
 import { SITE_NAME } from "@/lib/seo/brand";
 import "@/styles/globals.css";
@@ -65,6 +66,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         <QualityProvider initialMode={mode} preference={preference}>
           <ModeProvider>
             <ServiceWorkerRegistrar />
+            <RumReporter mode={mode} />
             {children}
           </ModeProvider>
         </QualityProvider>

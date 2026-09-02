@@ -6,6 +6,7 @@ import { isQualityMode } from "@/lib/quality/types";
 import { deviceClassFromUserAgent, isDoNotTrack } from "@/lib/stats/device";
 import { recordVacancyView } from "@/lib/stats/events";
 import { SESSION_COOKIE, isSessionHash } from "@/lib/stats/session";
+import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
       qualityMode,
     });
   } catch (cause) {
-    console.error("[api/events]", cause);
+    log.error("api/events", "не удалось записать просмотр", cause);
   }
 
   return noContent();

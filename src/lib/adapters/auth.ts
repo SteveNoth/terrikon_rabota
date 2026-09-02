@@ -21,6 +21,7 @@ import { AUTH_NOT_CONFIGURED, authErrorMessage } from "@/lib/auth/messages";
 import { LOGIN_BLOCKED_MESSAGE } from "@/lib/auth/blocks";
 import { getDefaultCity, isCitySlug } from "@/lib/geo";
 import { employerSlug } from "@/lib/parser/slug";
+import { log } from "@/lib/log";
 
 export type AuthUser = {
   id: string;
@@ -255,14 +256,7 @@ class SupabaseAuth implements AuthAdapter {
       },
     });
     if (error) {
-      console.error(
-        "[auth] signUp",
-        error.code ?? "",
-        error.status ?? "",
-        error.message ?? "",
-        "redirect",
-        input.emailRedirectTo,
-      );
+      log.error("auth", "signUp", { code: error.code ?? "", status: error.status ?? "" });
       return { ok: false, error: authErrorMessage(error) };
     }
     if (looksLikeExistingAccount(data.user)) {
@@ -272,7 +266,7 @@ class SupabaseAuth implements AuthAdapter {
     try {
       user = data.user ? await ensureAppUser(data.user) : null;
     } catch (cause) {
-      console.error("[auth] signUp ensureAppUser", cause);
+      log.error("auth", "signUp ensureAppUser", cause);
       return { ok: false, error: "Не получилось создать аккаунт. Если ошибка повторяется — напишите администратору" };
     }
     const needsEmailConfirmation = !data.session;

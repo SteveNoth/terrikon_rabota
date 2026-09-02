@@ -3,6 +3,7 @@ import { authorizeParserRequest, unauthorizedResponse } from "@/lib/parser/auth"
 import { telegramBotToken } from "@/lib/telegram/auth";
 import { dispatchTelegramNotifications } from "@/lib/telegram/notify";
 import { TELEGRAM_NOTIFY_BATCH } from "@/lib/telegram/constants";
+import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
     const stats = await dispatchTelegramNotifications({ limit, deadlineMs: 8000 });
     return json(stats);
   } catch (cause) {
-    console.error("[api/telegram/notify]", cause);
-    return json({ ok: false, error: "Не удалось разослать уведомления." }, 500);
+    log.error("api/telegram/notify", "рассылка не прошла", cause);
+    return json({ ok: false, code: "INTERNAL", message: "Не удалось разослать уведомления." }, 500);
   }
 }

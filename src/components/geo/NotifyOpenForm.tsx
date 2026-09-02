@@ -16,9 +16,6 @@ export function NotifyOpenForm({
   const [done, setDone] = useState(notified);
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
-    const form = event.currentTarget;
-    const contact = String(new FormData(form).get("contact") ?? "").trim();
-    console.log("[notify-city-open]", { city: citySlug, contact });
     event.preventDefault();
     setDone(true);
   }

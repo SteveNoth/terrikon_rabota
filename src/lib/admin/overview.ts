@@ -1,6 +1,7 @@
 import { ModerationStatus } from "@prisma/client";
 import { prisma } from "@/lib/adapters/db";
 import { DB_LIMIT_BYTES } from "@/lib/admin/constants";
+import { readDatabaseBytes } from "@/lib/health/database";
 import { cityDisplayName } from "@/lib/geo";
 import { listSpheres } from "@/lib/professions";
 import { queueSummary } from "@/lib/admin/queue";
@@ -77,27 +78,4 @@ export async function loadOverview(): Promise<Overview> {
     employerQueueSize: employerQueue.total,
     oldestEmployerQueue: employerQueue.oldestLabel,
   };
-}
-
-async function readDatabaseBytes(): Promise<number | null> {
-  try {
-    const rows = await prisma.$queryRaw<Array<{ bytes: bigint | number | string }>>`
-      SELECT pg_database_size(current_database()) AS bytes
-    `;
-    const raw = rows[0]?.bytes;
-    if (typeof raw === "bigint") {
-      return Number(raw);
-    }
-    if (typeof raw === "number") {
-      return raw;
-    }
-    if (typeof raw === "string") {
-      const parsed = Number(raw);
-      return Number.isFinite(parsed) ? parsed : null;
-    }
-    return null;
-  } catch (cause) {
-    console.error("[admin] размер базы", cause);
-    return null;
-  }
 }

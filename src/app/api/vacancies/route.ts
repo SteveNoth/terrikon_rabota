@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { getCity } from "@/lib/geo";
 import { listVacancies } from "@/lib/repo/vacancies";
 import { parseVacancyQuery } from "@/lib/validation/vacancy-query";
+import { apiError } from "@/lib/api/response";
+import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 
@@ -25,10 +27,7 @@ export async function GET(request: Request) {
   const city = getCity(query.city);
 
   if (!city) {
-    return json(
-      { message: `Города «${query.city}» нет в справочнике.` },
-      { status: 404 },
-    );
+    return apiError("NOT_FOUND", `Города «${query.city}» нет в справочнике.`, 404);
   }
 
   if (city.status !== "active") {
@@ -50,10 +49,7 @@ export async function GET(request: Request) {
       );
     }
 
-    return json(
-      { message: `Город «${city.name.nom}» пока не подключается.` },
-      { status: 404 },
-    );
+    return apiError("NOT_FOUND", `Город «${city.name.nom}» пока не подключается.`, 404);
   }
 
   try {
@@ -100,9 +96,8 @@ export async function GET(request: Request) {
       },
       { headers: { "Server-Timing": `total;dur=${elapsed}` } },
     );
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Не удалось загрузить вакансии. Попробуйте обновить страницу.";
-    return json({ message }, { status: 500 });
+  } catch (cause) {
+    log.error("api/vacancies", "список не загрузился", cause);
+    return apiError("INTERNAL", "Не удалось загрузить вакансии. Попробуйте обновить страницу.", 500);
   }
 }

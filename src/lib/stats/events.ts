@@ -1,5 +1,6 @@
 import { DeviceClass, EventType } from "@prisma/client";
 import { prisma } from "@/lib/adapters/db";
+import { log } from "@/lib/log";
 
 const THROTTLE_MS = 30 * 60 * 1000;
 
@@ -56,6 +57,6 @@ export async function recordVacancyView(input: VacancyViewEventInput): Promise<v
       }),
     ]);
   } catch (cause) {
-    console.error("[stats] не удалось записать просмотр вакансии", cause);
+    log.error("stats", "не удалось записать просмотр вакансии", cause);
   }
 }

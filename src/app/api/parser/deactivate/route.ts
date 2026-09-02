@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { authorizeParserRequest, unauthorizedResponse } from "@/lib/parser/auth";
 import { deactivateStaleVacancies } from "@/lib/parser/ingest";
 import { allowRequest, clientKey, tooManyResponse, INACTIVE_AFTER_DAYS } from "@/lib/parser/limits";
+import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
       неактивных: result.deactivated,
     });
   } catch (cause) {
-    console.error("[api/parser/deactivate]", cause);
-    return json({ error: "Не удалось пометить неактивные вакансии." }, 500);
+    log.error("api/parser/deactivate", "не удалось пометить неактивные", cause);
+    return json({ ok: false, code: "INTERNAL", message: "Не удалось пометить неактивные вакансии." }, 500);
   }
 }

@@ -18,13 +18,13 @@
  *    Онлайн человек не сидит на вечно старой странице.
  * 4. Статика с хешем в имени (/_next/static/...) — сначала кэш, в фоне
  *    подтягиваем свежее: файлы и так уникальны, путаницы нет.
- * 5. Админку, вход, API парсера, события, жалобы, очередь офлайна и /api/ping
- *    не кэшируем никогда.
+ * 5. Админку, вход, API парсера, события, жалобы, очередь офлайна, /api/ping,
+ *    /api/health, /api/rum и watchdog парсеров не кэшируем никогда.
  * 6. Когда выложили новую версию, SW ждёт кнопку «Обновить приложение»,
  *    а не подменяет страницу посреди чтения.
  */
 
-const CACHE_VERSION = "tr-offline-v4";
+const CACHE_VERSION = "tr-offline-v5";
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const DATA_CACHE = `data-${CACHE_VERSION}`;
 
@@ -49,6 +49,9 @@ const NEVER_CACHE_PREFIXES = [
   "/api/events",
   "/api/reports",
   "/api/ping",
+  "/api/health",
+  "/api/rum",
+  "/api/ops",
   "/dev",
 ];
 

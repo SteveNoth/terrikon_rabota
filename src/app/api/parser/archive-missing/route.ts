@@ -3,6 +3,7 @@ import { z } from "zod";
 import { authorizeParserRequest, unauthorizedResponse } from "@/lib/parser/auth";
 import { archiveMissingOfficial } from "@/lib/parser/archive";
 import { allowRequest, clientKey, tooManyResponse } from "@/lib/parser/limits";
+import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
       причинаПропуска: result.skippedReason,
     });
   } catch (cause) {
-    console.error("[api/parser/archive-missing]", cause);
-    return json({ error: "Не удалось снять исчезнувшие вакансии." }, 500);
+    log.error("api/parser/archive-missing", "не удалось снять исчезнувшие", cause);
+    return json({ ok: false, code: "INTERNAL", message: "Не удалось снять исчезнувшие вакансии." }, 500);
   }
 }

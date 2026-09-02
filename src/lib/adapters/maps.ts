@@ -10,6 +10,8 @@
  * и вызываются из парсера и админки, не со страницы.
  */
 
+import { log } from "@/lib/log";
+
 export type MapRenderMode = "interactive" | "static" | "none";
 export type MapsProvider = "maplibre" | "yandex" | "static" | "none";
 
@@ -348,7 +350,7 @@ function createMaps(): MapsAdapter {
   switch (provider) {
     case "yandex":
       if (!yandexKey()) {
-        console.warn("[maps] MAPS_PROVIDER=yandex, но YANDEX_MAPS_API_KEY пуст — рисуем MapLibre");
+        log.warn("maps", "MAPS_PROVIDER=yandex, но ключ пуст — рисуем MapLibre");
         return new MaplibreMaps();
       }
       return new YandexMaps();

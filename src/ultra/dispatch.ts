@@ -17,6 +17,7 @@ import { renderCityStub } from "@/ultra/render/stub";
 import { renderVacancyPage } from "@/ultra/render/vacancy";
 import { renderMapPage } from "@/ultra/render/map";
 import type { VacancyView } from "@/lib/vacancy/view";
+import { log } from "@/lib/log";
 
 export type UltraResult = {
   title: string;
@@ -171,7 +172,7 @@ export async function dispatchUltra(input: {
 
     return { ...renderGenericMissing(city), citySlug: city, status: 404, cache: "none" };
   } catch (error) {
-    console.error("[ultra]", error);
+    log.error("ultra", "страница не собралась", error);
     return { ...renderServerError(), citySlug, status: 500, cache: "none" };
   }
 }

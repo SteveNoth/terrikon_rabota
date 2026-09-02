@@ -13,6 +13,7 @@ const NAV = [
   { href: "/admin/blocked", label: "Заблокировано" },
   { href: "/admin/posts", label: "Модерация постов" },
   { href: "/admin/quality", label: "Качество объявлений" },
+  { href: "/admin/health", label: "Наблюдаемость" },
   { href: "/admin/parsers", label: "Статистика парсеров" },
   { href: "/admin/reports", label: "Жалобы" },
   { href: "/admin/cities", label: "Города" },

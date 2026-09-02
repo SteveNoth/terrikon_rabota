@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { authorizeTelegramWebhook } from "@/lib/telegram/auth";
 import { handleTelegramUpdate } from "@/lib/telegram/handler";
 import type { TelegramUpdate } from "@/lib/telegram/parse";
+import { log } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 10;
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
   try {
     await handleTelegramUpdate(update);
   } catch (cause) {
-    console.error("[telegram/webhook]", cause);
+    log.error("telegram/webhook", "обновление не обработано", cause);
   }
 
   return ok();

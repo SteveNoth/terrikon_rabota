@@ -12,6 +12,7 @@ import { prisma } from "@/lib/adapters/db";
 import { maps, readMapsProvider } from "@/lib/adapters/maps";
 import { buildGeocodeQuery } from "@/lib/geo/geocode-query";
 import { fallbackMapPoint, getCity, isActiveCity } from "@/lib/geo";
+import { log } from "@/lib/log";
 
 export type { GeocodeAccuracy };
 
@@ -167,7 +168,7 @@ export async function resolveVacancyCoordinates(
       };
     }
   } catch (cause) {
-    console.error("[geocode] внешний запрос не удался, точку не кэшируем", cause);
+    log.error("geocode", "внешний запрос не удался, точку не кэшируем", cause);
     return { ...fallback, query, cached: false, external: true };
   }
 

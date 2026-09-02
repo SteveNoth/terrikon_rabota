@@ -20,6 +20,7 @@ import { vacancyPath } from "@/lib/vacancy/path";
 import { deviceClassFromUserAgent } from "@/lib/stats/device";
 import { defaultQualityMode } from "@/lib/quality/server";
 import { SESSION_COOKIE, isSessionHash } from "@/lib/stats/session";
+import { log } from "@/lib/log";
 
 export type SaveResult = { ok: true } | { ok: false; error: string };
 
@@ -358,7 +359,7 @@ export async function createApplication(
         professionSlug: vacancy.professionSlug,
       });
     } catch (cause) {
-      console.error("[seeker] не удалось записать событие отклика", cause);
+      log.error("seeker", "не удалось записать событие отклика", cause);
     }
     return { ok: true, applicationId: created.id };
   } catch (cause) {

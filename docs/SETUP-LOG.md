@@ -888,4 +888,277 @@ curl -X POST http://127.0.0.1:3000/api/telegram/notify -H "Authorization: Bearer
 - Rich Results / валидатор Яндекса по карточке вакансии без ошибок: ☐
 - Превью ссылки в Telegram: ☐
 
+---
+
+## 2026-09-02 — Этап 24: наблюдаемость — что сделать руками
+
+Код уже в репозитории (ветка `stage-24-observability`). Сайт, база и GitHub Actions сами ничего не узнают, пока не накатить миграцию, не прописать две переменные и не выложить код. Порядок ниже — как есть: сначала база, потом секреты, потом деплой, потом проверка.
+
+GitHub к проекту Vercel по-прежнему не привязан: `git push` живой сайт не обновляет. После merge в `master` — `npx vercel --prod --yes` из папки проекта (как на предыдущих этапах). Расписание keep-alive и parser-watch GitHub запускает **только с ветки `master`**. Пока yml лежат лишь в рабочей ветке, кнопкой **Run workflow** можно проверить руками, по часам ничего не пойдёт.
+
+---
+
+### 1. Накатить миграцию
+
+Нужен интернет до Supabase и `DIRECT_URL` в `.env` / `.env.local` (прямое соединение, порт 5432, не пул 6543). CLI Prisma читает оба файла (`prisma.config.ts`).
+
+В папке проекта, PowerShell:
+
+```
+npx prisma migrate deploy
+```
+
+В списке должна появиться `20260902180000_observability`. Она добавляет две таблицы: `RumSample` (замеры LCP/CLS/INP) и `OpsAlert` (чтобы одна и та же тревога не приходила каждый час).
+
+Если команда пишет `P1001` / `Can't reach database server` — база недоступна или уснула. Тогда:
+
+1. Открыть https://supabase.com/dashboard → проект `terrikon-rabota`.
+2. Если статус **Paused** — Restore / Resume (название кнопки в кабинете может быть Restore). Подождать 1–2 минуты.
+3. Снова `npx prisma migrate deploy`.
+
+Таблицы в Table Editor руками не рисовать: история миграций разъедется с базой.
+
+Пока этой миграции нет, `/api/health` честно скажет, что схема неполная (503), а `/admin/health` не покажет метрики.
+
+Проверка: `npx prisma migrate status` — pending не должно остаться.
+
+---
+
+### 2. Chat id для тревог в Telegram
+
+Это **не** токен BotFather и не `TG_SESSION` парсера. Это номер твоего чата с уже существующим ботом Этапа 22, чтобы сайт писал *тебе*: «парсер ВКонтакте затих». Telegram не даст боту написать человеку, который ни разу не нажал `/start`.
+
+1. Открой в Telegram того бота, чей username в `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` (без `@`). Если переменная ещё пустая — сначала Этап 22 (бот у @BotFather, токен в Vercel, webhook).
+2. Напиши ему `/start`. Должен прийти обычный ответ бота. Если бот молчит — webhook: `npx tsx scripts/telegram-webhook.ts set`, затем `info`.
+3. Узнай число chat id. В Supabase → проект `terrikon-rabota` → **SQL Editor** → New query:
+
+```sql
+SELECT "chatId", "createdAt"
+FROM "TelegramUser"
+ORDER BY "createdAt" DESC
+LIMIT 5;
+```
+
+Run. В верхней строке — твой id. Это цифры, иногда с минусом (группа). Не username и не `@name`.
+
+Запасной способ, если таблицы ещё нет: бот [@userinfobot](https://t.me/userinfobot) в личке покажет `Id`. То же число.
+
+4. В файл `.env.local` добавь строку (подставь своё число, без кавычек и без `@`):
+
+```
+TELEGRAM_ADMIN_CHAT_ID=123456789
+```
+
+5. То же имя и то же значение — в Vercel, иначе живой сайт тревогу не отправит:
+
+   1. https://vercel.com/terrikon/terrikon-rabota/settings/environment-variables
+   2. **Add New** / **Create new**.
+   3. Key: `TELEGRAM_ADMIN_CHAT_ID`
+   4. Value: то же число, что в `.env.local`.
+   5. Environments: **Production** и **Preview**.
+   6. Save. Переменная на уже выложенный деплой сама не попадает — нужен новый деплой (шаг 4).
+
+Без этой переменной watchdog видит поломку парсера, пишет в журнал «некуда слать» и в Telegram молчит.
+
+---
+
+### 3. Секреты GitHub Actions (keep-alive и watchdog)
+
+Расписания живут в `.github/workflows/keep-alive.yml` и `parser-watch.yml`. Они появятся на GitHub только после **push**. Кнопки **Actions** до пуша не будет. Сами по часам они заработают после попадания этих файлов в **`master`**.
+
+Открой https://github.com/SteveNoth/terrikon_rabota/settings/secrets/actions
+
+Нужны два секрета (если уже стоят с Этапа 16 — не дублируй, проверь что имена есть в списке):
+
+| Имя | Значение | Зачем |
+|-----|----------|--------|
+| `SITE_URL` | `https://terrikon-rabota.vercel.app` | keep-alive и watchdog знают, какой сайт дергать |
+| `CRON_SECRET` | тот же, что в `.env.local` (≥ 32 символа) | watchdog стучится в `/api/ops/watch`; без секрета дверь закрыта |
+
+Как добавить: **New repository secret** → имя точно как в таблице → значение → **Add secret**. Редактировать уже существующий: имя в списке → **Update**. Значение потом не показывают.
+
+Тот же `CRON_SECRET` должен быть и в Vercel (Production), иначе GitHub дойдёт до сайта, а сайт ответит 401. Как копировать из `.env.local` в буфер, не светя секрет в чат:
+
+```
+Set-Clipboard (((Get-Content .env.local | Where-Object { $_ -like 'CRON_SECRET=*' } | Select-Object -First 1) -replace '^CRON_SECRET=','').Trim())
+```
+
+В Vercel: Settings → Environment Variables → `CRON_SECRET` → вставить Ctrl+V. После смены — новый деплой.
+
+`SITE_URL` на Vercel для сайта не обязателен: его читают скрипты Actions и парсеры, не страницы.
+
+На 2026-08-30 в журнале Этапа 15–16 эти два секрета ещё стояли ☐. Если с тех пор не добавлял — шаг обязателен, иначе keep-alive напишет «SITE_URL пуст» и тихо выйдет.
+
+---
+
+### 4. Выложить код на живой сайт
+
+Пока GitHub не подключён к Vercel:
+
+```
+npx vercel --prod --yes
+```
+
+из папки проекта, на ветке с кодом этапа 24 (или после merge в `master`).
+
+После деплоя подожди минуту. Проверка без входа:
+
+В браузере: `https://terrikon-rabota.vercel.app/api/health`
+
+Должен открыться JSON. Смотри поля:
+
+- `"status": "ok"` или `"degraded"` и HTTP 200 — сайт и база живы. `degraded` значит парсер просел, это не «сайт упал».
+- `"status": "down"` и HTTP 503 — база не отвечает или миграция не накатана. Вернись к шагу 1.
+- Если страница «Application error» — деплой без нового кода или падение функции; смотри Vercel → Deployments → логи.
+
+Админка: `https://terrikon-rabota.vercel.app/admin/health` — тот же пароль `ADMIN_PASSWORD`, что у `/admin`. На странице: размер базы, парсеры, доля Full / Lite / Ultra. Пока мало заходов, в метриках будет «пока нет замеров» — это нормально.
+
+Чтобы появились цифры RUM: открой главную города в обычном браузере (Full/Lite), подожди несколько секунд. Ultra сам пишет заход с сервера. Админку, `/auth`, `/employer`, `/profile` счётчик пропускает.
+
+---
+
+### 5. Включить расписания на GitHub
+
+Это **не** деплой сайта. Шаг 4 выкладывает код на Vercel. Шаг 5 включает двух роботов на GitHub, которые по расписанию стучатся в уже живой сайт.
+
+Представь двух сторожей:
+
+- **keep-alive** — раз в три дня открывает дверь базы: «ты ещё не спишь?». Бесплатный Supabase без запросов ~7 дней уходит в паузу. Сторож дергает публичный адрес `/api/health`. Пароля нет: health не отдаёт персональные данные.
+- **parser-watch** — каждый час спрашивает сайт: «парсеры живы?». Сайт смотрит последние запуски и при поломке пишет тебе в Telegram. Тут уже нужен пароль `CRON_SECRET`, иначе любой в интернете мог бы дёргать тревогу.
+
+Оба живут как GitHub Actions: GitHub по cron поднимает чужой Linux, выполняет скрипт, гасит машину. Файлы:
+
+- `.github/workflows/keep-alive.yml` → скрипт `scripts/ci/keep-alive.sh`
+- `.github/workflows/parser-watch.yml` → скрипт `scripts/ci/parser-watch.sh`
+
+Пока эти файлы только на твоём диске, вкладка Actions их не видит. GitHub читает то, что **запушено**. Часовой cron GitHub запускает **только с ветки `master`** (default). Кнопка **Run workflow** умеет и с рабочей ветки — ею проверяем сразу, не дожидаясь merge.
+
+Если в репозитории уже крутятся `parser-vk` / `parser-tg` и т.п., Actions включены. Новых секретов шаг 5 не просит: те же `SITE_URL` и `CRON_SECRET` из шага 3.
+
+#### 5.1. Чтобы роботы появились в списке
+
+1. Закоммить и запушь ветку с файлами `.github/workflows/keep-alive.yml` и `parser-watch.yml` (если ещё не пушил).
+2. Чтобы **часы** заработали — влей эту ветку в `master` и запушь `master`. Пока yml только в `stage-24-observability`, по расписанию тишина; кнопка Run уже может работать, если в Run workflow выбрать эту ветку.
+3. Открой https://github.com/SteveNoth/terrikon_rabota/actions (вкладка **Actions** у репозитория, не Settings).
+4. Слева — список workflow. Ищи имена **keep-alive** и **parser-watch** (как `name:` в yml, не имя файла).
+5. Если вместо списка жёлтый баннер **Enable workflows** / **I understand my workflows, go ahead and enable them** — нажми, иначе ничего не запустится.
+
+В списке не будет запусков, пока сам не нажмёшь Run или не дождёшься cron. Пустой список справа — нормально.
+
+#### 5.2. Проверка keep-alive руками
+
+Не жди трёх дней. Цель: увидеть, что GitHub дошёл до `https://terrikon-rabota.vercel.app/api/health`.
+
+1. Слева нажми **keep-alive**.
+2. Справа кнопка **Run workflow** (иногда только иконка ▶). Если кнопки нет — yml ещё не на выбранной ветке, вернись к 5.1.
+3. Выпадашка **Use workflow from**: для постоянной работы — `master`. Чтобы проверить сразу после пуша рабочей ветки — выбери `stage-24-observability`.
+4. **Run workflow**. Через 1–2 секунды обнови страницу (GitHub иногда не рисует новый run сразу).
+5. Открой свежий run (жёлтый кружок = ещё идёт, зелёный = скрипт вышел с кодом 0, красный = упал).
+6. Клик по job **ping** → шаг **Ping / api/health**.
+
+Что должно быть в логе:
+
+| Текст | Смысл | Что делать |
+|-------|--------|------------|
+| `Keep-alive, попытка 1 → https://terrikon-rabota.vercel.app/api/health` и ниже JSON, затем `HTTP 200` | сайт и база ответили | ничего |
+| то же, но `HTTP 503` и в JSON `"status": "down"` | до сайта дошли, база нездорова или миграция не накатана | шаг 1; для keep-alive это **успех**: проект уже не спит |
+| `SITE_URL пуст — keep-alive пропускаю.` | в GitHub Secrets нет `SITE_URL` | шаг 3. Галочка будет **зелёная** — скрипт специально выходит 0, чтобы пустой секрет не краснил Actions. Это не «всё работает» |
+| 4 раза таймаут, в конце `За 4 попытки /api/health не ответил` | неверный `SITE_URL`, сайт лежит, или пауза Supabase дольше обычного | проверь секрет, открой health в браузере, в кабинете Supabase не Paused |
+| `Unrecognized named-value: 'secrets.SITE_URL'` или пустой env | секрет с опечаткой в имени | имя должно быть точно `SITE_URL` |
+
+Зелёная галочка без строки `HTTP 200` / `HTTP 503` — смотри таблицу, часто это пустой `SITE_URL`.
+
+#### 5.3. Проверка parser-watch руками
+
+Тот же ритуал, workflow **parser-watch**, job **watch**, шаг **Check parsers**.
+
+Скрипт стучится на `https://terrikon-rabota.vercel.app/api/ops/watch` с заголовком `Authorization: Bearer <CRON_SECRET>`. Сайт должен быть уже с кодом этапа 24 (шаг 4), иначе будет 404.
+
+В логе будет JSON. Смотри поля, не только цвет run. Скрипт при 401/404 тоже выходит 0 («чтобы не маскировать парсеры») — красным Actions не загорится.
+
+| Что в логе | Смысл | Что делать |
+|------------|--------|------------|
+| `SITE_URL или CRON_SECRET пусты — проверку парсеров пропускаю.` | нет секрета в GitHub | шаг 3 |
+| HTTP 401, `"code": "UNAUTHORIZED"`, `"Нет доступа."` | секрет в GitHub ≠ секрет на Vercel, или на Vercel его нет / деплоя после записи не было | шаг 3 + новый деплой |
+| HTTP 404 | на проде нет `/api/ops/watch` | шаг 4 |
+| `"ok": true`, `"alerts": []`, `"sent": 0`, `"reason": null` | парсеры в порядке, писать не о чем | так и должно быть в обычный день |
+| `"reason": "TELEGRAM_ADMIN_CHAT_ID не задан"` | сайт видит поломку, но в Telegram молчит | шаг 2, переменная на Vercel + деплой |
+| `"reason": "уже сообщали, повтор не раньше чем через 6 часов"` | тревога уже уходила | ничего; следующее сообщение не раньше чем через 6 часов |
+| `"reason": "Telegram не принял сообщение"` | chat id неверный или боту не писали `/start` | шаг 2: `/start`, проверить число |
+| `"sent": 1` (или больше) и в Telegram сообщение «Террикон Работа: парсеры» | сторож живой | ничего |
+
+Пороги на стороне сайта, не GitHub: ВК и Telegram — 6 часов без запуска; сайты предприятий и ЦЗН — 26 часов; либо два последних завершённых запуска с 0 принятых вакансий.
+
+#### 5.4. Что будет само, без кнопки
+
+Когда оба yml лежат в **`master`**:
+
+- keep-alive — cron `17 6 */3 * *`: примерно раз в 3 дня в **06:17 UTC** (09:17 по Москве зимой, 09:17/10:17 в зависимости от летнего времени; GitHub cron в UTC и может сдвинуться на десятки минут).
+- parser-watch — cron `20 * * * *`: каждый час в **:20 UTC** (23-я минута часа по Москве зимой: 03:20 МСК = 00:20 UTC и т.д.).
+
+Первый час после появления файла GitHub иногда пропускает. Если через сутки в Actions нет ни одного run с пометкой `schedule` — проверь, что yml именно в `master`, не только в рабочей ветке.
+
+GitHub **выключает все cron**, если в репозиторий **60 дней никто не пушил**. Тогда keep-alive тоже замолкает, и база снова может уснуть. Лечится любым пушем или снова **Run workflow**.
+
+Минуты Actions: оба job короткие (curl, таймаут 5 минут). Keep-alive раз в 3 дня почти ничего не ест. Parser-watch — 24 коротких запуска в сутки, как остальные парсерные cron. Лимит смотреть: GitHub → Settings (аккаунт SteveNoth, не репозиторий) → Billing → Actions. Подробнее — запись Этапа 16, блок D.
+
+---
+
+### 6. Проверка «уснувшего» парсера (по желанию)
+
+На живом сайте после шагов 2–5, из PowerShell (секрет не печатай в чат):
+
+```
+$secret = (((Get-Content .env.local | Where-Object { $_ -like 'CRON_SECRET=*' } | Select-Object -First 1) -replace '^CRON_SECRET=','').Trim())
+Invoke-RestMethod -Uri "https://terrikon-rabota.vercel.app/api/ops/watch" -Headers @{ Authorization = "Bearer $secret" }
+```
+
+Если какой-то парсер реально не запускался дольше порога (ВК/Telegram — 6 часов, сайты и ЦЗН — 26 часов) или принял 0 вакансий два раза подряд — в Telegram придёт сообщение. Одну и ту же поломку бот не повторяет чаще чем раз в 6 часов.
+
+---
+
+### 7. Git-hook на этой машине (бюджеты перед коммитом)
+
+Один раз в папке проекта:
+
+```
+node scripts/install-git-hooks.mjs
+```
+
+Дальше каждый `git commit` сначала гоняет `npm run check:design` и `npm run check:budget`. Если специально импортировать `moment` / `lodash` / `recharts` — коммит не пройдёт. `npm install` ставит hook сам (скрипт `prepare`).
+
+Проверка бюджетов без коммита: `npm run build`, затем `npm run check:budget`.
+
+---
+
+### Как понять, что проект Supabase уснул
+
+Бесплатный проект без запросов к базе около **семи дней** уходит в паузу.
+
+Признаки:
+
+1. Сайт крутится дольше минуты или отдаёт ошибку.
+2. `https://terrikon-rabota.vercel.app/api/health` не открывается или JSON с `"status": "down"` и HTTP 503.
+3. В кабинете Supabase у `terrikon-rabota` статус **Paused**.
+
+Первый живой запрос будит проект (часто 30–90 секунд); keep-alive специально пробует health несколько раз. Если Actions выключены (шаг 5) — пауза снова возможна.
+
+---
+
+Шаблон отметки:
+
+- Дата: 2026-09-02
+- Миграция `20260902180000_observability` накатана: ☑
+- `TELEGRAM_ADMIN_CHAT_ID` в `.env.local`: ☑
+- `TELEGRAM_ADMIN_CHAT_ID` в Vercel (Production + Preview) + новый деплой: ☑
+- `SITE_URL` в GitHub Secrets: ☑
+- `CRON_SECRET` в GitHub Secrets и в Vercel совпадают: ☑
+- Код этапа 24 на https://terrikon-rabota.vercel.app: ☑
+- `/api/health` на проде открывается JSON: ☑
+- `/admin/health` открывается: ☑
+- yml keep-alive и parser-watch в `master`: ☑ (PR `stage-24-observability` → `master`)
+- Actions: пробный Run workflow keep-alive и parser-watch прошёл: ☑
+- Шаг 6 (ручной вызов `/api/ops/watch` из PowerShell): ☐ пропущен, по желанию
+- Шаг 7 (`node scripts/install-git-hooks.mjs` на этой машине): ☐ пропущен, по желанию (`npm prepare` ставит hook при `npm install`)
+
 

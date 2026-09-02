@@ -14,7 +14,7 @@ export function renderNotFound(citySlug?: string): { title: string; description:
         `<li><a href="/${attr(city.slug)}">${esc(cityName(city.slug, "nom"))}${city.status === "soon" ? " · скоро" : ""}</a></li>`,
     )
     .join("")}</ul>
-<p class="small"><a href="/${home}">На главную</a></p>
+<p class="small"><a href="/${home}">Вернуться</a></p>
 </div>`;
 
   return {
@@ -32,7 +32,7 @@ export function renderServerError(): { title: string; description: string; body:
     body: `<div class="wrap stack">
 <h1>Не получилось открыть страницу</h1>
 <p class="muted">Это не ваша вина. Попробуйте обновить страницу через минуту.</p>
-<p><a class="btn btn-primary" href="/${home}">На главную</a></p>
+<p><a class="btn btn-primary" href="/${home}">Вернуться</a></p>
 </div>`,
   };
 }
@@ -44,7 +44,7 @@ export function renderGenericMissing(citySlug: string): { title: string; descrip
     body: `<div class="wrap stack">
 <h1>Страница не найдена</h1>
 <p class="muted">В экономной версии есть главная, список вакансий, карточка, «О проекте» и эта страница. Остальное откроется в полной версии.</p>
-<p><a class="btn btn-primary" href="/${citySlug}/jobs">К вакансиям</a> <a class="btn btn-outline" href="?mode=full">Полная версия</a></p>
+<p><a class="btn btn-primary" href="/${citySlug}/jobs">Вернуться</a> <a class="btn btn-outline" href="?mode=full">Полная версия</a></p>
 </div>`,
   };
 }

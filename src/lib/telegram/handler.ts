@@ -5,6 +5,7 @@ import {
   TELEGRAM_DIALOGS,
 } from "@/lib/telegram/constants";
 import { answerCallbackQuery, sendTelegramMessage } from "@/lib/telegram/api";
+import { log } from "@/lib/log";
 import { formatVacancyMessage, vacancyPublicUrl } from "@/lib/telegram/format";
 import {
   cityInlineKeyboard,
@@ -53,7 +54,7 @@ async function reply(chatId: string, text: string, markup?: ReplyMarkup): Promis
     result = await sendTelegramMessage(chatId, text);
   }
   if (!result.ok) {
-    console.error("[telegram] sendMessage", result.description ?? "fail");
+    log.error("telegram", "sendMessage не дошёл", result.description ?? "fail");
   }
 }
 
