@@ -979,18 +979,3 @@ async function mapInChunks<T>(
     await Promise.all(slice.map((item) => fn(item)));
   }
 }
-
-export async function deactivateStaleVacancies(days = 30): Promise<{ deactivated: number; days: number }> {
-  const cutoff = new Date();
-  cutoff.setUTCDate(cutoff.getUTCDate() - days);
-  const result = await prisma.vacancy.updateMany({
-    where: {
-      isActive: true,
-      lastSeenAt: { lt: cutoff },
-      source: { not: Source.TRUDVSEM },
-    },
-    data: { isActive: false },
-  });
-  clearMemoryCache();
-  return { deactivated: result.count, days };
-}

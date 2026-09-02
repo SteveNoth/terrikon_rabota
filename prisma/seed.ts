@@ -1112,18 +1112,8 @@ async function main(): Promise<void> {
     });
   }
 
-  const grouped = await prisma.vacancy.groupBy({
-    by: ["sphere"],
-    where: { isActive: true },
-    _count: { _all: true },
-  });
-
-  for (const row of grouped) {
-    await prisma.category.update({
-      where: { slug: row.sphere },
-      data: { vacancyCount: row._count._all },
-    });
-  }
+  const { recomputeVacancyCounts } = await import("../src/lib/hygiene/counters");
+  await recomputeVacancyCounts();
 
   const counts = {
     vacancies: await prisma.vacancy.count(),

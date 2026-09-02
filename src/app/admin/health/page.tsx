@@ -1,9 +1,12 @@
 import { requireAdmin } from "@/lib/admin/auth";
-import { formatPercent } from "@/lib/admin/format";
+import { formatBytes, formatPercent } from "@/lib/admin/format";
 import { formatTimeShort } from "@/lib/format/date";
 import { collectHealth } from "@/lib/health";
 import { adminChatId } from "@/lib/health/watch";
 import { loadRumDashboard } from "@/lib/rum/stats";
+import { loadLatestSizeSample } from "@/lib/hygiene/report";
+import { DB_LIMIT_BYTES, DB_MIGRATE_BYTES } from "@/lib/hygiene/constants";
+import { forecastFromSamples, formatHorizon } from "@/lib/hygiene/forecast";
 import type { QualityMode } from "@/lib/quality/types";
 
 const MODE_LABEL: Record<QualityMode, string> = {
@@ -31,9 +34,24 @@ function ms(value: number | null, digits = 0): string {
 
 export default async function AdminHealthPage() {
   await requireAdmin();
-  const [health, rum] = await Promise.all([collectHealth(), loadRumDashboard(7)]);
+  const [health, rum, lastSize] = await Promise.all([
+    collectHealth(),
+    loadRumDashboard(7),
+    loadLatestSizeSample(),
+  ]);
   const ultra = rum.modes.find((row) => row.mode === "ultra");
   const chat = adminChatId();
+  const sizeForecast =
+    lastSize && health.database.sizeBytes != null
+      ? forecastFromSamples({
+          currentBytes: health.database.sizeBytes,
+          previousBytes: lastSize.bytes,
+          daysBetween: Math.max(
+            1 / 24,
+            (Date.now() - lastSize.capturedAt.getTime()) / 86_400_000,
+          ),
+        })
+      : null;
 
   return (
     <>
@@ -65,6 +83,21 @@ export default async function AdminHealthPage() {
         <p>
           Не хватает: {health.migrations.pending.length ? health.migrations.pending.join(", ") : "список неизвестен"}.
           Пока так, сайт может врать схемой.
+        </p>
+      )}
+
+      <h2 className="mt-6 text-lg">Гигиена диска</h2>
+      {lastSize ? (
+        <p>
+          Последний снимок {formatTimeShort(lastSize.capturedAt)}: {formatBytes(lastSize.bytes)} из{" "}
+          {formatBytes(DB_LIMIT_BYTES)}, строк Vacancy {lastSize.vacancyRows}. Порог переезда{" "}
+          {formatBytes(DB_MIGRATE_BYTES)}: {sizeForecast ? formatHorizon(sizeForecast.daysToMigrate) : "—"}. Лимит 500
+          МБ: {sizeForecast ? formatHorizon(sizeForecast.daysToLimit) : "—"}. Шаги — в docs/MIGRATION.md.
+        </p>
+      ) : (
+        <p>
+          Еженедельного снимка ещё нет. Первый появится из расписания `hygiene-size` или локально:{" "}
+          <code>npx tsx scripts/db-size-report.ts --apply</code>.
         </p>
       )}
 

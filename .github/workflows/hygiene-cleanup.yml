@@ -1,0 +1,40 @@
+# Очистка базы раз в сутки (Этап 25).
+# Не на Vercel: удаление и группы дублей могут длиться дольше 10 секунд.
+
+name: hygiene-cleanup
+
+on:
+  schedule:
+    - cron: "40 3 * * *"
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Применить удаление (false = только --dry-run)"
+        type: boolean
+        default: true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Cleanup
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.apply }}" != "true" ]; then
+            npx tsx scripts/cleanup.ts --dry-run
+          else
+            npx tsx scripts/cleanup.ts --apply
+          fi

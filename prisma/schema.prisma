@@ -272,6 +272,8 @@ model Vacancy {
   @@index([contactPhone])
   /// Главная выдача: город + активные + местные/вахта + свежесть.
   @@index([citySlug, isActive, workFormat, publishedAt])
+  /// Очистка Этапа 25: не встречались N дней / неактивные старше 60.
+  @@index([isActive, lastSeenAt])
 }
 
 model Employer {
@@ -308,6 +310,24 @@ model Category {
   icon         String
   order        Int
   vacancyCount Int    @default(0)
+}
+
+/// Счётчик местных и вахт по городу. Пересчёт раз в час (Этап 25), страницы не делают COUNT.
+model CityStat {
+  citySlug     String   @id
+  vacancyCount Int      @default(0)
+  vahtaCount   Int      @default(0)
+  updatedAt    DateTime @updatedAt
+}
+
+/// Счётчик местных вакансий сферы в городе. Главная читает отсюда, не группирует Vacancy.
+model SphereStat {
+  citySlug     String
+  sphere       String
+  vacancyCount Int      @default(0)
+  updatedAt    DateTime @updatedAt
+
+  @@id([citySlug, sphere])
 }
 
 model Profession {
@@ -463,6 +483,8 @@ model ParserRun {
   vacanciesCreated  Int       @default(0)
   vacanciesUpdated  Int       @default(0)
   errorsCount       Int       @default(0)
+
+  @@index([startedAt])
 }
 
 model Report {
@@ -697,4 +719,15 @@ model OpsAlert {
   id       String   @id @default(cuid())
   alertKey String   @unique
   sentAt   DateTime
+}
+
+/// Еженедельный снимок размера базы (Этап 25). Нужен прогнозу «на сколько хватит».
+model DbSizeSample {
+  id          String   @id @default(cuid())
+  capturedAt  DateTime @default(now())
+  bytes       Int
+  tableCounts Json
+  vacancyRows Int      @default(0)
+
+  @@index([capturedAt])
 }

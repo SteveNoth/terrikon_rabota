@@ -1,0 +1,55 @@
+# Выгрузка базы раз в неделю и обязательная проверка восстановлением (Этап 25).
+
+name: hygiene-backup
+
+on:
+  schedule:
+    - cron: "10 4 * * 0"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: restore
+          POSTGRES_PASSWORD: restore
+          POSTGRES_DB: terrikon_check
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U restore -d terrikon_check"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client openssl
+
+      - name: Dump, restore, verify
+        id: verify
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          RESTORE_HOST: localhost
+          RESTORE_USER: restore
+          RESTORE_PASSWORD: restore
+          RESTORE_DB: terrikon_check
+        run: bash scripts/ci/backup-and-verify.sh
+
+      - name: Upload encrypted dump
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terrikon-db-${{ github.run_id }}
+          path: backups/*.enc
+          if-no-files-found: warn
+          retention-days: 30

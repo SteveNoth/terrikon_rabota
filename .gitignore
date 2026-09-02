@@ -65,3 +65,7 @@ next-env.d.ts
 
 # Выгрузка правок из админки. Не в git: это локальная обучающая выборка.
 scripts/tests/normalization/learned.json
+
+# Дампы базы (Этап 25). В git не кладём: там телефоны и почта.
+/backups/*
+!/backups/.gitkeep

@@ -1161,4 +1161,151 @@ node scripts/install-git-hooks.mjs
 - Шаг 6 (ручной вызов `/api/ops/watch` из PowerShell): ☐ пропущен, по желанию
 - Шаг 7 (`node scripts/install-git-hooks.mjs` на этой машине): ☐ пропущен, по желанию (`npm prepare` ставит hook при `npm install`)
 
+---
+
+## 2026-09-02 — Этап 25: гигиена данных — что сделать руками
+
+Код на ветке `stage-25-data-hygiene`. Расписания GitHub запускает **только с ветки `master`**. Пока yml в рабочей ветке — проверка кнопкой **Run workflow**. GitHub к Vercel по-прежнему не привязан: после merge — `npx vercel --prod --yes`.
+
+Очистка ходит в базу напрямую (`DIRECT_URL`), как ночной `regroup`. Счётчики и отчёт о размере бьют в сайт (`SITE_URL` + `CRON_SECRET`), как watchdog.
+
+---
+
+### 1. Накатить миграцию
+
+Нужен интернет до Supabase и `DIRECT_URL` в `.env` / `.env.local` (порт 5432, не пул 6543).
+
+```
+npx prisma migrate deploy
+```
+
+В списке должна появиться `20260902210000_data_hygiene`. Таблицы: `CityStat`, `SphereStat` (счётчики, чтобы страницы не считали Vacancy на каждом заходе), `DbSizeSample` (еженедельный снимок для прогноза). Индексы очистки на `Vacancy(isActive, lastSeenAt)` и `ParserRun(startedAt)`.
+
+2026-09-02 с этой машины миграция уже накатана (`npx prisma migrate deploy`). Повторный вызов безопасен: pending не останется.
+
+Таблицы в Table Editor руками не рисовать.
+
+Проверка: `npx prisma migrate status` — pending нет.
+
+---
+
+### 2. Первый пересчёт счётчиков и сухой прогон очистки
+
+Пока hourly cron не сработал, главная всё ещё может посчитать Vacancy сама (запасной путь). Чтобы сразу читать готовые числа:
+
+```
+npx tsx scripts/recompute-counts.ts
+npx tsx scripts/cleanup.ts --dry-run
+```
+
+`--dry-run` обязан показать «будет удалено N записей» и **ничего не удалить**. GeocodeCache в отчёте есть строкой «не трогаем». Без `--apply` скрипт всегда в этом режиме, даже если флаг забыли.
+
+Живое удаление вручную (когда сухой прогон выглядит правдой):
+
+```
+npx tsx scripts/cleanup.ts --apply
+```
+
+На проде это делает workflow `hygiene-cleanup` раз в сутки (`40 3 * * *`).
+
+---
+
+### 3. Бэкап: куда класть и чем проверять
+
+**Локально** файл всегда в папку `backups/` в корне проекта (gitignore, в git не попадает).
+
+Нужен `pg_dump` в PATH (клиент PostgreSQL) или Docker с образом `postgres:16`.
+
+```
+npm run db:backup
+```
+
+Появится `backups/terrikon-ГГГГ-ММ-ДД.dump`. Это схема `public` (таблицы Prisma). Пользователи входа в Supabase Auth в этот файл не входят.
+
+**Проверка восстановлением на этой машине** (если есть Docker):
+
+```
+docker run -d --name tr-restore-check -e POSTGRES_USER=restore -e POSTGRES_PASSWORD=restore -e POSTGRES_DB=terrikon_check -p 55432:5432 postgres:16
+docker run --rm --network host -v ${PWD}/backups:/backups postgres:16 pg_restore --no-owner --no-acl --dbname=postgresql://restore:restore@127.0.0.1:55432/terrikon_check /backups/terrikon-ГГГГ-ММ-ДД.dump
+```
+
+В PowerShell `${PWD}` работает в Docker Desktop. Потом:
+
+```
+docker exec tr-restore-check psql -U restore -d terrikon_check -c "SELECT COUNT(*) FROM \"Vacancy\";"
+docker rm -f tr-restore-check
+```
+
+Число вакансий должно совпасть с живой базой (или быть не меньше сидов).
+
+**В GitHub Actions** то же самое делает `.github/workflows/hygiene-backup.yml` каждое воскресенье 04:10 UTC: выгрузка → restore на одноразовый Postgres 16 → проверка таблиц `Vacancy` / `GeocodeCache` / `_prisma_migrations` → зашифрованный артефакт 30 дней. Бэкап, который этот restore не прошёл, не считается бэкапом.
+
+Чтобы артефакт появился, в GitHub Secrets нужен `DIRECT_URL` (уже есть у `regroup.yml`) и желательно `BACKUP_PASSPHRASE`. Если пароля нет — шифруем `CRON_SECRET`. Расшифровка:
+
+```
+openssl enc -d -aes-256-cbc -pbkdf2 -in terrikon-ГГГГ-ММ-ДД.dump.enc -out terrikon.dump -pass pass:ВАШ_ПАРОЛЬ
+```
+
+---
+
+### 4. Отчёт о размере в Telegram
+
+Тот же `TELEGRAM_ADMIN_CHAT_ID`, что для тревог парсеров. Локально без отправки:
+
+```
+npx tsx scripts/db-size-report.ts --dry-run
+```
+
+С записью снимка и отправкой:
+
+```
+npx tsx scripts/db-size-report.ts --apply
+```
+
+Расписание: `.github/workflows/hygiene-size.yml`, понедельник 04:20 UTC. Бьёт `POST /api/ops/size` с `CRON_SECRET`. Первый замер честно пишет «прогноз после второго». Со второго — «на сколько хватит до 400 МБ и до 500 МБ».
+
+Пороги и шаги переезда: `docs/MIGRATION.md`.
+
+---
+
+### 5. Секреты GitHub и деплой
+
+Открой https://github.com/SteveNoth/terrikon_rabota/settings/secrets/actions
+
+Должны быть (не дублируй, проверь имена):
+
+| Имя | Откуда |
+|---|---|
+| `DIRECT_URL` | уже для regroup |
+| `DATABASE_URL` | уже для regroup |
+| `SITE_URL` | уже для парсеров / watchdog |
+| `CRON_SECRET` | уже для двери |
+| `BACKUP_PASSPHRASE` | новый, по желанию; иначе шифруем `CRON_SECRET` |
+
+На Vercel ничего нового, кроме деплоя кода: счётчики и отчёт размера ходят на сайт.
+
+После merge в `master`:
+
+1. `npx vercel --prod --yes` (пока GitHub не привязан).
+2. Actions → `hygiene-cleanup` → Run workflow, можно с apply=false (только dry-run).
+3. Actions → `hygiene-counts` → Run workflow.
+4. Actions → `hygiene-size` → Run workflow — в Telegram должен прийти отчёт.
+5. Actions → `hygiene-backup` → Run workflow — в логе «Восстановление на проверочной базе прошло», в артефактах `.enc`.
+
+---
+
+Шаблон отметки:
+
+- Дата:
+- Миграция `20260902210000_data_hygiene` накатана: ☐
+- `npx tsx scripts/cleanup.ts --dry-run` показал N и ничего не удалил: ☐
+- `npx tsx scripts/recompute-counts.ts` записал CityStat/SphereStat: ☐
+- `npm run db:backup` дал файл в `backups/`: ☐
+- restore на проверочной базе (Docker или Actions) прошёл: ☐
+- `BACKUP_PASSPHRASE` в GitHub Secrets (или полагаемся на `CRON_SECRET`): ☐
+- Код этапа 25 на https://terrikon-rabota.vercel.app: ☐
+- Отчёт о размере пришёл в Telegram: ☐
+- yml гигиены в `master`: ☐
+
+
 

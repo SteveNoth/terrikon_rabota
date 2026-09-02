@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { authorizeParserRequest, unauthorizedResponse } from "@/lib/parser/auth";
-import { deactivateStaleVacancies } from "@/lib/parser/ingest";
+import { deactivateStaleVacancies } from "@/lib/hygiene/cleanup";
 import { allowRequest, clientKey, tooManyResponse, INACTIVE_AFTER_DAYS } from "@/lib/parser/limits";
 import { log } from "@/lib/log";
 

@@ -13,4 +13,5 @@ export const EXPECTED_MIGRATIONS = [
   "20260831210000_seeker_profile",
   "20260902120000_telegram_bot",
   "20260902180000_observability",
+  "20260902210000_data_hygiene",
 ] as const;

@@ -11,6 +11,7 @@ import {
 import { wrap } from "@/lib/adapters/cache";
 import { prisma } from "@/lib/adapters/db";
 import { getExternalDestination } from "@/lib/geo";
+import { readStoredCityCount, readStoredSphereCounts } from "@/lib/hygiene/counters";
 import { repoError } from "@/lib/repo/errors";
 
 /** Сколько карточек на страницу, если в адресе ничего нет. Как в режиме Full/Lite. */
@@ -502,6 +503,10 @@ export async function countVacanciesByFormat(
   workFormat: WorkFormat,
 ): Promise<number> {
   try {
+    const stored = await readStoredCityCount(citySlug, workFormat);
+    if (stored != null) {
+      return stored;
+    }
     return await wrap(`counts:format:${citySlug}:${workFormat}`, HOME_TTL_SECONDS, () =>
       prisma.vacancy.count({
         where: {
@@ -569,6 +574,10 @@ export async function countVacanciesByProfession(
 
 export async function countVacanciesBySphere(citySlug: string): Promise<SphereCount[]> {
   try {
+    const stored = await readStoredSphereCounts(citySlug);
+    if (stored != null) {
+      return stored;
+    }
     return await wrap(`counts:sphere:${citySlug}`, HOME_TTL_SECONDS, async () => {
       const groups = await prisma.vacancy.groupBy({
         by: ["sphere"],

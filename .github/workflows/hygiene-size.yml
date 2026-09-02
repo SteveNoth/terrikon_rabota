@@ -1,0 +1,22 @@
+# Размер базы раз в неделю в Telegram (Этап 25).
+
+name: hygiene-size
+
+on:
+  schedule:
+    - cron: "20 4 * * 1"
+  workflow_dispatch:
+
+jobs:
+  size:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout scripts
+        uses: actions/checkout@v4
+
+      - name: Send size report
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: bash scripts/ci/db-size-report.sh

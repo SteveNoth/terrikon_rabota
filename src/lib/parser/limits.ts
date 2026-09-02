@@ -9,7 +9,7 @@ export const MAX_BODY_BYTES = 1_500_000;
 export const MAX_STRING = 4000;
 export const MAX_URL = 2000;
 export const MAX_IMAGE_URLS = 4;
-export const INACTIVE_AFTER_DAYS = 30;
+export { INACTIVE_AFTER_DAYS } from "@/lib/hygiene/constants";
 export const DEDUPE_WINDOW_DAYS = 60;
 export const RATE_LIMIT_WINDOW_MS = 60_000;
 export const RATE_LIMIT_MAX = 30;

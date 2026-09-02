@@ -1,0 +1,15 @@
+{
+  "inactiveAfterDays": 30,
+  "deleteInactiveAfterDays": 60,
+  "rejectedPostDays": 7,
+  "parserRunDays": 90,
+  "dbLimitBytes": 524288000,
+  "dbMigrateBytes": 419430400,
+  "actionsMinutesLimit": 2000,
+  "actionsMinutesWarn": 1800,
+  "parserRunMinutesWarn": 8,
+  "searchMsWarn": 500,
+  "trafficGbWarn": 100,
+  "leaveGeocodeCache": true,
+  "deactivateSkipSources": ["TRUDVSEM", "EMPLOYER", "MANUAL"]
+}

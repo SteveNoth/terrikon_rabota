@@ -19,6 +19,11 @@
     "test:telegram": "npx tsx src/lib/telegram/run-tests.ts",
     "test:seo": "npx tsx src/lib/seo/run-tests.ts",
     "test:ops": "npx tsx src/lib/health/run-tests.ts",
+    "test:hygiene": "npx tsx src/lib/hygiene/run-tests.ts",
+    "hygiene:cleanup": "npx tsx scripts/cleanup.ts --dry-run",
+    "hygiene:counts": "npx tsx scripts/recompute-counts.ts",
+    "hygiene:size": "npx tsx scripts/db-size-report.ts --dry-run",
+    "db:backup": "node scripts/backup-db.mjs",
     "telegram:webhook": "npx tsx scripts/telegram-webhook.ts"
   },
   "prisma": {
