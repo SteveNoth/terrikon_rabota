@@ -1,0 +1,80 @@
+# Парсер сайтов предприятий (Этап 18). Класс COMPANY_SITE.
+#
+# Cron раз в сутки в 05:00 UTC. Реже ВК/Telegram: страницы предприятий
+# меняются не каждые три часа.
+#
+# Playwright / Chromium сюда НЕ ставим «на всякий случай».
+# pip install playwright — это только Python-обёртка (дешёвая).
+# python -m playwright install chromium качает браузер ~150 МБ и добавляет
+# 1–3 минуты к КАЖДОМУ запуску плюс системные зависимости --with-deps.
+# При 30 запусках в месяц это 30–90 минут сверху квоты (на приватном репо
+# лимит 2000 мин). Ставим браузер, только если в config_web.json у включённого
+# сайта javascript=true. Сейчас оба живых источника — обычный HTML.
+#
+# Tesseract здесь не ставим: вакансии в HTML, не на фотографиях постов.
+# Это экономит ещё 1–2 минуты apt на каждый запуск.
+
+name: parser-web
+
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      OCR_PROVIDER: none
+      SOURCE_WEB_ENABLED: "true"
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      SITE_URL: ${{ secrets.SITE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Need Playwright browser?
+        id: js
+        run: echo "needed=$(python scripts/parser_web.py --needs-js)" >> "$GITHUB_OUTPUT"
+
+      - name: Install Chromium for Playwright
+        if: steps.js.outputs.needed == 'true'
+        run: python -m playwright install --with-deps chromium
+
+      - name: Run website parser
+        run: python scripts/parser_web.py
+
+      - name: Notify Telegram subscribers
+        if: success()
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+        run: bash scripts/ci/telegram-notify.sh
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parser-web-logs
+          path: logs/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Job summary
+        if: always()
+        run: |
+          if [ -f logs/summary.md ]; then
+            cat logs/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Нет logs/summary.md — парсер не успел написать отчёт." >> "$GITHUB_STEP_SUMMARY"
+          fi

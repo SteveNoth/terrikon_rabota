@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation";
+import { getDefaultCity } from "@/lib/geo";
+
 export default function Home() {
-  return <p>Террикон Работа. Скоро здесь будут вакансии Горловки.</p>;
+  redirect(`/${getDefaultCity().slug}`);
 }

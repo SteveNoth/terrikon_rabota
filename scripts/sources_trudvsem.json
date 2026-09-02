@@ -1,0 +1,37 @@
+{
+  "_readme": "География открытого API «Работа России», не CSS-селекторы. Код региона только из поля region.region_code ответа API / WADL-ресурса vacancies/region/{regionCode}. Не угадывать. URL проверки — docs/SETUP-LOG.md, раздел Этапа 18A. enabled: false выключает город или регион без правки кода. Ключа API нет — не класть секреты сюда.",
+  "apiBase": "https://opendata.trudvsem.ru/api/v1/vacancies",
+  "wadlUrl": "https://opendata.trudvsem.ru/api/v1/vacancies/application.wadl",
+  "portalUrl": "https://trudvsem.ru",
+  "openDataHome": "https://trudvsem.ru/opendata",
+  "defaults": {
+    "limit": 100,
+    "maxRecords": 10000,
+    "pauseSec": 2,
+    "sourceName": "Работа России · ЦЗН"
+  },
+  "regions": [
+    {
+      "region_code": "9300000000000",
+      "region_name": "Донецкая Народная Республика",
+      "ourRegion": "dpr",
+      "enabled": true,
+      "codeSourceUrl": "https://opendata.trudvsem.ru/api/v1/vacancies?text=%D0%93%D0%BE%D1%80%D0%BB%D0%BE%D0%B2%D0%BA%D0%B0&limit=2",
+      "codeSourceField": "results.vacancies[].vacancy.region.region_code",
+      "regionEndpointChecked": "https://opendata.trudvsem.ru/api/v1/vacancies/region/9300000000000?offset=0&limit=1"
+    }
+  ],
+  "cities": [
+    {
+      "citySlug": "gorlovka",
+      "enabled": true,
+      "aliases": [
+        "Горловка",
+        "г. Горловка",
+        "г.Горловка",
+        "город Горловка",
+        "гор. Горловка"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+# Мониторинг парсеров (Этап 24).
+# Если парсер затих или принял 0 вакансий два раза подряд — сайт шлёт в Telegram.
+
+name: parser-watch
+
+on:
+  schedule:
+    - cron: "20 * * * *"
+  workflow_dispatch:
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout scripts
+        uses: actions/checkout@v4
+
+      - name: Check parsers
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: bash scripts/ci/parser-watch.sh

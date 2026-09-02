@@ -12,6 +12,11 @@
 
 # testing
 /coverage
+.pytest_cache/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
 
 # next.js
 /.next/
@@ -34,6 +39,14 @@ yarn-error.log*
 .env*
 !.env.example
 
+# Логи парсеров (раздел 11.6): jsonl уходит артефактом Actions, не в git и не в базу
+/logs/*
+!/logs/.gitkeep
+
+# Telegram Telethon: файл сессии = полноценный вход. Строка — в GitHub Secrets, не сюда.
+*.session
+*.session-journal
+
 # vercel
 .vercel
 
@@ -44,3 +57,11 @@ CLAUDE.md
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# MapLibre worker и CSS (копия из node_modules, собирается scripts/copy-maplibre-worker.mjs)
+/public/maplibre/
+
+# Выгрузка правок из админки. Не в git: это локальная обучающая выборка.
+scripts/tests/normalization/learned.json

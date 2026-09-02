@@ -1,0 +1,2 @@
+Unbounded is licensed under the SIL Open Font License, Version 1.1.
+Source: https://github.com/google/fonts (via Fontsource 5.3.0)

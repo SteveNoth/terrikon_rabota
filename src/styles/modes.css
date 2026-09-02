@@ -1,0 +1,79 @@
+/* Режим интернета меняет внешний вид, переопределяя те же токены.
+   Ни один компонент об этом не знает — он по-прежнему говорит «тень-1» и «скругление-md». */
+
+/* Lite: спокойнее, проще, быстрее */
+html[data-mode="lite"] {
+  --t-shadow-strength: 0.35;
+  --t-motion-base: 90ms;
+  --t-radius-base: 8px;
+  --t-font-display: var(--t-font-sans); /* брендовый шрифт не грузим */
+}
+
+/* Ultra Lite: только смысл */
+html[data-mode="ultra"] {
+  --t-shadow-strength: 0; /* все тени исчезли одной строкой */
+  --t-motion-base: 0ms; /* все анимации исчезли одной строкой */
+  --t-radius-base: 6px;
+  --t-color-bg: var(--p-gray-0);
+}
+
+/* Уважаем системную настройку «меньше движения» */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-motion-base: 0ms;
+  }
+}
+
+/* Тёмная тема: переопределяем ТОЛЬКО смысловые токены, палитру не трогаем */
+html[data-theme="dark"] {
+  --t-color-bg: var(--p-navy-950);
+  --t-color-surface: var(--p-navy-900);
+  --t-color-surface-muted: var(--p-navy-800);
+  --t-color-text: var(--p-gray-100);
+  --t-color-text-muted: var(--p-gray-400);
+  --t-color-border: var(--p-navy-700);
+  --t-color-brand: var(--p-navy-200);
+  --t-color-brand-text: var(--p-navy-950);
+  /* Диаграммы на тёмном фоне: тёмно-синий не виден, берём светлее */
+  --t-chart-1: var(--p-navy-200);
+  --t-chart-6: var(--p-navy-400);
+  --t-chart-grid: var(--p-navy-700);
+  --t-chart-axis: var(--p-navy-600);
+}
+
+/* Печать: простой вид статистики должен читаться в чёрно-белом виде */
+@media print {
+  :root {
+    --t-shadow-strength: 0;
+    --t-motion-base: 0ms;
+    --t-color-bg: #fff;
+    --t-color-surface: #fff;
+    --t-color-text: #000;
+    --t-chart-grid: #ccc;
+  }
+
+  .tr-tg-pulse,
+  .tr-tg-pulse::after {
+    animation: none;
+  }
+}
+
+/* Встроенная анимация Tailwind (animate-pulse) не читает --t-motion-base.
+   В Ultra и при «меньше движения» выключаем её отдельно. */
+html[data-mode="ultra"] .animate-pulse,
+html[data-mode="ultra"] .tr-spin,
+html[data-mode="ultra"] .tr-tg-pulse,
+html[data-mode="ultra"] .tr-tg-pulse::after,
+html[data-mode="lite"] .tr-tg-pulse,
+html[data-mode="lite"] .tr-tg-pulse::after {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .tr-spin,
+  .tr-tg-pulse,
+  .tr-tg-pulse::after {
+    animation: none;
+  }
+}

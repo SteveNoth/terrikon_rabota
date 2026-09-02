@@ -1,0 +1,69 @@
+# Парсер публичных каналов Telegram (Этап 17).
+# Client API (Telethon). Строка сессии — секрет TG_SESSION, не файл в репозитории.
+# Cron сдвинут на :30 относительно parser-vk (0 */3), чтобы нагрузка не совпадала.
+
+name: parser-tg
+
+on:
+  schedule:
+    - cron: "30 1,4,7,10,13,16,19,22 * * *"
+  workflow_dispatch:
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      OCR_PROVIDER: tesseract
+      SOURCE_TG_ENABLED: "true"
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      SITE_URL: ${{ secrets.SITE_URL }}
+      TG_API_ID: ${{ secrets.TG_API_ID }}
+      TG_API_HASH: ${{ secrets.TG_API_HASH }}
+      TG_SESSION: ${{ secrets.TG_SESSION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Tesseract with Russian
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-rus
+          tesseract --list-langs
+
+      - name: Run Telegram parser
+        run: python scripts/parser_tg.py
+
+      - name: Notify Telegram subscribers
+        if: success()
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+        run: bash scripts/ci/telegram-notify.sh
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parser-tg-logs
+          path: logs/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Job summary
+        if: always()
+        run: |
+          if [ -f logs/summary.md ]; then
+            cat logs/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Нет logs/summary.md — парсер не успел написать отчёт." >> "$GITHUB_STEP_SUMMARY"
+          fi

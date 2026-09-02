@@ -1,0 +1,352 @@
+{
+  "source": {
+    "name": "Работа Горловка",
+    "default_city": "gorlovka",
+    "externalId": "ocr-live"
+  },
+  "_readme": "Живые макеты из папки «ПОСТЫ ФОТО». Подпись пустая: смысл на картинке. ocrPreview — снимок Tesseract на момент ingest, тесты гоняют движок заново.",
+  "posts": [
+    {
+      "id": "garbage-01",
+      "kind": "garbage",
+      "file": "live/garbage-01.jpg",
+      "originalName": "1 мусор.jpg",
+      "caption": "",
+      "ocrPreview": "Za\nСкосим траву. </\nБыстро, \\\nкачественно, ы\nнедорого. й\n+79494356847 4 # Е\n[2\n‚., AWG",
+      "ocrChars": 86
+    },
+    {
+      "id": "garbage-02",
+      "kind": "garbage",
+      "file": "live/garbage-02.jpg",
+      "originalName": "2 мусор.jpg",
+      "caption": "",
+      "ocrPreview": "г wa\n_ Aa\nпосуточно\n~ КВАРТИРУ a\n1KOM.KBap.",
+      "ocrChars": 43
+    },
+    {
+      "id": "garbage-03",
+      "kind": "garbage",
+      "file": "live/garbage-03.jpg",
+      "originalName": "3 мусор.jpg",
+      "caption": "",
+      "ocrPreview": "в.\n| —_\nС Зы\n2\nь a\" . ~\nу\nПродам игровую приставку X-Box 360 Slim+\nдва джойстика,‚консоль прошитая стоит\nпрошивка фрибут,все игры качаются с\nинтернета,на нём уже стоит 40 игр топовых\nна любой вкус, Енакиево и рядом.Писать в\nЛС.",
+      "ocrChars": 227
+    },
+    {
+      "id": "garbage-04",
+      "kind": "garbage",
+      "file": "live/garbage-04.jpg",
+      "originalName": "4 мусор.jpg",
+      "caption": "",
+      "ocrPreview": "и | ria) ) овал « САМОЕ ЯРКОЕ! * ка. | а“ 4\n1 Bey + > м Well \\ * id Ал р\nс. .. А\né. 758 TIAtou ADA AINA AA AT Oca oon\neee, люшевая| радостей\n‘| ©+7 (949) 406-51-06 =: .\n4 ‚ ДЕНЬ РОЖДЕНИЯ, ЮБИЛЕЙ, ВЫПУСКНОЙ , @®)”_*`\n7 =“. + ВЫПИСКА ИЗ РОДДОМА и многое другое! . 27%\new GD) осно @ sm Ш рый d//\nИРАДОСТЬ , И НАДЁЖНО PA / ДЛЯ ЛЮБОГО ПРАЗДНИКА подход й",
+      "ocrChars": 348
+    },
+    {
+      "id": "garbage-05",
+      "kind": "garbage",
+      "file": "live/garbage-05.jpg",
+      "originalName": "5 мусор.jpg",
+      "caption": "",
+      "ocrPreview": "Горловка\nМастер на час\n+7949 059 77 50\nУСЛУГИ\nЭЛЕКТРИКА\nОТ РОЗЕТКИ\nSS\nМонтаж, замена,чистка\nремонт (эл.части)\nводонагревателей\nTelegram VK",
+      "ocrChars": 138
+    },
+    {
+      "id": "garbage-06",
+      "kind": "garbage",
+      "file": "live/garbage-06.jpg",
+      "originalName": "6 мусор.jpg",
+      "caption": "",
+      "ocrPreview": "Горловка\n+7949 384 09 45\nЭПЕКТРИК\n- Монтаж/замена проводки,\nавтоматов, счётчиков\n- Установка светильников,\nрозеток, выключателей\n- Другие виды\nэлектромонтажных работ\n= я. зо * te\n= и. з\nУстановка,чистка, замена,\nремонт (эл. части)\nVk водонагревателеи Та",
+      "ocrChars": 253
+    },
+    {
+      "id": "garbage-07",
+      "kind": "garbage",
+      "file": "live/garbage-07.jpg",
+      "originalName": "7 мусор.jpg",
+      "caption": "",
+      "ocrPreview": "ЭЛЕКТРИКА В ВАШЕМ ДОМЕ\nу J ЗАМЕНА ЭЛЕКТРОПРОВОДКИ\nя \\/ УСТАНОВКА - ЗАМЕНА РОЗЕТКИ\nМ УСТАНОВКА - ЗАМЕНА ВЫКЛЮЧАТЕЛЕЙ\n/ МОНТАЖ ЭЛЕКТРИЧЕСКОГО ЩИТА\nlay = \\ у“ ШТРОБЛЕНИЕ СТЕНН ПОД ПРОВОДКУ\nSAG ak \\/ ЗАМЕНА И УСТАНОВКА ЭЛЕКТРОСЧЕТЧИКА\nы U ЛА, \\ УСТАНОВКА - ЗАМЕНА ЛЮСТР, СВЕТИЛЬНИКОВ\n- i А: А Moura BCE ВИДЫ ЭЛЕКТОМОНТАЖНЫХ РАБОТ _\nонтаж,ремонт,чистка водонагревателей\nВаш электрик +( 94943568\nл/с. Vi, T",
+      "ocrChars": 419
+    },
+    {
+      "id": "garbage-09",
+      "kind": "garbage",
+      "file": "live/garbage-09.jpg",
+      "originalName": "9 мусор.jpg",
+      "caption": "",
+      "ocrPreview": "_—\nKBAPTUPA oe\nHA\nв ^\n‚ СУТКИ 2А\nСдается 1-комн. кварт. в г.Енакиево,\nПОСУТОЧНО, цена: 2500T.p., Кондиционер,\nбыт.техника, постель, посуда,\nВай-фай, ванна/душ, 2-й этаж, (рядом 2\nсупермаркета, Парк Отдых- ---*--*--`\nТ. :+7949-387-51-25 28 августа в 14:\n31 просмотр\n®` _ .\ne Nau €> 204Ha\n@ Комментарий О\nao Q 95:\nс) =\n= о <",
+      "ocrChars": 322
+    },
+    {
+      "id": "garbage-10",
+      "kind": "garbage",
+      "file": "live/garbage-10.jpg",
+      "originalName": "10 мусор.jpg",
+      "caption": "",
+      "ocrPreview": "СРЕДИ -_ ©\nOK: —\nНОВИНОК! ~<.\n4 i = “es о» м axe а\neae? kes ae бий ie >\noe Spe te BY Ber Wise\nTOM AM TOM 9M - 7\nКРЕВЕТКА лосось TOM ям\nв vn ee Tn лосось под пикантным Ч И КЕН 7\nS ' ‘соусом Том Ям и :\naa ПОПРОБУЙТЕ ВСЕ! #",
+      "ocrChars": 220
+    },
+    {
+      "id": "garbage-11",
+      "kind": "garbage",
+      "file": "live/garbage-11.jpg",
+      "originalName": "11 мусор.jpg",
+      "caption": "",
+      "ocrPreview": "де Ремонт ходовой\nE ^. - мена шаровых,\n< саилент IOKOB И ТП. ых\nК Sg ЧЕ Обслуживание\n< тормозной системы\n\\ ; г. - диагностика ходовой\nВ - замена шрусов,\n\\ | рулевых‘ реек\na > - замена моторного,\nп § TPaHCMMCCHOHHOrO,Macnia\n1* « - замена Macna B pasparke,\n— =\n` penyktopa, MocTbI z\nip SSE Чистка-и‘диагностика\nai SNE\" бензиновых:форсунок\n\\, |\nг. Енакиево\n+7949-084-36-93; +7949-535-98-77",
+      "ocrChars": 386
+    },
+    {
+      "id": "not_vacancy-01",
+      "kind": "not_vacancy",
+      "file": "live/not_vacancy-01.jpg",
+      "originalName": "1 не вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "=.\n\\ и мя Ш\nes) Автошкола „Южный город\" 1.\n«РУ До конца акции осталось несколько дней! & a\n=) —‹ @ оформление на обучение — ~\n$ скидка\n| apy.) ВАА ° & Приводите друга — 3 =\nв.’ ie дополнительная скидка i -\nЕ Pye. № ° == Скидки на доп. вождение Gh, al j\na pees обсуждаются индивидуально % 2, ee\nКонтакты: & +7-949-989-51-47 $ +7-949-682-79-33",
+      "ocrChars": 341
+    },
+    {
+      "id": "not_vacancy-02",
+      "kind": "not_vacancy",
+      "file": "live/not_vacancy-02.jpg",
+      "originalName": "2 не вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "` НАУЧИМ ВОДИТЬ! _\n\nя ere Eze = 1722-06 \"ПОЕХАЛИ №\n\ni a Xp PHOT OT а\n\\ 1 —_\n\n® контроль часов вождения\n\n@ выбор даты и времени занятия\n\n® любой автомобиль (МКПП/АКПП])\n\ne маршруты экзамена ГИБДА",
+      "ocrChars": 194
+    },
+    {
+      "id": "not_vacancy-03",
+      "kind": "not_vacancy",
+      "file": "live/not_vacancy-03.jpg",
+      "originalName": "3 не вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "_ СТУДИЯ ОКОН И ДВЕРЕЙ\n: 4\nMec\nГ окнА\n* БАЛКОНЫ ПОД КЛЮЧ ›\n| uy Boa BA ЧАбЫ РАБОТЬ:\nee | ое\nRY Фа",
+      "ocrChars": 97
+    },
+    {
+      "id": "not_vacancy-04",
+      "kind": "not_vacancy",
+      "file": "live/not_vacancy-04.jpg",
+      "originalName": "4 не вакансия.jpg",
+      "caption": "",
+      "ocrPreview": ": t mF ХОТИТЕ ПОЛУЧИТЬ ПРАВА\n| | И УВЕРЕННОСТЬ НА ДОРОГЕ?\nif = в р? Профессиональные инструкторы\n=” р ~ © Удобное расписание занятий\nos uy = Современные автомобили\nAy С SETS в Доступные цены\nва a Мы ждем вас в \"Южном городе\"! 6\nces ® Адрес: улица Гагарина, 61A, офис 23\n- ‘ \\ Телефон: +7-949-989-51-47",
+      "ocrChars": 301
+    },
+    {
+      "id": "svo-01",
+      "kind": "svo",
+      "file": "live/svo-01.jpg",
+      "originalName": "1 сво.jpg",
+      "caption": "",
+      "ocrPreview": ">;\nОГНЕВЫЕ ГРУППЫ\n> a ЩИТ НЕБА - НАША РАБОТА!\n. | : ye oe „$ |\n$ ЗАЩИТА ОТ — ait iN\nВОЗДУШНЫХ УГРОЗ Г | я №\nПРОФЕССИОНАЛЬНАЯ PO (Mh f=\n© ПОДГОТОВКА РА Lf > ‘ee\n29% СЛУЖБА В СПЛОЧЕННОЙ se ПРИСОЕДИНЯЙСЯ\nМЕ eK TEM, КТО ЗАЩИЩАЕТ\nу НАШЕ НЕБО!",
+      "ocrChars": 237
+    },
+    {
+      "id": "svo-02",
+      "kind": "svo",
+      "file": "live/svo-02.jpg",
+      "originalName": "2 сво.jpg",
+      "caption": "",
+      "ocrPreview": "ть\nАГ ЖБЫ в.\nЗА ГОД СЛУ Министерство,\nЕДИНОВРЕМЕННАЯ ВЫПЛАТА\nдо 4 500 000Р ты. <“ »\n© а\nЗАРАБОТНАЯ ПЛАТА . Ni\noT 250 000 P| J\n4 ых. ot *\n(© ПОГАШЕНИЕ Ley 2. №. я\n—57 долгов ЗЕЕ о И\n‘Сопровождение и помощь Sis я. 7, Sse ay\nНА КАЖДОМ ЭТАПЕ А gy\nВыплаты точно в срок Е ВУ Wael И\nБЕЗ ЗАДЕРЖЕК м le } x =\nГАРАНТИРУЕМ j р\nПокупка билетов и быстрый выезд, Ie. | 4\nOBECNEYMM ip у\nВладимир ‘ f ee\n+7-951 495 7",
+      "ocrChars": 525
+    },
+    {
+      "id": "svo-03",
+      "kind": "svo",
+      "file": "live/svo-03.jpg",
+      "originalName": "3 сво.jpg",
+      "caption": "",
+      "ocrPreview": "на контрактную службу\nв | &\nУдалённо Без вложений = Свободный\n% график fa\n\\ Выплата после Y\n‘ &Я заключения контракта 4 7",
+      "ocrChars": 121
+    },
+    {
+      "id": "svo-04",
+      "kind": "svo",
+      "file": "live/svo-04.jpg",
+      "originalName": "4 сво.jpg",
+      "caption": "",
+      "ocrPreview": "МОСКВА «7 °\nЕДВ о о ees\n/2.350.0002) Lunar ©\n3noT veep ^^ Seas\n260.0002) naw” 7\ntm'g ВОЗРАСТ | { poy ОТНОШЕНИЕ :\nдоб Е eee») М ОТНОШЕНИЕ МОСКВА !!\n————— ВАКАНСИИ ————\n= Водитель: механик = Механик-радиотелефонист\n“4 a . а.\n2 = Старший пова\nЕ мастер аппаратной = Sahu me\n= Наводчик = Телефонист\n= Начальник аппаратной, z ane\nрадиостанции, электростанции ельдшер\n= Оператор = Экскаваторщик\n= Крановщик ",
+      "ocrChars": 598
+    },
+    {
+      "id": "svo-05",
+      "kind": "svo",
+      "file": "live/svo-05.jpg",
+      "originalName": "5 сво.jpg",
+      "caption": "",
+      "ocrPreview": "и %7 „< м © \\ A i} 29 | 3\nNV (aa -\n| NSS “yy \\ A = Ч 4\na = eas VS a\nЖелаешь быть № | CE\n2) Набор кандидатов or 18 до 45 лт | | | im || aN\nGE SR SR SEO SA Rae em RE 3 \\ (iil\n©) Работа в боевых и тыловых условиях )\\ А у\nа д. ВИННИ: CGN ==\n(А) Четкие задачи, адекватное e. © “\nкомандование, заслуженный отдых | (\n(#1) Современная экипировка,\n`` медицинское обслуживание, питание\nes Cratyc ветерана боевы",
+      "ocrChars": 487
+    },
+    {
+      "id": "svo-06",
+      "kind": "svo",
+      "file": "live/svo-06.jpg",
+      "originalName": "6 сво.jpg",
+      "caption": "",
+      "ocrPreview": "ВОЙСКОВАЯ ЧАСТЬ 3678 Г. ДЕСНОГОРСК СМОЛЕНСКОЙ ОБЛАСТИ (РОСГВАРДИЯ)\nПРОВОДИТ НАБОР ГРАЖДАН ДЛЯ ПРОХОЖДЕНИЯ ВОЕННОЙ СЛУЖБЫ ПО KOHTPAKTY!!!\nВОЕННОСЛУЖАЩИМ ПРЕДОСТАВЛЯЮТ:\n\nНА СВО НЕ НАПРАВЛЯЕМ - военную службу будите проходить в г.Десногорске Смоленской области! Основной\nзадачей войсковой части 3678 является охрана и оборона Смоленской атомной станции. И\nВОЗМОЖНОСТЬ ПРОЙТИ ВОЕННУЮ СЛУЖБУ ПО КОНТРАКТУ ",
+      "ocrChars": 4221
+    },
+    {
+      "id": "svo-07",
+      "kind": "svo",
+      "file": "live/svo-07.jpg",
+      "originalName": "7 сво.jpg",
+      "caption": "",
+      "ocrPreview": "ПОСТУПАЙ НА СЛУЖБУ\n\nПО КОНТРАКТУ Pr,\n\nB MOCKBE ба.\n\not 5 200 000 руб. - Гр\n\nвыплаты по контракту Москвы a =, / Vy\n\nза первый год hes = 53 sr\ncate, = AA\n\n2300 000 ру. wr > 24\n\nединовременная выплата при a A =\n\nзаключении контракта \\\\ Lae",
+      "ocrChars": 236
+    },
+    {
+      "id": "vacancy-01",
+      "kind": "vacancy",
+      "file": "live/vacancy-01.jpg",
+      "originalName": "1 вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "_ a =| _ Горловский ХЛЕБОЗАВОД\n* пекаря, тестовода (з/пл от 65 000 руб.)  \\ Е oe _ я “>\nШ Режим работы: дневные и ночные смены А А NS\n* начальника смены (з/пл от 90 000 руб.) = = SS aS\nPemum работы с 17:00 до 08:00 иметь.\n„= * токаря (з/пл or 55 000 руб.) NACA оформление.\nРежим работы: пятидневка. ; м ere ee\nх Укладчика-упаковщика, | то ето адресу:\n\\ г. Горловка ул. Первомайская, 83. /\nФормовщика-",
+      "ocrChars": 581
+    },
+    {
+      "id": "vacancy-02",
+      "kind": "vacancy",
+      "file": "live/vacancy-02.jpg",
+      "originalName": "2 вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "Автошкола «Южный город» | г. Горловка\n— a Официальное\nое ЕН \"трудоустройство\nыы ai 6 конкурентная зарплата\n= th и Гибкий график работы\n= Работа Ha авто автошколы\n2 Cra вождения от 3 лет\nЗАПИСЬ НА СОБЕСЕДОВАНИЕ\n+7 949 989 51 47",
+      "ocrChars": 226
+    },
+    {
+      "id": "vacancy-03",
+      "kind": "vacancy",
+      "file": "live/vacancy-03.jpg",
+      "originalName": "3 вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "СБОРЩИК НА ПРОИЗВОДСТВО Ga ===\n\nennui —_—— -\n\n3A CMEHY ail У\n\n165 000 P р 7\n\nЗА 30 СЕН +\n\n(© пиоиквл-лачасов ) [6 сидячярыт )/ 7 ax ~\n\n#4 ПРОЖИВАНИЕ (© БЕРЁМ ТОЛЬКО РФ age = 9\n\n(Som | О одни По Г 52 5002 |\n(4 спецодежда & товддо 10 000 “neti",
+      "ocrChars": 241
+    },
+    {
+      "id": "vacancy-04",
+      "kind": "vacancy",
+      "file": "live/vacancy-04.jpg",
+      "originalName": "4 вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "‘) р.\n# ноцелях i -~ =\nшаурма & бургеры Е x go SN wo\nИ а |\nСОТРУДНИКОВ * 2\nВ КОМАНДУ #НАУГЛЯХ\n|\n| © стабильная зарплата » ответственность\n© обучение с нуля © быстрота и аккуратность\n© удобный график » комфортные условия |\nnc дружный коллектив © ежедневные выплаты\n(\\) ХОЧЕШЬ К HAM? ПИШИ ИЛИ ЗВОНИ!\nБУДЕМ РАДЫ ВИДЕТЬ ТЕБЯ В НАШЕЙ КОМАНДЕ! %®",
+      "ocrChars": 340
+    },
+    {
+      "id": "vacancy-05",
+      "kind": "vacancy",
+      "file": "live/vacancy-05.jpg",
+      "originalName": "5 вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "_| ТРЕБУЕТСЯ\nОФИЦИАНТ",
+      "ocrChars": 21
+    },
+    {
+      "id": "vacancy-06",
+      "kind": "vacancy",
+      "file": "live/vacancy-06.jpg",
+      "originalName": "6 вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "ТРЕБУЕТСЯ\nПРОДАВЕЦ-КАССИР\nВ ПРОДО\nСМАВОСЗНАМО АР",
+      "ocrChars": 48
+    },
+    {
+      "id": "vacancy-07",
+      "kind": "vacancy",
+      "file": "live/vacancy-07.jpg",
+      "originalName": "7 вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "Формовщикатеста\n| i Sereees |. ||\ni it a i\ni aa | 90000!\nA HeeHaa CmeHa.om 2 500 py6.\n| Намная смена om 4 000 руб.\nБез опыта работы.\nС обучение на рабочем месте.\nБольше работаешь — больше получаешь.\nme!\nрабо Saw\nя enum al +7949 320 68 44,\nсмей _. 231 с мобильного",
+      "ocrChars": 263
+    },
+    {
+      "id": "vacancy-08",
+      "kind": "vacancy",
+      "file": "live/vacancy-08.jpg",
+      "originalName": "8 вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "Горловский ХЛЕБОЗАВОД\nприглашает на работу:\nДиспетчера автомобильного\nтранспорта\nз/плата от\n№ 50 00 6.\n~~ Режим\nработы:\n‚ пятид ка\n” ЗЙание L\nприветствуется.\nОфициальное оформление.\nGB +7949 320 68 44 МАРИНА ©",
+      "ocrChars": 209
+    },
+    {
+      "id": "vacancy-09",
+      "kind": "vacancy",
+      "file": "live/vacancy-09.jpg",
+      "originalName": "9 вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "Dua! | ТРЕБУЮТСЯ ВОДИТЕЛИ |\nвы У | \"С\" \"р\" i щи",
+      "ocrChars": 47
+    },
+    {
+      "id": "vacancy-10",
+      "kind": "vacancy",
+      "file": "live/vacancy-10.jpg",
+      "originalName": "10 вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "j Be J a. Ч требуется\nу, * Инспектор\n= № i 4 Покадрам",
+      "ocrChars": 53
+    },
+    {
+      "id": "vacancy-11",
+      "kind": "vacancy",
+      "file": "live/vacancy-11.jpg",
+      "originalName": "11 вакансия.jpg",
+      "caption": "",
+      "ocrPreview": "Горловский Хлебозавод\n\nприглашает на работу\nВОР ig ще\"\n\n| { AO! y | | enti 2\n\n| 1000 руб.\n\nРежим рабо». |\nЖи Baer адресу: ~~\n_г.Горловка ул. Первомайская, 83.",
+      "ocrChars": 158
+    },
+    {
+      "id": "vahta-01",
+      "kind": "vahta",
+      "file": "live/vahta-01.jpg",
+      "originalName": "1 вахта.jpg",
+      "caption": "",
+      "ocrPreview": "вы\ni “ty Г\nКрупнейшее многопрофильное предприятие “жом, — &\nремонтно-строительной сферы, приглашает на Wwe м о NS\nработу вахтовым методом и на постоянную paboTy-~ say / |\nработа на заводах (город Норильск): БА: АОРИЛЬК |\n? Вакансии без опыта и удостоверений с переездом =\nв Норильск: оплата жилья до 3x лет, подъемные,\nповышение квалификации за счет предприятия - без f\nотрыва от производства. Vos =\n",
+      "ocrChars": 1029
+    },
+    {
+      "id": "vahta-02",
+      "kind": "vahta",
+      "file": "live/vahta-02.jpg",
+      "originalName": "2 вахта.jpg",
+      "caption": "",
+      "ocrPreview": "Po es а\nТАИМЫР | Ч ыы\nИнвест м |\n№ | |\nTPEBYETCA И aa\n| =>. J\nМАШИНИСТ - (8 ol\nБУРОВОЙ Г Tie\ncae ORM ое\nAPA3PADA рее ° м\nустановка буровая ee - г =\nшнековая малогабаритная Де : 5\nЗАРПЛАТА вл о\n220 0002 45/45 Gaep гтлзльмесяц\nна руки за 30 дней работы: Te cae 15 И 30 ЧИСЛА\nОБЯЗАННОСТИ: ® УСЛОВИЯ:\nЕ (2x этажное блочно-модульное здание)\nПласа вар ии > Onnara билетов из базовых городов:\n* Приготовлени",
+      "ocrChars": 725
+    },
+    {
+      "id": "vahta-03",
+      "kind": "vahta",
+      "file": "live/vahta-03.jpg",
+      "originalName": "3 вахта.jpg",
+      "caption": "",
+      "ocrPreview": "ИРезаресурс >",
+      "ocrChars": 13
+    },
+    {
+      "id": "vahta-04",
+      "kind": "vahta",
+      "file": "live/vahta-04.jpg",
+      "originalName": "4 вахта.jpg",
+      "caption": "",
+      "ocrPreview": "у\nBax я\nм5 ‘ 4, ya\n’ РА\nВостоке в Ши\nAAA\nЗвоните +7 (964) 331-13-91",
+      "ocrChars": 67
+    },
+    {
+      "id": "vahta-05",
+      "kind": "vahta",
+      "file": "live/vahta-05.jpg",
+      "originalName": "5 вахта.jpg",
+      "caption": "",
+      "ocrPreview": "iy \\ 7 м a\n«! =\n2 => № ‚ща\n> 4 } 3 aN = | зи яв.\nfr о at \\\na 2! ae р\nу\nKe) fit\nBAXTA | БЕСПЛАТНОЕ | БЕСПЛАТНОЕ |\nот 15 смен ПИТАНИЕ ПРОЖИВАНИЕ",
+      "ocrChars": 142
+    },
+    {
+      "id": "vahta-06",
+      "kind": "vahta",
+      "file": "live/vahta-06.jpg",
+      "originalName": "6 вахта.jpg",
+      "caption": "",
+      "ocrPreview": "|рАБОТ\n8 (800) 600-61-59",
+      "ocrChars": 24
+    }
+  ]
+}

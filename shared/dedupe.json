@@ -1,0 +1,23 @@
+{
+  "_readme": "Пятый уровень дублей (11.21) и приоритет полей при склейке. Не хардкодить if source == в Python/TypeScript: порядок берётся отсюда. Члены группы свои зарплаты не затирают — главная запись выбирается по полноте, затем по sourcePriority.",
+  "DEDUPE_VERSION": 1,
+  "employerWindowDays": 60,
+  "primaryBy": ["completeness", "sourcePriority", "firstSeenAt"],
+  "sourcePriority": [
+    "TRUDVSEM",
+    "WEBSITE",
+    "EMPLOYER",
+    "MANUAL",
+    "VK",
+    "TELEGRAM"
+  ],
+  "fieldPriority": {
+    "title": ["TRUDVSEM", "WEBSITE", "EMPLOYER", "MANUAL", "VK", "TELEGRAM"],
+    "description": ["TRUDVSEM", "WEBSITE", "VK", "TELEGRAM"],
+    "salaryFrom": ["VK", "TELEGRAM", "WEBSITE", "TRUDVSEM"],
+    "salaryTo": ["VK", "TELEGRAM", "WEBSITE", "TRUDVSEM"],
+    "contactPhone": ["VK", "TELEGRAM", "WEBSITE", "TRUDVSEM"],
+    "employerName": ["TRUDVSEM", "WEBSITE", "VK", "TELEGRAM"],
+    "address": ["TRUDVSEM", "WEBSITE", "VK", "TELEGRAM"]
+  }
+}

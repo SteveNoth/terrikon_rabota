@@ -1,0 +1,194 @@
+{
+  "meta": {
+    "total": 5
+  },
+  "results": {
+    "vacancies": [
+      {
+        "vacancy": {
+          "id": "tv-gor-weld-001",
+          "job-name": "Сварщик",
+          "company": {
+            "name": "ООО Горловский механический завод",
+            "inn": "9303012345",
+            "companycode": "comp-mech-001",
+            "hr-agency": false
+          },
+          "salary_min": 45000,
+          "salary_max": 55000,
+          "salary": "45000-55000",
+          "vac_url": "https://m-czn.ru/vacancy/should-not-use",
+          "region": {
+            "region_code": "9300000000000",
+            "name": "Донецкая Народная Республика"
+          },
+          "addresses": {
+            "address": [
+              {
+                "location": "г. Горловка, ул. Ленина, 10"
+              }
+            ]
+          },
+          "duty": "Сварка металлоконструкций на заводе",
+          "requirement": {
+            "qualification": "Разряд 4",
+            "experience": 1
+          },
+          "schedule": "5/2",
+          "employment": "Полная занятость",
+          "creation-date": "2026-08-01T10:00:00+03:00",
+          "contact_list": [
+            {
+              "contact_type": "Телефон",
+              "contact_value": "071-123-45-67"
+            }
+          ]
+        }
+      },
+      {
+        "vacancy": {
+          "id": "tv-gor-weld-002",
+          "job-name": "Сварщик",
+          "company": {
+            "name": "ООО Горловский механический завод",
+            "inn": "9303012345",
+            "companycode": "comp-mech-001",
+            "hr-agency": false
+          },
+          "salary_min": 48000,
+          "salary_max": 48000,
+          "vac_url": "https://trudvsem.ru/vacancy/card/comp-mech-001/tv-gor-weld-002",
+          "region": {
+            "region_code": "9300000000000",
+            "name": "Донецкая Народная Республика"
+          },
+          "addresses": {
+            "address": [
+              {
+                "location": "Горловка"
+              }
+            ]
+          },
+          "duty": "Ручная дуговая сварка",
+          "requirement": {
+            "experience": 1
+          },
+          "schedule": "5/2",
+          "employment": "Полная занятость",
+          "creation-date": "2026-08-02",
+          "contact_list": [
+            {
+              "contact_type": "Телефон",
+              "contact_value": "071-123-45-68"
+            }
+          ]
+        }
+      },
+      {
+        "vacancy": {
+          "id": "tv-gor-noinn-003",
+          "job-name": "Продавец",
+          "company": {
+            "name": "Магнит",
+            "companycode": "comp-magnit-003",
+            "hr-agency": false
+          },
+          "salary_min": 28000,
+          "salary_max": 32000,
+          "vac_url": "https://trudvsem.ru/vacancy/card/comp-magnit-003/tv-gor-noinn-003",
+          "region": {
+            "region_code": "9300000000000",
+            "name": "Донецкая Народная Республика"
+          },
+          "addresses": {
+            "address": [
+              {
+                "location": "город Горловка"
+              }
+            ]
+          },
+          "duty": "Работа в торговом зале, касса",
+          "schedule": "2/2",
+          "employment": "Полная занятость",
+          "creation-date": "2026-08-03",
+          "contact_list": [
+            {
+              "contact_type": "Телефон",
+              "contact_value": "071-222-33-44"
+            }
+          ]
+        }
+      },
+      {
+        "vacancy": {
+          "id": "tv-donetsk-skip-004",
+          "job-name": "Водитель",
+          "company": {
+            "name": "ООО Чужой город",
+            "inn": "9303099999",
+            "companycode": "comp-other-004",
+            "hr-agency": false
+          },
+          "salary_min": 40000,
+          "salary_max": 40000,
+          "vac_url": "https://trudvsem.ru/vacancy/card/comp-other-004/tv-donetsk-skip-004",
+          "region": {
+            "region_code": "9300000000000",
+            "name": "Донецкая Народная Республика"
+          },
+          "addresses": {
+            "address": [
+              {
+                "location": "г. Донецк, ул. Артёма, 1"
+              }
+            ]
+          },
+          "duty": "Перевозка грузов",
+          "schedule": "5/2",
+          "employment": "Полная занятость",
+          "creation-date": "2026-08-04",
+          "contact_list": [
+            {
+              "contact_type": "Телефон",
+              "contact_value": "071-000-00-01"
+            }
+          ]
+        }
+      },
+      {
+        "vacancy": {
+          "id": "tv-gor-index-005",
+          "job-name": "Слесарь",
+          "company": {
+            "name": "МУП Горловкатеплосеть",
+            "inn": "9303055555",
+            "companycode": "comp-heat-005",
+            "hr-agency": false
+          },
+          "vac_url": "https://trudvsem.ru/vacancy/card/comp-heat-005/tv-gor-index-005",
+          "region": {
+            "region_code": "9300000000000",
+            "name": "Донецкая Народная Республика"
+          },
+          "addresses": {
+            "address": [
+              {
+                "location": "г. Горловка, индекс 284627"
+              }
+            ]
+          },
+          "duty": "Ремонт тепловых сетей",
+          "schedule": "5/2",
+          "employment": "Полная занятость",
+          "creation-date": "2026-08-05",
+          "contact_list": [
+            {
+              "contact_type": "Телефон",
+              "contact_value": "071-555-66-77"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

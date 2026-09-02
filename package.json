@@ -3,26 +3,54 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
+    "dev": "node scripts/copy-maplibre-worker.mjs && next dev --turbopack",
+    "build": "node scripts/copy-maplibre-worker.mjs && prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "check:design": "echo Design check will be added in stage 2",
-    "analyze": "echo Bundle analysis not configured yet"
+    "postinstall": "prisma generate && node scripts/copy-maplibre-worker.mjs",
+    "check:design": "node scripts/check-design.mjs",
+    "icons:pwa": "node scripts/generate-pwa-icons.mjs",
+    "measure:ultra": "node scripts/measure-ultra.mjs",
+    "test:policy": "npx tsx src/lib/policy/run-tests.ts",
+    "test:blocks": "npx tsx src/lib/auth/run-block-tests.ts",
+    "test:seeker": "npx tsx src/lib/seeker/run-tests.ts",
+    "test:telegram": "npx tsx src/lib/telegram/run-tests.ts",
+    "test:seo": "npx tsx src/lib/seo/run-tests.ts",
+    "telegram:webhook": "npx tsx scripts/telegram-webhook.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "@supabase/ssr": "^0.12.5",
+    "@supabase/supabase-js": "^2.112.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "idb": "^8.0.3",
+    "maplibre-gl": "^6.6.0",
     "next": "16.3.3",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "tailwind-merge": "^3.6.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
+    "prisma": "^6.19.3",
     "tailwindcss": "^4",
+    "tsx": "^4.23.12",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "prisma@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "@prisma/client@6.19.3": true
   }
 }

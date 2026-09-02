@@ -1,0 +1,422 @@
+{
+  "_readme": "Словари фильтра, вахты, СВО и мошенничества — основами слов, не целыми словоформами. Пороги и веса правятся здесь, без изменения кода. Регулярки с границами слов собирает scripts/filter.py (раздел 11.2 ядра). Блок fraud читает scripts/trust.py; is_vacancy его не вызывает.",
+  "thresholds": {
+    "accept": 60,
+    "maybe": 30
+  },
+  "weights": {
+    "vacancyMarker": 12,
+    "vacancyMarkerMax": 48,
+    "structureBlock": 12,
+    "salary": 18,
+    "schedule": 10,
+    "phone": 15,
+    "username": 8,
+    "contactHint": 8,
+    "profession": 15,
+    "city": 10,
+    "lengthOk": 6,
+    "stopWord": -40,
+    "ads": -25,
+    "lengthBad": -20,
+    "capsOrEmoji": -15,
+    "spam": -20
+  },
+  "length": {
+    "tooShort": 80,
+    "okMin": 120,
+    "okMax": 2500,
+    "tooLong": 3000
+  },
+  "capsEmojiRatio": 0.4,
+  "vacancyMarkers": [
+    { "id": "trebuetsya", "stem": "требу", "endings": ["ется", "ются", "ем", "ю"], "requireEnding": true },
+    { "id": "vakansiya", "stem": "ваканси", "endings": ["я", "и", "ю", "ей", "ям"] },
+    { "id": "ischem", "stem": "ищ", "endings": ["ем", "ете"], "requireEnding": true },
+    { "id": "nuzhen", "stem": "нуж", "endings": ["ен", "на", "ны", "но"], "requireEnding": true },
+    { "id": "nabor", "stem": "набор", "endings": ["", "а", "у", "е", "ом"] },
+    { "id": "priglashaem", "stem": "приглаша", "endings": ["ем", "ются", "ю"], "requireEnding": true },
+    { "id": "oklad", "stem": "оклад", "endings": ["", "а", "у", "е", "ом"] },
+    { "id": "zarplata", "stem": "зарплат", "endings": ["а", "ы", "у", "е", "ой"], "requireEnding": true },
+    { "id": "zp_slash", "pattern": "з\\s*/\\s*п" },
+    { "id": "zp_word", "stem": "зп" },
+    { "id": "na_rabotu", "phrase": "на работу" },
+    { "id": "v_shtat", "phrase": "в штат" },
+    { "id": "trudoustroystvo", "stem": "трудоустрой", "endings": ["ство", "стве", "ства", "ством"], "requireEnding": true },
+    { "id": "vyhod_na_rabotu", "phrase": "выход на работу" },
+    { "id": "stavka", "stem": "ставк", "endings": ["а", "и", "у", "ой"] },
+    { "id": "otkryta_vakansiya", "phrase": "открыта вакансия" },
+    { "id": "priglashaem_na", "phrase": "приглашаем на" }
+  ],
+  "contactHints": [
+    { "id": "po_telefonu", "phrase": "по телефону" }
+  ],
+  "structureBlocks": [
+    { "id": "duties", "stem": "обязанност", "endings": ["и", "ь", "ях", "ей"], "requireEnding": true },
+    { "id": "what_to_do", "phrase": "что делать" },
+    { "id": "functions", "stem": "функци", "endings": ["и", "я", "й"], "requireEnding": true },
+    { "id": "requirements", "stem": "требован", "endings": ["ия", "ий", "иях", "ие"], "requireEnding": true },
+    { "id": "zhdem", "phrase": "ждем от вас" },
+    { "id": "nuzhen_opyt", "phrase": "нужен опыт" },
+    { "id": "conditions", "stem": "услов", "endings": ["ия", "иях", "ий"], "requireEnding": true },
+    { "id": "we_offer", "phrase": "мы предлагаем" },
+    { "id": "what_we_offer", "phrase": "что предлагаем" }
+  ],
+  "scheduleWords": [
+    { "id": "smennyy", "stem": "сменн", "endings": ["ый", "ая", "ое", "ые", "ом", "ого"], "requireEnding": true },
+    { "id": "full_day", "phrase": "полный день" },
+    { "id": "full_time", "phrase": "полный рабочий" },
+    { "id": "part_day", "phrase": "неполный день" },
+    { "id": "sutki", "phrase": "сутки через" },
+    { "id": "grafik", "stem": "график", "endings": ["", "а", "у", "е", "ом"] }
+  ],
+  "stopWords": [
+    { "id": "prodam", "stem": "продам" },
+    { "id": "prodayu", "stem": "продаю" },
+    { "id": "prodaetsya", "stem": "продае", "endings": ["тся"], "requireEnding": true },
+    { "id": "prodaetsya_yo", "phrase": "продается" },
+    { "id": "v_prodazhe", "phrase": "в продаже" },
+    { "id": "sdam", "stem": "сдам" },
+    { "id": "sdayu", "stem": "сдаю" },
+    { "id": "sdaetsya", "stem": "сдае", "endings": ["тся"], "requireEnding": true },
+    { "id": "arenda", "stem": "аренд", "endings": ["а", "у", "е", "ы", "ой"] },
+    { "id": "snyat_kvartiru", "phrase": "снять квартиру" },
+    { "id": "snimu", "stem": "сниму" },
+    { "id": "rozygrysh", "stem": "розыгрыш", "endings": ["", "а", "е", "и"] },
+    { "id": "kurs", "stem": "курс", "endings": ["", "ы", "ов", "а", "ами", "ах", "ом"] },
+    { "id": "na_kursy", "phrase": "на курсы" },
+    { "id": "znakomstva", "stem": "знакомств", "endings": ["а", "о", "е"] },
+    { "id": "kuplyu", "stem": "куплю" },
+    { "id": "kupim", "stem": "купим" },
+    { "id": "otdam", "stem": "отдам" },
+    { "id": "shchenok", "stem": "щенок" },
+    { "id": "shchenki", "stem": "щенк", "endings": ["и", "ов", "а"], "requireEnding": true },
+    { "id": "kotenok", "stem": "котенок" },
+    { "id": "poteryalsya", "stem": "потерял", "endings": ["", "ся", "ась", "и"] },
+    { "id": "afisha", "stem": "афиш", "endings": ["а", "у", "е", "и"] },
+    { "id": "mem", "stem": "мем", "endings": ["", "ы", "ов"] },
+    { "id": "anekdot", "stem": "анекдот", "endings": ["", "ы", "ов"] },
+    { "id": "rezyume", "phrase": "резюме по запросу" },
+    { "id": "rezyume_moe", "phrase": "мое резюме" },
+    { "id": "rezyume_attach", "pattern": "резюме\\s+прилага" },
+    { "id": "ischu_rabotu", "phrase": "ищу работу" },
+    { "id": "ishchu_podrabotku", "phrase": "ищу подработку" },
+    { "id": "darom", "stem": "даром" },
+    { "id": "bu", "pattern": "\\bб\\s*/\\s*у\\b" },
+    { "id": "akciya", "stem": "акци", "endings": ["я", "и", "ю", "ей"], "requireEnding": true },
+    { "id": "skidka", "stem": "скидк", "endings": ["а", "и", "у", "ой"], "requireEnding": true },
+    { "id": "kontsert", "stem": "концерт", "endings": ["", "а", "е", "ы"] },
+    { "id": "kotyata", "stem": "котят", "endings": ["а", "ами"] },
+    { "id": "avtoshkola", "stem": "автошкол", "endings": ["а", "ы", "е", "у"] },
+    { "id": "master_klass", "phrase": "мастер-класс" },
+    { "id": "master_klass_space", "phrase": "мастер класс" },
+    { "id": "posutochno", "stem": "посуточн", "endings": ["о", "ая", "ое"] },
+    { "id": "uslugi_predostavlyayu", "phrase": "предоставляю услуги" },
+    { "id": "vypolnyu", "stem": "выполню" },
+    { "id": "sdelayu", "stem": "сделаю" }
+  ],
+  "ads": [
+    { "id": "reklama", "stem": "реклам", "endings": ["а", "у", "е", "ой", "ный", "ная"] },
+    { "id": "partnerskiy", "stem": "партнерск", "endings": ["ий", "ая", "ое", "ие"] },
+    { "id": "avito", "stem": "avito" },
+    { "id": "youla", "stem": "youla" },
+    { "id": "yula", "stem": "юла" },
+    { "id": "wildberries", "stem": "wildberries" },
+    { "id": "ozon", "stem": "ozon" },
+    { "id": "marketplace", "stem": "маркетплейс", "endings": ["", "а", "е"] },
+    { "id": "podpisyvaytes", "stem": "подписыва", "endings": ["йтесь", "йся"], "requireEnding": true },
+    { "id": "nasha_gruppa", "phrase": "наша группа" }
+  ],
+  "remote": [
+    { "id": "udalenka", "stem": "удаленк", "endings": ["а", "е", "у"] },
+    { "id": "udalennyy", "stem": "удаленн", "endings": ["ая", "ый", "ое", "ые", "ого"], "requireEnding": true },
+    { "id": "distancion", "stem": "дистанцион", "endings": ["ная", "ный", "но", "ка"] },
+    { "id": "remote", "stem": "remote" },
+    { "id": "na_udalenke", "phrase": "на удаленке" }
+  ],
+  "vahta": {
+    "_comment": "Вахта — это workFormat, не сфера. Формат определяют слова и схема смен; место работы извлекается отдельно. Нельзя считать вахтой всё, что вне списка наших городов: вахта бывает и в Мариуполе.",
+    "scheduleMax": 7,
+    "rotationMin": 15,
+    "words": [
+      { "id": "vahta_word", "stem": "вахт", "endings": ["а", "ы", "у", "е", "ой"], "requireEnding": true },
+      { "id": "vahtovyy", "stem": "вахтов", "endings": ["ый", "ая", "ое", "ые", "ым", "ого", "ому", "ой", "ую", "ых", "ыми", "ом"], "requireEnding": true },
+      { "id": "vahtovik", "stem": "вахтовик", "endings": ["", "а", "у", "и", "ов", "ам", "ами"] },
+      { "id": "mezhvahta", "stem": "межвахтов", "endings": ["ый", "ая", "ые", "ого", "ым"], "requireEnding": true },
+      { "id": "na_vahtu", "phrase": "на вахту" },
+      { "id": "vahtovyy_metod", "phrase": "вахтовый метод" }
+    ],
+    "conditions": [
+      { "id": "housing_provided", "pattern": "проживани\\w*\\s+предоставля", "field": "housing" },
+      { "id": "housing_company", "pattern": "жил[ье]\\s+за\\s+счет", "field": "housing" },
+      { "id": "housing_free", "phrase": "проживание бесплатно", "field": "housing" },
+      { "id": "housing_word", "stem": "проживани", "endings": ["е", "я", "ем"], "field": "housing" },
+      { "id": "meals_paid", "pattern": "питани\\w*\\s+оплач", "field": "meals" },
+      { "id": "meals_provided", "pattern": "питани\\w*\\s+предоставля", "field": "meals" },
+      { "id": "meals_word", "stem": "питани", "endings": ["е", "я", "ем"], "field": "meals" },
+      { "id": "travel_paid", "pattern": "проезд\\s+оплач", "field": "travel" },
+      { "id": "travel_word", "stem": "проезд", "endings": ["", "а", "у", "е"], "field": "travel" },
+      { "id": "delivery", "phrase": "доставка до объекта", "field": "travel" },
+      { "id": "advance_shift", "stem": "подсменн", "endings": ["ые", "ый", "ых", "ыми"], "field": "advance", "requireEnding": true }
+    ],
+    "formatStrongFields": ["housing", "advance"],
+    "agency": [
+      { "id": "kadrovoye", "phrase": "кадровое агентство" },
+      { "id": "kadrovaya", "phrase": "кадровая компания" },
+      { "id": "nabor_partnera", "phrase": "набор от партнера" },
+      { "id": "rekruting", "stem": "рекрутинг", "endings": ["", "ов", "овая", "овое"] },
+      { "id": "posrednik", "stem": "посредник", "endings": ["", "а", "и", "ов"] },
+      { "id": "verbovshchik", "stem": "вербовщик", "endings": ["", "а", "и"] },
+      { "id": "ot_agenta", "phrase": "от агентства" }
+    ],
+    "direct": [
+      { "id": "napryamuyu", "phrase": "напрямую от работодателя" },
+      { "id": "bez_posrednikov", "phrase": "без посредников" },
+      { "id": "ot_predpriyatiya", "phrase": "от предприятия" },
+      { "id": "ot_zavoda", "phrase": "от завода" }
+    ]
+  },
+  "extract": {
+    "phoneCodes": [
+      { "digits": "071", "region": "dpr" },
+      { "digits": "072", "region": "lpr" },
+      { "digits": "7949", "region": "dpr" },
+      { "digits": "8949", "region": "dpr" },
+      { "digits": "7944", "region": "lpr" },
+      { "digits": "7959", "region": "lpr" }
+    ],
+    "recruitingPhrases": [
+      { "id": "nabor_v", "pattern": "набор\\s+в\\s+([а-яё\\-]+)" },
+      { "id": "nabiraem_v", "pattern": "набираем\\s+в\\s+([а-яё\\-]+)" },
+      { "id": "sobesedovanie_v", "pattern": "собеседование\\s+в\\s+([а-яё\\-]+)" },
+      { "id": "ofis_v", "pattern": "офис\\s+в\\s+([а-яё\\-]+)" }
+    ],
+    "experience": [
+      { "id": "no_experience", "phrase": "без опыта", "years": 0 },
+      { "id": "opyt_ne_nuzhen", "phrase": "опыт не требуется", "years": 0 },
+      { "id": "students", "phrase": "можно студентам", "years": 0 },
+      { "id": "dlya_studentov", "phrase": "для студентов", "years": 0 }
+    ],
+    "employment": [
+      { "id": "full", "phrase": "полная занятость", "value": "full" },
+      { "id": "full_day", "phrase": "полный день", "value": "full" },
+      { "id": "part", "phrase": "подработка", "value": "part" },
+      { "id": "sovmest", "stem": "совместительств", "endings": ["о", "а", "е"], "value": "part" },
+      { "id": "temporary", "phrase": "временная работа", "value": "temporary" }
+    ]
+  },
+  "svo": {
+    "_comment": "Набор на СВО — отброс, не workFormat. Явный слой — на целом посте до нарезки. Скрытый — на единице после extract и detect_work_format, только если вместе: профессия из coverProfessions, зарплата сильно выше местной, нет вахтовых признаков. Не ставим основу «зон» (промышленную зону), голый «контракт» (работа по контракту) и «мобилизация» (честные вахты пишут «бронь от мобилизации»). \\bсво\\b не ловит «своего». Игра слов «ты нужен СВОим» — отдельной фразой, не основой «своим» (иначе «нужен своим автомобилем»). «Пункт отбора МО РФ» ловим явно: такие посты пишут про жильё и питание и иначе стали бы вахтой.",
+    "thresholds": {
+      "reject": 40,
+      "maybe": 20
+    },
+    "salaryMultiplier": 3,
+    "maybeMultiplier": 2.2,
+    "minSample": 5,
+    "maybeCeilingRatio": 0.85,
+    "coverProfessions": [
+      "ohrannik",
+      "povar",
+      "pomoshchnik-povara",
+      "pekar",
+      "voditel",
+      "voditel-c",
+      "voditel-b",
+      "voditel-e",
+      "voditel-avtobusa",
+      "voditel-taxi",
+      "sanitar",
+      "raznorabochiy",
+      "gruzchik",
+      "gornichnaya",
+      "uborshchik",
+      "dvornik"
+    ],
+    "sphereSalaryCeiling": {
+      "bezopasnost": 80000,
+      "obschepit": 90000,
+      "transport": 120000,
+      "meditsina": 80000,
+      "stroitelstvo": 100000,
+      "uslugi": 70000,
+      "default": 100000
+    },
+    "explicit": [
+      { "id": "svo_abbr", "pattern": "\\bсво\\b", "weight": 40, "label": "аббревиатура СВО" },
+      { "id": "svo_latin", "pattern": "\\bsvo\\b", "weight": 40, "label": "латиница SVO" },
+      { "id": "svo_dotted", "pattern": "(?<![а-яёa-z])с\\.\\s*в\\.\\s*о\\.?(?![а-яёa-z])", "weight": 40, "label": "С.В.О." },
+      { "id": "spec_voennaya_operaciya", "phrase": "специальная военная операция", "weight": 50, "label": "специальная военная операция" },
+      { "id": "zona_svo", "pattern": "\\bзон(?:а|е|у|ы|ах)\\s+сво\\b", "weight": 35, "label": "зона СВО" },
+      { "id": "nabor_na_svo", "phrase": "набор на сво", "weight": 45, "label": "набор на СВО" },
+      { "id": "na_svo", "phrase": "на сво", "weight": 35, "label": "на СВО" },
+      { "id": "uchastie_v_svo", "phrase": "участие в сво", "weight": 45, "label": "участие в СВО" },
+      { "id": "zona_boevyh", "pattern": "\\bзон(?:а|е|у|ы|ах)\\s+боевых\\s+действий\\b", "weight": 45, "label": "зона боевых действий" },
+      { "id": "boevye_deystviya", "pattern": "\\bбоев(?:ые|ых|ыми)\\s+действи", "weight": 30, "label": "боевые действия" },
+      { "id": "sluzhba_po_kontraktu", "phrase": "служба по контракту", "weight": 35, "label": "служба по контракту" },
+      { "id": "voennaya_sluzhba", "phrase": "военная служба", "weight": 30, "label": "военная служба" },
+      { "id": "denezhnoe_dovolstvie", "phrase": "денежное довольствие", "weight": 40, "label": "денежное довольствие" },
+      { "id": "chvk", "stem": "чвк", "weight": 45, "label": "ЧВК" },
+      { "id": "shturmovoy_otryad", "phrase": "штурмовой отряд", "weight": 45, "label": "штурмовой отряд" },
+      { "id": "shturmovaya_rota", "phrase": "штурмовая рота", "weight": 40, "label": "штурмовая рота" },
+      { "id": "na_peredovuyu", "phrase": "на передовую", "weight": 35, "label": "на передовую" },
+      { "id": "kontraktnik", "stem": "контрактник", "endings": ["", "а", "у", "и", "ов", "ами"], "weight": 20, "label": "контрактник" },
+      { "id": "shturmovik", "stem": "штурмовик", "endings": ["", "а", "у", "и", "ов"], "weight": 20, "label": "штурмовик" },
+      { "id": "voennosluzhashchiy", "stem": "военнослужащ", "endings": ["ий", "его", "ему", "им", "ие", "их"], "requireEnding": true, "weight": 20, "label": "военнослужащий" },
+      { "id": "lbs", "stem": "лбс", "weight": 30, "label": "ЛБС" },
+      { "id": "minoborony", "stem": "минобороны", "weight": 25, "label": "минобороны" },
+      { "id": "ministerstvo_oborony", "pattern": "\\bминистерств\\w*\\s+оборон", "weight": 35, "label": "министерство обороны" },
+      { "id": "vooruzhennye_sily", "phrase": "вооруженные силы", "weight": 25, "label": "вооруженные силы" },
+      { "id": "vs_rf", "phrase": "вс рф", "weight": 30, "label": "ВС РФ" },
+      { "id": "mo_rf", "phrase": "мо рф", "weight": 30, "label": "МО РФ" },
+      { "id": "punkt_otbora", "phrase": "пункт отбора", "weight": 40, "label": "пункт отбора" },
+      { "id": "podpisanie_kontrakta", "phrase": "подписание контракта", "weight": 20, "label": "подписание контракта" },
+      { "id": "dobrovolcem_na_svo", "phrase": "добровольцем на сво", "weight": 45, "label": "добровольцем на СВО" },
+      { "id": "nabor_dobrovolcev", "phrase": "набор добровольцев", "weight": 25, "label": "набор добровольцев" },
+      { "id": "ty_nuzhen_svoim", "phrase": "ты нужен своим", "weight": 40, "label": "игра слов СВОим" },
+      { "id": "nuzhen_svoim", "pattern": "\\bнужен\\s+своим\\b(?!\\s+авто)", "weight": 35, "label": "нужен СВОим" },
+      { "id": "boevogo_soprikosnoveniya", "pattern": "\\bбоев\\w*\\s+соприкосновен", "weight": 40, "label": "боевое соприкосновение" },
+      { "id": "kontraktnaya_sluzhba", "pattern": "\\bконтрактн\\w*\\s+служб", "weight": 35, "label": "контрактная служба" },
+      { "id": "bpla", "stem": "бпла", "weight": 20, "label": "БПЛА" },
+      { "id": "shturmovyh_zadach", "phrase": "штурмовых задач", "weight": 25, "label": "штурмовые задачи" },
+      { "id": "voyska_bespilotnyh", "phrase": "войска беспилотных", "weight": 30, "label": "войска беспилотных" }
+    ]
+  },
+  "fraud": {
+    "_comment": "Оценка доверия (11.18), не фильтр «вакансия или мусор». is_vacancy и trust_score — разные вопросы: оформленная вакансия может быть обманом. Веса вычитаются из 100. Жёсткие флаги минуют баллы и очередь — сразу BLOCKED. Потолки зарплаты здесь свои и с разбивкой по workFormat: вахта законно втрое выше местной, чужой блок svo.sphereSalaryCeiling сюда не подмешиваем. «Пишите в WhatsApp» — целиком фраза: честные вахты пишут «WhatsApp или телеграм» рядом с телефоном, это не уход в личку. «Аванс» не предоплата: у вахты это выплата компании, не взнос соискателя. Правило нового контакта в коде: неизвестный телефон идёт на одобрение один раз, даже при высоком балле — белый список растёт, очередь со временем сокращается.",
+    "thresholds": {
+      "publish": 70,
+      "review": 40
+    },
+    "salaryMultiplier": 3,
+    "hourlyMultiplier": 3,
+    "minSample": 5,
+    "workDaysPerMonth": 22,
+    "hoursPerDayDefault": 8,
+    "shiftAsMonthlyAbove": 40000,
+    "shortDescriptionChars": 150,
+    "incompatibleProfessionCount": 10,
+    "manyPhonesInGroup": 5,
+    "jaccardThreshold": 0.6,
+    "basketWindowDays": 60,
+    "salaryCorridor": 10000,
+    "bigMoneyMonthly": {
+      "LOCAL": 150000,
+      "REMOTE": 150000,
+      "VAHTA": 280000
+    },
+    "weights": {
+      "salaryVsMedian": 40,
+      "hourlyVsMedian": 25,
+      "emptyProfession": 15,
+      "emptyCompany": 8,
+      "shortDescription": 12,
+      "accountNoPhone": 15,
+      "manyPhonesInGroup": 20,
+      "phoneManyProfessions": 25
+    },
+    "sphereSalaryCeiling": {
+      "LOCAL": {
+        "torgovlya": 80000,
+        "uslugi": 70000,
+        "bezopasnost": 80000,
+        "obschepit": 90000,
+        "transport": 120000,
+        "meditsina": 90000,
+        "stroitelstvo": 100000,
+        "proizvodstvo": 110000,
+        "obrazovanie": 70000,
+        "it": 150000,
+        "default": 100000
+      },
+      "REMOTE": {
+        "default": 120000
+      },
+      "VAHTA": {
+        "stroitelstvo": 350000,
+        "transport": 350000,
+        "obschepit": 220000,
+        "uslugi": 220000,
+        "proizvodstvo": 300000,
+        "torgovlya": 200000,
+        "default": 400000
+      }
+    },
+    "fastMoney": [
+      { "id": "ezhednevnye_vyplaty", "phrase": "ежедневные выплаты", "weight": 12, "label": "ежедневные выплаты" },
+      { "id": "dengi_v_pervyy_den", "phrase": "деньги в первый день", "weight": 14, "label": "деньги в первый день" },
+      { "id": "mgnovennyy_zarabotok", "phrase": "мгновенный заработок", "weight": 14, "label": "мгновенный заработок" },
+      { "id": "passivnyy_dohod", "phrase": "пассивный доход", "weight": 16, "label": "пассивный доход" },
+      { "id": "finansovaya_svoboda", "phrase": "финансовая свобода", "weight": 16, "label": "финансовая свобода" },
+      { "id": "rabota_na_sebya", "phrase": "работа на себя", "weight": 12, "label": "работа на себя" },
+      { "id": "svoy_biznes", "phrase": "свой бизнес", "weight": 12, "label": "свой бизнес" },
+      { "id": "investicii", "stem": "инвестици", "endings": ["я", "и", "й", "ях", "ями"], "requireEnding": true, "weight": 14, "label": "инвестиции" },
+      { "id": "kripta", "stem": "крипт", "endings": ["а", "е", "у", "ы", "ой"], "requireEnding": true, "weight": 16, "label": "крипта" },
+      { "id": "kriptovalyuta", "stem": "криптовалют", "endings": ["а", "ы", "у", "е"], "weight": 16, "label": "криптовалюта" },
+      { "id": "treyding", "stem": "трейдинг", "endings": ["", "а", "у", "е"], "weight": 14, "label": "трейдинг" },
+      { "id": "arbitrazh", "stem": "арбитраж", "endings": ["", "а", "у", "е"], "weight": 14, "label": "арбитраж" },
+      { "id": "partnerskaya", "phrase": "партнерская программа", "weight": 16, "label": "партнёрская программа" },
+      { "id": "dohod_v_den", "pattern": "\\b(?:доход|заработ\\w*|выплат\\w*)[^\\n.]{0,40}\\bв\\s+день\\b", "weight": 18, "label": "доход в день" },
+      { "id": "summa_v_den", "pattern": "\\d[\\d\\s\\u00a0]{2,10}\\s*(?:₽|руб(?:л\\w*)?|р)\\.?\\s*в\\s+день\\b", "weight": 18, "label": "сумма в день" }
+    ],
+    "privacy": [
+      { "id": "podrobnosti_v_lichke", "phrase": "подробности в личке", "weight": 18, "label": "подробности в личке" },
+      { "id": "pishi_plus", "phrase": "пиши плюс", "weight": 14, "label": "пиши плюс в комментарии" },
+      { "id": "plus_v_kommentarii", "phrase": "плюс в комментарии", "weight": 14, "label": "плюс в комментарии" },
+      { "id": "pishite_v_whatsapp", "phrase": "пишите в whatsapp", "weight": 10, "label": "пишите в WhatsApp", "requireNoPhone": true },
+      { "id": "pishite_v_vatsap", "phrase": "пишите в ватсап", "weight": 10, "label": "пишите в ватсап", "requireNoPhone": true },
+      { "id": "zayavka_v_lichku", "phrase": "отправь заявку в личку", "weight": 16, "label": "заявка в личку" },
+      { "id": "napishite_mne", "phrase": "напишите мне", "weight": 10, "label": "напишите мне", "requireNoPhone": true }
+    ],
+    "denials": [
+      { "id": "ne_setevoy_marketing", "phrase": "не сетевой маркетинг", "weight": 16, "label": "отрицание сетевого" },
+      { "id": "ne_prodazhi", "phrase": "не продажи", "weight": 14, "label": "отрицание продаж" },
+      { "id": "bez_prodazh", "phrase": "без продаж", "weight": 14, "label": "без продаж" },
+      { "id": "bez_vlozheniy", "phrase": "без вложений", "weight": 16, "label": "без вложений" },
+      { "id": "mlm", "stem": "млм", "weight": 12, "label": "МЛМ" }
+    ],
+    "hardFlags": [
+      { "id": "vstupitelnyy_vznos", "phrase": "вступительный взнос", "label": "предоплата: вступительный взнос" },
+      { "id": "vznos_za_trud", "phrase": "взнос за трудоустройство", "label": "предоплата: взнос за трудоустройство" },
+      { "id": "zalog_za_formu", "phrase": "залог за форму", "label": "предоплата: залог за форму" },
+      { "id": "zalog_za_instrument", "phrase": "залог за инструмент", "label": "предоплата: залог за инструмент" },
+      { "id": "oplatit_obuchenie", "phrase": "оплатить обучение", "label": "предоплата: оплатить обучение" },
+      { "id": "oplata_obucheniya", "phrase": "оплата обучения", "label": "предоплата: оплата обучения" },
+      { "id": "kupit_nabor", "phrase": "купить стартовый набор", "label": "предоплата: стартовый набор" },
+      { "id": "startovyy_nabor", "phrase": "стартовый набор", "label": "предоплата: стартовый набор" },
+      { "id": "vnesti_depozit", "phrase": "внести депозит", "label": "предоплата: депозит" },
+      { "id": "predoplata", "stem": "предоплат", "endings": ["а", "у", "ы", "е", "ой"], "label": "предоплата" },
+      { "id": "oformit_kartu", "phrase": "оформить карту на себя", "label": "дроппер: карта на себя" },
+      { "id": "karta_na_svoe_imya", "phrase": "карту на свое имя", "label": "дроппер: карта на своё имя" },
+      { "id": "pasport_dlya_oformleniya", "phrase": "нужен паспорт для оформления", "label": "дроппер: паспорт для оформления" },
+      { "id": "sim_karty", "pattern": "\\bсим\\s*-?\\s*карт", "label": "дроппер: сим-карты" },
+      { "id": "podstavnoe_lico", "phrase": "подставное лицо", "label": "дроппер: подставное лицо" },
+      { "id": "obnal", "stem": "обнал", "endings": ["", "а", "у", "е"], "label": "дроппер: обнал" }
+    ],
+    "abroad": [
+      { "id": "za_granicey", "phrase": "за границей", "label": "работа за границей" },
+      { "id": "v_polshe", "phrase": "в польше", "label": "работа в Польше" },
+      { "id": "v_chehii", "phrase": "в чехии", "label": "работа в Чехии" }
+    ],
+    "documentsHelp": [
+      { "id": "pomozhem_s_dokumentami", "phrase": "поможем с документами", "label": "поможем с документами" },
+      { "id": "oformim_vizu", "phrase": "оформим визу", "label": "оформим визу" },
+      { "id": "pomozhem_s_vizoy", "phrase": "поможем с визой", "label": "поможем с визой" }
+    ],
+    "klady": [
+      { "id": "klady", "stem": "клады", "label": "клады" },
+      { "id": "rasfasovka", "stem": "расфасовк", "endings": ["а", "у", "и", "ой"], "label": "расфасовка" }
+    ],
+    "dailyPay": [
+      { "id": "ezhednevnaya_oplata", "phrase": "ежедневная оплата", "label": "ежедневная оплата" },
+      { "id": "oplata_kazhdyy_den", "phrase": "оплата каждый день", "label": "оплата каждый день" },
+      { "id": "vyplata_kazhdyy_den", "phrase": "выплата каждый день", "label": "выплата каждый день" }
+    ],
+    "shingleStopWords": [
+      "и", "в", "на", "с", "по", "для", "от", "до", "или", "а", "но", "же",
+      "это", "как", "из", "к", "у", "о", "об", "за", "при", "над", "под",
+      "без", "что", "не", "то", "же", "бы", "ли", "же", "их", "его", "ее",
+      "мы", "вы", "он", "она", "они", "все", "так", "уже", "еще", "ещё"
+    ]
+  }
+}
