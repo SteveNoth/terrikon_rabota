@@ -24,7 +24,7 @@
  *    а не подменяет страницу посреди чтения.
  */
 
-const CACHE_VERSION = "tr-offline-v3";
+const CACHE_VERSION = "tr-offline-v4";
 const SHELL_CACHE = `shell-${CACHE_VERSION}`;
 const DATA_CACHE = `data-${CACHE_VERSION}`;
 
@@ -44,6 +44,7 @@ const NEVER_CACHE_PREFIXES = [
   "/profile",
   "/api/auth",
   "/api/parser",
+  "/api/telegram",
   "/api/offline",
   "/api/events",
   "/api/reports",

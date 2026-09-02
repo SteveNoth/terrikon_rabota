@@ -256,6 +256,7 @@ model Vacancy {
   reports             Report[]
   moderationDecisions ModerationDecision[]
   events              Event[]
+  telegramDeliveries  TelegramDelivery[]
 
   @@unique([source, externalId])
   @@index([citySlug])
@@ -345,6 +346,7 @@ model User {
   favorites     Favorite[]
   employer      Employer?
   accountBlocks AccountBlock[]
+  telegramUser  TelegramUser?
 }
 
 /// Журнал блока аккаунта. Флаги на User — для проверки, эта таблица — источник правды.
@@ -399,7 +401,33 @@ model TelegramUser {
   spheres        String[]  @default([])
   isActive       Boolean   @default(true)
   lastNotifiedAt DateTime?
+  /// idle | keywords | sphere | link — шаг диалога. На serverless нельзя держать это в памяти.
+  dialog         String    @default("idle")
+  pendingKeywords String[] @default([])
+  userId         String?   @unique
+  user           User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt      DateTime  @default(now())
+  deliveries     TelegramDelivery[]
+
+  @@index([citySlug, isActive])
+  @@index([isActive, lastNotifiedAt])
+}
+
+/// Одна вакансия (или группа дублей) — одно сообщение подписчику.
+model TelegramDelivery {
+  id             String   @id @default(cuid())
+  telegramUserId String
+  vacancyId      String
+  /// groupId группы дублей или id вакансии, если группы нет.
+  groupKey       String
+  sentAt         DateTime @default(now())
+
+  telegramUser TelegramUser @relation(fields: [telegramUserId], references: [id], onDelete: Cascade)
+  vacancy      Vacancy      @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+
+  @@unique([telegramUserId, groupKey])
+  @@index([telegramUserId, sentAt])
+  @@index([vacancyId])
 }
 
 model ParsedPost {

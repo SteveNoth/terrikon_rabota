@@ -1,10 +1,10 @@
 /**
  * Переходник уведомлений (Закон 6).
  *
- * По умолчанию NOTIFY_DRIVER=telegram. На этом этапе в сеть не ходим: бот
- * и рассылка появятся позже. Важно, что страницы будут звать `notify.send`,
- * а не Telegram API напрямую.
+ * Страницы зовут `notify.send`, а не Telegram API напрямую.
+ * NOTIFY_DRIVER=telegram | none.
  */
+import { sendTelegramMessage } from "@/lib/telegram/api";
 
 export type NotifyMessage = {
   text: string;
@@ -21,11 +21,11 @@ export interface NotifyAdapter {
 
 class TelegramNotify implements NotifyAdapter {
   async send(message: NotifyMessage): Promise<NotifyResult> {
-    void message;
-    if (!process.env.TELEGRAM_BOT_TOKEN) {
+    if (!message.chatId) {
       return { ok: false };
     }
-    return { ok: false };
+    const result = await sendTelegramMessage(message.chatId, message.text);
+    return { ok: result.ok };
   }
 }
 

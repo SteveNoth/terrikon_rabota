@@ -13,7 +13,9 @@
     "measure:ultra": "node scripts/measure-ultra.mjs",
     "test:policy": "npx tsx src/lib/policy/run-tests.ts",
     "test:blocks": "npx tsx src/lib/auth/run-block-tests.ts",
-    "test:seeker": "npx tsx src/lib/seeker/run-tests.ts"
+    "test:seeker": "npx tsx src/lib/seeker/run-tests.ts",
+    "test:telegram": "npx tsx src/lib/telegram/run-tests.ts",
+    "telegram:webhook": "npx tsx scripts/telegram-webhook.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

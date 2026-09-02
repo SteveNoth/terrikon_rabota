@@ -54,6 +54,13 @@ jobs:
       - name: Run website parser
         run: python scripts/parser_web.py
 
+      - name: Notify Telegram subscribers
+        if: success()
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+        run: bash scripts/ci/telegram-notify.sh
+
       - name: Upload logs
         if: always()
         uses: actions/upload-artifact@v4

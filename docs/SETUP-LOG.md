@@ -680,5 +680,115 @@ GitHub Secrets те же `CRON_SECRET` и `SITE_URL`, новых ключей н
 - Миграция `seeker_profile` накатана на Supabase: ☑ (локально, 2026-08-31)
 - `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` (можно пустым до этапа 22): ☐
 
+## 2026-09-02 — Этап 22: Telegram-бот
+
+Бот уведомлений — это **не** парсер каналов (Этап 17, `TG_SESSION`). Здесь токен от `@BotFather`.
+
+### 1. Создать бота
+
+1. Открыть Telegram, найти **@BotFather** (синяя галочка).
+2. Написать `/newbot`.
+3. Имя (как видно людям), например: `Террикон Работа`.
+4. Username (латиница, обязан кончаться на `bot`), например: `terrikon_rabota_bot`. Если занято — другой.
+5. BotFather пришлёт токен вида `123456789:AAH...`. Это пароль бота. В чат и в git не копировать.
+6. Сразу задать команды (удобно с телефона): `/setcommands` → выбрать бота → вставить:
+
+```
+start - Начать
+subscribe - Подписка на вакансии
+unsubscribe - Отключить подписку
+latest - Последние 5 вакансий
+city - Выбрать город
+link - Привязать кабинет на сайте
+help - Что умеет бот
+```
+
+7. `/setjoingroups` → Disable (бот для личных сообщений, не для групп).
+
+### 2. Записать секреты
+
+В `.env.local` (локально) и в Vercel → terrikon-rabota → Settings → Environment Variables (Production и Preview):
+
+| Имя | Что это |
+|-----|---------|
+| `TELEGRAM_BOT_TOKEN` | токен от BotFather |
+| `TELEGRAM_WEBHOOK_SECRET` | случайная строка, только латиница/цифры/`_`/`-`, ≥ 8 символов. PowerShell: `-join ((48..57 + 65..90 + 97..122) | Get-Random -Count 32 | ForEach-Object { [char]$_ })` |
+| `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME` | username **без** `@` |
+
+`NOTIFY_DRIVER=telegram` уже в `.env.example`.
+
+На Vercel после записи переменных нужен новый деплой, иначе webhook получит 404.
+
+### 3. Миграция базы
+
+```
+npx prisma migrate deploy
+```
+
+Нужен `DIRECT_URL`. Таблица `TelegramDelivery` + поля `TelegramUser.userId` / `dialog` / `pendingKeywords`.
+
+### 4. Поставить webhook
+
+Только HTTPS. localhost Telegram не вызовет. Адрес сайта: `NEXT_PUBLIC_SITE_URL` или `SITE_URL` (сейчас https://terrikon-rabota.vercel.app).
+
+Из папки проекта, когда токен уже в `.env.local`:
+
+```
+npx tsx scripts/telegram-webhook.ts set
+npx tsx scripts/telegram-webhook.ts info
+```
+
+Что делает `set`: вызывает `setWebhook` с `url=https://…/api/telegram/webhook`, `secret_token=…`, `allowed_updates=["message","callback_query"]`.
+
+Проверка руками (токен подставить у себя, в историю команд лучше не светить):
+
+```
+https://api.telegram.org/bot<ТОКЕН>/getWebhookInfo
+```
+
+Ждём `"url": "https://terrikon-rabota.vercel.app/api/telegram/webhook"` и пустой `last_error_message`.
+
+Если нет tsx-скрипта, та же ссылка:
+
+```
+https://api.telegram.org/bot<ТОКЕН>/setWebhook?url=https://terrikon-rabota.vercel.app/api/telegram/webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>&drop_pending_updates=true
+```
+
+### 5. Если ошибка
+
+Смотреть `last_error_message` в `getWebhookInfo`.
+
+| Что пишет Telegram | Что сделать |
+|--------------------|-------------|
+| Connection timed out / Failed to connect | сайт на Vercel не отвечает или неверный URL |
+| 404 | код Этапа 22 не задеплоен, нет `/api/telegram/webhook` |
+| 401 Unauthorized | секрет заголовка не тот. Снова `npx tsx scripts/telegram-webhook.ts set`. В Vercel должен быть тот же `TELEGRAM_WEBHOOK_SECRET` (или не задан — тогда секрет считается от токена и на Vercel токен должен совпасть) |
+| SSL error | только HTTPS продакшена, не http://localhost |
+| 401 от getWebhookInfo | сам токен неверный |
+
+Сбросить webhook: `npx tsx scripts/telegram-webhook.ts delete`, потом снова `set`.
+
+Написать боту `/start`. Должен ответить про вакансии активного города из geo.json и показать кнопки внизу.
+
+### 6. Рассылка
+
+Не из `/api/parser/upload`. После каждого парсера GitHub Actions бьёт `POST /api/telegram/notify` с `Authorization: Bearer CRON_SECRET` (`scripts/ci/telegram-notify.sh`). Локально, если сайт запущен:
+
+```
+curl -X POST http://127.0.0.1:3000/api/telegram/notify -H "Authorization: Bearer <CRON_SECRET>" -H "Content-Type: application/json" -d "{\"limit\":40}"
+```
+
+Шаблон отметки:
+
+- Дата: 2026-09-02
+- Бот создан у @BotFather: ☐
+- `TELEGRAM_BOT_TOKEN` в `.env.local` и Vercel: ☐
+- `TELEGRAM_WEBHOOK_SECRET` в `.env.local` и Vercel: ☐
+- `NEXT_PUBLIC_TELEGRAM_BOT_USERNAME`: ☐
+- Миграция `telegram_bot` накатана на Supabase: ☑ (локально, 2026-09-02)
+- `npx tsx scripts/telegram-webhook.ts set` + `info` без last_error: ☐
+- Код Этапа 22 на https://terrikon-rabota.vercel.app/api/telegram/webhook (не 404): ☐
+- `/start` отвечает: ☐
+
 
 

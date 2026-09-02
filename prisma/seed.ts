@@ -114,6 +114,7 @@ async function reset(): Promise<void> {
   await prisma.parserRun.deleteMany();
   await prisma.cityWaitlist.deleteMany();
   await prisma.geocodeCache.deleteMany();
+  await prisma.telegramDelivery.deleteMany();
   await prisma.telegramUser.deleteMany();
   await prisma.vacancy.updateMany({
     data: { groupId: null, duplicateOfId: null, employerId: null },
