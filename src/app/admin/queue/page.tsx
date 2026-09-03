@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/auth";
-import { listQueue, parseQueueTab, queueSummary } from "@/lib/admin/queue";
+import { listDuplicateCandidates, listQueue, parseQueueTab, queuePath, queueSummary } from "@/lib/admin/queue";
 import { ruleAccuracy } from "@/lib/admin/rules";
 import { highlightParts } from "@/lib/admin/highlight";
 import { AdminNotice, firstParam } from "@/app/admin/notice";
@@ -30,7 +30,8 @@ export default async function QueuePage({
   const [items, summary, rules] = await Promise.all([listQueue(tab), queueSummary(), ruleAccuracy()]);
   const currentId = firstParam(query.id);
   const current = items.find((item) => item.id === currentId) ?? items[0] ?? null;
-  const candidates = rules.filter((rule) => rule.candidate);
+  const candidates = current ? await listDuplicateCandidates(current) : [];
+  const currentRules = rules.filter((rule) => rule.candidate);
 
   return (
     <>
@@ -43,62 +44,59 @@ export default async function QueuePage({
         {summary.growing ? " За сутки очередь растёт быстрее, чем разбирается." : ""}
       </p>
       <p className="mt-2 text-sm">
-        Если очередь растёт быстрее, чем её разбирать — это признак слишком строгих правил, а не повод её отключить.{" "}
-        Карточки из кабинета работодателя сюда не попадают — они в{" "}
-        <Link href="/admin/employers/queue">очереди кабинета</Link>. <a href="#rules">К списку неточных правил</a>.
+        Карточки из кабинета работодателя — в{" "}
+        <Link href="/admin/employers/queue">очереди кабинета</Link>. Клавиши: P опубликовать · D дубль · N не вакансия ·
+        F мошенничество.
       </p>
 
       <div className="admin-tabs">
-        <Tab href="/admin/queue?tab=fraud" current={tab === "fraud"}>
+        <Tab href={queuePath("fraud")} current={tab === "fraud"}>
           Мошенничество?
         </Tab>
-        <Tab href="/admin/queue?tab=vacancy" current={tab === "vacancy"}>
+        <Tab href={queuePath("vacancy")} current={tab === "vacancy"}>
           Вакансия?
         </Tab>
-        <Tab href="/admin/queue?tab=duplicate" current={tab === "duplicate"}>
+        <Tab href={queuePath("duplicate")} current={tab === "duplicate"}>
           Дубль?
         </Tab>
-        <Tab href="/admin/queue?tab=all" current={tab === "all"}>
+        <Tab href={queuePath("all")} current={tab === "all"}>
           Все ({summary.total})
         </Tab>
       </div>
 
       {current ? (
-        <QueueCard item={current} />
+        <div className="admin-queue">
+          <ol className="admin-queue-list">
+            {items.slice(0, 40).map((item) => (
+              <li key={item.id}>
+                <Link href={queuePath(tab, item.id)} aria-current={item.id === current.id ? "page" : undefined}>
+                  {item.highRisk ? "высокий риск · " : ""}
+                  {item.doubts.duplicate ? "дубль · " : ""}
+                  {item.title} · {item.waitLabel}
+                </Link>
+              </li>
+            ))}
+          </ol>
+          <QueueCard item={current} tab={tab} candidates={candidates} />
+        </div>
       ) : (
         <p className="mt-4">Очередь пуста. Сомнительные объявления ждут здесь и сами на сайт не выходят.</p>
       )}
 
-      {items.length > 1 ? (
-        <ol className="mt-6">
-          {items.slice(0, 30).map((item) => (
-            <li key={item.id}>
-              <Link href={`/admin/queue?tab=${tab}&id=${item.id}`}>
-                {item.highRisk ? "высокий риск · " : ""}
-                {item.title} · {item.waitLabel}
-              </Link>
-            </li>
-          ))}
-        </ol>
-      ) : null}
-
-      <section id="rules" className="mt-8">
-        <h2 className="text-lg">Точность правил</h2>
-        <p className="admin-kicker">
+      <details className="mt-8">
+        <summary>Точность правил{currentRules.length ? ` · кандидаты на понижение: ${currentRules.length}` : ""}</summary>
+        <p className="admin-kicker mt-2">
           Сработало N раз, согласился M раз. Правило с низкой точностью тихо засоряет очередь.
         </p>
-        {candidates.length ? (
-          <>
-            <h3 className="mt-4">Кандидаты на понижение веса</h3>
-            <ul>
-              {candidates.map((rule) => (
-                <li key={rule.id}>
-                  {rule.label} ({rule.id}): сработало {rule.fires}, согласился {rule.agreed} (
-                  {formatPercent(rule.agreed, rule.fires)})
-                </li>
-              ))}
-            </ul>
-          </>
+        {currentRules.length ? (
+          <ul className="mt-3">
+            {currentRules.map((rule) => (
+              <li key={rule.id}>
+                {rule.label} ({rule.id}): сработало {rule.fires}, согласился {rule.agreed} (
+                {formatPercent(rule.agreed, rule.fires)})
+              </li>
+            ))}
+          </ul>
         ) : (
           <p className="mt-3">Пока мало решений, чтобы предлагать понижение веса.</p>
         )}
@@ -126,7 +124,7 @@ export default async function QueuePage({
             </tbody>
           </table>
         ) : null}
-      </section>
+      </details>
     </>
   );
 }
@@ -139,9 +137,19 @@ function Tab({ href, current, children }: { href: string; current: boolean; chil
   );
 }
 
-function QueueCard({ item }: { item: Awaited<ReturnType<typeof listQueue>>[number] }) {
+function QueueCard({
+  item,
+  tab,
+  candidates,
+}: {
+  item: Awaited<ReturnType<typeof listQueue>>[number];
+  tab: ReturnType<typeof parseQueueTab>;
+  candidates: Awaited<ReturnType<typeof listDuplicateCandidates>>;
+}) {
   const parts = highlightParts(item.rawText, item.flags);
   const phraseDefault = item.flags.find((flag) => flag.sample && !/^\d+$/.test(flag.sample))?.sample ?? "";
+  const defaultDup =
+    candidates.find((row) => row.similarity >= 95)?.id ?? candidates[0]?.id ?? item.members[0]?.id ?? "";
   return (
     <article>
       <p className="admin-kicker">
@@ -230,31 +238,44 @@ function QueueCard({ item }: { item: Awaited<ReturnType<typeof listQueue>>[numbe
         <p className="admin-kicker">Решений по этому контакту ещё не было.</p>
       )}
 
-      <div className="admin-actions">
+      <div className="admin-actions admin-actions-primary">
         <form action={queuePublishAction}>
           <input type="hidden" name="id" value={item.id} />
+          <input type="hidden" name="tab" value={tab} />
           <button id="queue-publish" type="submit" className={buttonVariants({ variant: "primary", size: "sm" })}>
             Опубликовать (P)
           </button>
         </form>
-        <form action={queuePublishTrustAction}>
+        <form action={queueMergeAction}>
           <input type="hidden" name="id" value={item.id} />
-          <button id="queue-trust" type="submit" className={buttonVariants({ variant: "accent", size: "sm" })}>
-            Опубликовать и доверять (T)
-          </button>
-        </form>
-        <form action={queueFraudAction}>
-          <input type="hidden" name="id" value={item.id} />
+          <input type="hidden" name="tab" value={tab} />
           <label className="admin-field mb-0">
-            Фраза в словарь
-            <input name="phrase" defaultValue={phraseDefault} />
+            Это дубль вакансии…
+            {candidates.length ? (
+              <select id="queue-duplicate-of" name="duplicateOfId" defaultValue={defaultDup}>
+                <option value="">— выбрать —</option>
+                {candidates.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    {member.similarity}% · {member.title} ({SOURCE_LABEL[member.source]})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                id="queue-duplicate-of"
+                name="duplicateOfId"
+                placeholder="id оригинала"
+                autoComplete="off"
+              />
+            )}
           </label>
-          <button id="queue-fraud" type="submit" className={buttonVariants({ variant: "danger", size: "sm" })}>
-            Мошенничество (F)
+          <button id="queue-duplicate" type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            Это дубль (D)
           </button>
         </form>
         <form action={queueNotVacancyAction}>
           <input type="hidden" name="id" value={item.id} />
+          <input type="hidden" name="tab" value={tab} />
           <label className="admin-field mb-0">
             Стоп-слово
             <input name="stopWord" />
@@ -263,8 +284,29 @@ function QueueCard({ item }: { item: Awaited<ReturnType<typeof listQueue>>[numbe
             Не вакансия (N)
           </button>
         </form>
+        <form action={queueFraudAction}>
+          <input type="hidden" name="id" value={item.id} />
+          <input type="hidden" name="tab" value={tab} />
+          <label className="admin-field mb-0">
+            Фраза в словарь
+            <input name="phrase" defaultValue={phraseDefault} />
+          </label>
+          <button id="queue-fraud" type="submit" className={buttonVariants({ variant: "danger", size: "sm" })}>
+            Мошенничество (F)
+          </button>
+        </form>
+      </div>
+      <div className="admin-actions">
+        <form action={queuePublishTrustAction}>
+          <input type="hidden" name="id" value={item.id} />
+          <input type="hidden" name="tab" value={tab} />
+          <button id="queue-trust" type="submit" className={buttonVariants({ variant: "accent", size: "sm" })}>
+            Опубликовать и доверять (T)
+          </button>
+        </form>
         <form action={queueApproveGroupAction}>
           <input type="hidden" name="id" value={item.id} />
+          <input type="hidden" name="tab" value={tab} />
           <button
             id="queue-group"
             type="submit"
@@ -272,23 +314,6 @@ function QueueCard({ item }: { item: Awaited<ReturnType<typeof listQueue>>[numbe
             disabled={item.groupPostings < 2}
           >
             Одобрить всю группу (G)
-          </button>
-        </form>
-        <form action={queueMergeAction}>
-          <input type="hidden" name="id" value={item.id} />
-          <label className="admin-field mb-0">
-            Это дубль вакансии…
-            <select id="queue-duplicate-of" name="duplicateOfId" defaultValue={item.members[0]?.id ?? ""}>
-              <option value="">— выбрать —</option>
-              {item.members.map((member) => (
-                <option key={member.id} value={member.id}>
-                  {member.title} ({SOURCE_LABEL[member.source]})
-                </option>
-              ))}
-            </select>
-          </label>
-          <button type="submit" className={buttonVariants({ variant: "outline", size: "sm" })}>
-            Склеить (D — фокус)
           </button>
         </form>
       </div>

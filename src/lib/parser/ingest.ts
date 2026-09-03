@@ -14,10 +14,11 @@ import { clearMemoryCache } from "@/lib/adapters/cache";
 import { getDefaultCity } from "@/lib/geo";
 import { decideCity } from "@/lib/parser/city";
 import { blockReasonForFlags, contactKey } from "@/lib/parser/contact";
-import { contentHash, isSha1, samePostUnits, titlesSimilar } from "@/lib/parser/dedupe";
+import { contentHash, isSha1, samePostUnits, titlesSimilar, textHash, isTextDupEligible, textDupBucket, bodyForFingerprint, dedupeCutoff } from "@/lib/parser/dedupe";
 import { uniqueSlug, vacancySlug, employerSlug } from "@/lib/parser/slug";
 import { decideModeration } from "@/lib/parser/moderation";
 import { qualityScoreFrom } from "@/lib/parser/quality";
+import { isPublishedStatus } from "@/lib/vacancy/listing-where";
 import {
   asVersionString,
   isMaybeRecord,
@@ -41,6 +42,7 @@ export type IngestStats = {
   errors: number;
   errorItems: ParserErrorItem[];
   skippedCityItems: { index: number; externalId: string | null; reason: string }[];
+  citySlugs: string[];
   runId: string;
   elapsedMs: number;
 };
@@ -64,6 +66,8 @@ type ExistingVacancy = {
   ocrVersion: string | null;
   splitIndex: number;
   moderationStatus: ModerationStatus;
+  duplicateOfId: string | null;
+  rawText: string | null;
   workFormat: WorkFormat;
   archivedAt: Date | null;
   isActive: boolean;
@@ -299,7 +303,14 @@ export async function ingestVacancies(input: {
   const citySlugs = [...new Set(vacancyBound.map((item) => item.record.citySlug).filter((item): item is string => Boolean(item)))];
 
   const defaultCitySlug = getDefaultCity().slug;
-  const [existingByPair, existingByHash, verdicts, groups, similarByPhone, slugRows] = await Promise.all([
+  const bodyWindow = {
+    publishedAt: { gte: dedupeCutoff() },
+    OR: [
+      { citySlug: { in: citySlugs.length ? citySlugs : [defaultCitySlug] } },
+      { workFormat: WorkFormat.VAHTA },
+    ],
+  } satisfies Prisma.VacancyWhereInput;
+  const [existingByPair, existingByHash, verdicts, groups, similarByPhone, slugRows, existingByBody] = await Promise.all([
     externalIds.length
       ? prisma.vacancy.findMany({
           where: { source: { in: sources }, externalId: { in: externalIds } },
@@ -360,6 +371,14 @@ export async function ingestVacancies(input: {
           select: { slug: true },
         })
       : Promise.resolve([] as { slug: string }[]),
+    vacancyBound.length
+      ? prisma.vacancy.findMany({
+          where: bodyWindow,
+          select: existingSelect(),
+          orderBy: { firstSeenAt: "asc" },
+          take: 2500,
+        })
+      : Promise.resolve([] as ExistingVacancy[]),
   ]);
 
   const pairMap = new Map<string, ExistingVacancy>();
@@ -371,6 +390,34 @@ export async function ingestVacancies(input: {
     const list = hashMap.get(row.contentHash) ?? [];
     list.push(row);
     hashMap.set(row.contentHash, list);
+  }
+  type TextOwner = {
+    id: string;
+    sourcePostExternalId: string;
+    moderationStatus: ModerationStatus;
+    isActive: boolean;
+    groupId: string | null;
+  };
+  const textOwner = new Map<string, TextOwner>();
+  const rememberText = (row: ExistingVacancy) => {
+    const body = bodyForFingerprint(row);
+    if (!isTextDupEligible(body)) {
+      return;
+    }
+    const key = textDupBucket(textHash(body), row.workFormat, row.citySlug);
+    if (textOwner.has(key)) {
+      return;
+    }
+    textOwner.set(key, {
+      id: row.duplicateOfId || row.id,
+      sourcePostExternalId: row.sourcePostExternalId,
+      moderationStatus: row.moderationStatus,
+      isActive: row.isActive,
+      groupId: row.groupId,
+    });
+  };
+  for (const row of [...existingByBody, ...existingByHash, ...existingByPair, ...similarByPhone]) {
+    rememberText(row);
   }
   const verdictMap = new Map(verdicts.map((row) => [row.contact, row.verdict]));
   const groupMap = new Map<string, GroupRow>();
@@ -414,6 +461,8 @@ export async function ingestVacancies(input: {
     record: ParserVacancyInput;
     data: Prisma.VacancyCreateManyInput;
     duplicateOfId: string | null;
+    duplicateOfPairKey: string | null;
+    exactTextDup: boolean;
     isDuplicate: boolean;
     status: ModerationStatus;
     contact: string | null;
@@ -436,7 +485,11 @@ export async function ingestVacancies(input: {
 
   const creates: CreatePlan[] = [];
   const updates: UpdatePlan[] = [];
+  const pendingCreatePairs = new Set<string>();
   const blockContacts = new Map<string, string>();
+  const batchTextOwner = new Map<string, { pairKey: string; status: ModerationStatus }>();
+  const batchHashOwner = new Map<string, { pairKey: string; status: ModerationStatus }>();
+  const touchedCities = new Set<string>();
 
   for (const item of vacancyBound) {
     const record = item.record;
@@ -461,9 +514,6 @@ export async function ingestVacancies(input: {
       parserStatus: record.moderationStatus ?? null,
       contactVerdict: contact ? (verdictMap.get(contact) ?? null) : null,
     });
-    if (decision.status === ModerationStatus.PENDING) {
-      pending += 1;
-    }
     if (decision.status === ModerationStatus.BLOCKED) {
       blocked += 1;
       const hardId = flags.find((flag) => flag.hard || flag.id)?.id ?? "жёсткий флаг";
@@ -484,29 +534,82 @@ export async function ingestVacancies(input: {
     const workFormat = (record.workFormat ?? "LOCAL") as WorkFormat;
 
     let duplicateOfId: string | null = null;
+    let duplicateOfPairKey: string | null = null;
     let isDuplicate = false;
+    let exactTextDup = false;
+    let originalStatus: ModerationStatus | undefined;
+    let originalActive: boolean | undefined;
+    const body = bodyForFingerprint(record);
+    const bodyKey = isTextDupEligible(body)
+      ? textDupBucket(textHash(body), workFormat, city.city.slug)
+      : "";
     if (!existingExact) {
-      const hashHits = (hashMap.get(hash) ?? []).filter(
-        (row) => !samePostUnits(row.sourcePostExternalId, postId),
-      );
-      if (hashHits[0]) {
-        duplicateOfId = hashHits[0].id;
+      const textHit = bodyKey ? textOwner.get(bodyKey) : undefined;
+      const batchText = bodyKey ? batchTextOwner.get(bodyKey) : undefined;
+      if (textHit && !samePostUnits(textHit.sourcePostExternalId, postId)) {
+        duplicateOfId = textHit.id;
         isDuplicate = true;
-      } else if (record.contactPhone) {
-        const title = record.titleNormalized || record.title;
-        const hit = similarByPhone.find(
-          (row) =>
-            row.contactPhone === record.contactPhone &&
-            row.citySlug === city.city.slug &&
-            row.workFormat === workFormat &&
-            !samePostUnits(row.sourcePostExternalId, postId) &&
-            titlesSimilar(row.titleNormalized || row.title, title),
+        exactTextDup = true;
+        originalStatus = textHit.moderationStatus;
+        originalActive = textHit.isActive;
+      } else if (batchText && batchText.pairKey !== pairKey(asSource(record.source), record.externalId)) {
+        duplicateOfPairKey = batchText.pairKey;
+        isDuplicate = true;
+        exactTextDup = true;
+        originalStatus = batchText.status;
+        originalActive = isPublishedStatus(batchText.status);
+      } else {
+        const hashHits = (hashMap.get(hash) ?? []).filter(
+          (row) => !samePostUnits(row.sourcePostExternalId, postId),
         );
-        if (hit) {
-          duplicateOfId = hit.id;
+        const batchHash = batchHashOwner.get(hash);
+        if (hashHits[0]) {
+          duplicateOfId = hashHits[0].duplicateOfId || hashHits[0].id;
           isDuplicate = true;
+          exactTextDup = true;
+          originalStatus = hashHits[0].moderationStatus;
+          originalActive = hashHits[0].isActive;
+        } else if (batchHash) {
+          duplicateOfPairKey = batchHash.pairKey;
+          isDuplicate = true;
+          exactTextDup = true;
+          originalStatus = batchHash.status;
+          originalActive = isPublishedStatus(batchHash.status);
+        } else if (record.contactPhone) {
+          const title = record.titleNormalized || record.title;
+          const hit = similarByPhone.find(
+            (row) =>
+              row.contactPhone === record.contactPhone &&
+              row.citySlug === city.city.slug &&
+              row.workFormat === workFormat &&
+              !samePostUnits(row.sourcePostExternalId, postId) &&
+              titlesSimilar(row.titleNormalized || row.title, title),
+          );
+          if (hit) {
+            duplicateOfId = hit.duplicateOfId || hit.id;
+            isDuplicate = true;
+          }
         }
       }
+    }
+
+    let status = decision.status;
+    let needsReview =
+      Boolean(record.needsHumanReview) || (decision.status === ModerationStatus.PENDING && !exactTextDup);
+    let isActive = decision.status !== ModerationStatus.BLOCKED;
+    if (exactTextDup) {
+      const inherited = inheritDuplicateStatus({
+        original: originalStatus,
+        originalActive,
+        decided: decision.status,
+        hard: decision.hard,
+      });
+      status = inherited.status;
+      isActive = inherited.isActive;
+      needsReview = inherited.needsHumanReview;
+    }
+    if (status === ModerationStatus.PENDING && !exactTextDup) {
+      pending += 1;
     }
 
     const now = new Date();
@@ -533,7 +636,8 @@ export async function ingestVacancies(input: {
         completeness,
         normalizerVersion: record.normalizerVersion || "1",
         needsAiReview: record.needsAiReview ?? undefined,
-        needsHumanReview: record.needsHumanReview || decision.status === ModerationStatus.PENDING || isDuplicate,
+        needsHumanReview:
+          existingExact.moderationStatus === ModerationStatus.PENDING ? needsReview : undefined,
         salaryFrom: record.salaryFrom ?? null,
         salaryTo: record.salaryTo ?? null,
         salaryText: record.salaryText ?? null,
@@ -608,13 +712,14 @@ export async function ingestVacancies(input: {
         data,
         duplicateOfId,
         isDuplicate,
-        status: decision.status,
+        status,
         contact,
         hard: decision.hard,
         citySlug: city.city.slug,
         existing: existingExact,
       });
       updated += 1;
+      touchedCities.add(city.city.slug);
       if (isDuplicate) {
         duplicates += 1;
       }
@@ -650,7 +755,7 @@ export async function ingestVacancies(input: {
       completeness,
       normalizerVersion: record.normalizerVersion || "1",
       needsAiReview: record.needsAiReview ?? false,
-      needsHumanReview: Boolean(record.needsHumanReview) || decision.status === ModerationStatus.PENDING || isDuplicate,
+      needsHumanReview: needsReview,
       salaryFrom: record.salaryFrom ?? null,
       salaryTo: record.salaryTo ?? null,
       salaryText: record.salaryText ?? null,
@@ -691,23 +796,40 @@ export async function ingestVacancies(input: {
       qualityScore,
       trustScore: record.trustScore ?? 0,
       trustFlags: jsonValue(flags),
-      moderationStatus: decision.status,
-      isActive: decision.status !== ModerationStatus.BLOCKED,
+      moderationStatus: status,
+      isActive,
       publishedAt,
     };
+
+    const createKey = pairKey(asSource(record.source), record.externalId);
+    if (pendingCreatePairs.has(createKey)) {
+      duplicates += 1;
+      continue;
+    }
+    pendingCreatePairs.add(createKey);
+
+    if (bodyKey && !batchTextOwner.has(bodyKey) && !exactTextDup) {
+      batchTextOwner.set(bodyKey, { pairKey: createKey, status });
+    }
+    if (!batchHashOwner.has(hash) && !exactTextDup) {
+      batchHashOwner.set(hash, { pairKey: createKey, status });
+    }
 
     creates.push({
       index: item.index,
       record,
       data: createData,
       duplicateOfId,
+      duplicateOfPairKey,
+      exactTextDup,
       isDuplicate,
-      status: decision.status,
+      status,
       contact,
       hard: decision.hard,
       citySlug: city.city.slug,
     });
     added += 1;
+    touchedCities.add(city.city.slug);
     if (isDuplicate) {
       duplicates += 1;
     }
@@ -716,7 +838,10 @@ export async function ingestVacancies(input: {
   await mapInChunks(updates, 20, (item) => prisma.vacancy.update({ where: { id: item.id }, data: item.data }));
 
   if (creates.length) {
-    await prisma.vacancy.createMany({ data: creates.map((item) => item.data) });
+    await prisma.vacancy.createMany({
+      data: creates.map((item) => item.data),
+      skipDuplicates: true,
+    });
   }
   const createdRows =
     creates.length === 0
@@ -739,6 +864,22 @@ export async function ingestVacancies(input: {
           },
         });
   const createdIdByPair = new Map(createdRows.map((row) => [pairKey(row.source, row.externalId), row]));
+
+  const exactLinks: { vacancyId: string; originalId: string }[] = [];
+  for (const item of creates) {
+    const row = createdIdByPair.get(pairKey(asSource(item.record.source), item.record.externalId));
+    if (!row) {
+      continue;
+    }
+    let originalId = item.duplicateOfId;
+    if (!originalId && item.duplicateOfPairKey) {
+      originalId = createdIdByPair.get(item.duplicateOfPairKey)?.id ?? null;
+    }
+    if (originalId && originalId !== row.id) {
+      exactLinks.push({ vacancyId: row.id, originalId });
+    }
+  }
+  await attachExactDuplicates(exactLinks);
 
   const attach: { vacancyId: string; signature: string; source: Source; phone: string | null; completeness: number; firstSeenAt: Date; postId: string }[] = [];
   for (const item of creates) {
@@ -856,9 +997,120 @@ export async function ingestVacancies(input: {
     errors: errorItems.length,
     errorItems,
     skippedCityItems,
+    citySlugs: [...touchedCities],
     runId: run.id,
     elapsedMs: Date.now() - started,
   };
+}
+
+function inheritDuplicateStatus(input: {
+  original?: ModerationStatus;
+  originalActive?: boolean;
+  decided: ModerationStatus;
+  hard: boolean;
+}): { status: ModerationStatus; isActive: boolean; needsHumanReview: boolean } {
+  if (input.hard || input.decided === ModerationStatus.BLOCKED) {
+    return { status: ModerationStatus.BLOCKED, isActive: false, needsHumanReview: false };
+  }
+  if (input.original === ModerationStatus.BLOCKED) {
+    return { status: ModerationStatus.BLOCKED, isActive: false, needsHumanReview: false };
+  }
+  if (input.original === ModerationStatus.REJECTED) {
+    return { status: ModerationStatus.REJECTED, isActive: false, needsHumanReview: false };
+  }
+  if (input.original && isPublishedStatus(input.original)) {
+    return {
+      status: ModerationStatus.APPROVED,
+      isActive: input.originalActive !== false,
+      needsHumanReview: false,
+    };
+  }
+  return {
+    status: ModerationStatus.PENDING,
+    isActive: true,
+    needsHumanReview: false,
+  };
+}
+
+async function attachExactDuplicates(links: { vacancyId: string; originalId: string }[]): Promise<void> {
+  if (links.length === 0) {
+    return;
+  }
+  const byOriginal = new Map<string, string[]>();
+  for (const link of links) {
+    const list = byOriginal.get(link.originalId) ?? [];
+    list.push(link.vacancyId);
+    byOriginal.set(link.originalId, list);
+  }
+  const originalIds = [...byOriginal.keys()];
+  const originals = await prisma.vacancy.findMany({
+    where: { id: { in: originalIds } },
+    select: {
+      id: true,
+      groupId: true,
+      signature: true,
+      source: true,
+      contactPhone: true,
+      completeness: true,
+      firstSeenAt: true,
+    },
+  });
+  const originalMap = new Map(originals.map((row) => [row.id, row]));
+
+  for (const [originalId, memberIds] of byOriginal) {
+    const original = originalMap.get(originalId);
+    if (!original) {
+      continue;
+    }
+    let groupId = original.groupId;
+    if (!groupId) {
+      const signature = `text:${originalId}`;
+      try {
+        const created = await prisma.vacancyGroup.create({
+          data: {
+            signature,
+            primaryVacancyId: originalId,
+            postingsCount: memberIds.length + 1,
+            sourcesCount: 1,
+            distinctPhonesCount: original.contactPhone ? 1 : 0,
+            firstSeenAt: original.firstSeenAt,
+            lastSeenAt: new Date(),
+          },
+        });
+        groupId = created.id;
+      } catch {
+        const existing = await prisma.vacancyGroup.findUnique({ where: { signature } });
+        groupId = existing?.id ?? null;
+      }
+      if (groupId) {
+        await prisma.vacancy.update({ where: { id: originalId }, data: { groupId } });
+      }
+    }
+    if (!groupId) {
+      await prisma.vacancy.updateMany({
+        where: { id: { in: memberIds } },
+        data: { duplicateOfId: originalId, needsHumanReview: false },
+      });
+      continue;
+    }
+    await prisma.vacancy.updateMany({
+      where: { id: { in: memberIds } },
+      data: { duplicateOfId: originalId, groupId, needsHumanReview: false },
+    });
+    const members = await prisma.vacancy.findMany({
+      where: { groupId },
+      select: { source: true, contactPhone: true },
+    });
+    await prisma.vacancyGroup.update({
+      where: { id: groupId },
+      data: {
+        postingsCount: members.length,
+        sourcesCount: new Set(members.map((item) => item.source)).size,
+        distinctPhonesCount: new Set(members.map((item) => item.contactPhone).filter(Boolean)).size,
+        lastSeenAt: new Date(),
+      },
+    });
+  }
 }
 
 function existingSelect() {
@@ -881,6 +1133,8 @@ function existingSelect() {
     ocrVersion: true,
     splitIndex: true,
     moderationStatus: true,
+    duplicateOfId: true,
+    rawText: true,
     workFormat: true,
     archivedAt: true,
     isActive: true,

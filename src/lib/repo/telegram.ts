@@ -1,8 +1,9 @@
-import { ModerationStatus, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/adapters/db";
 import { getDefaultCity, isActiveCity } from "@/lib/geo";
 import { repoError } from "@/lib/repo/errors";
 import { getLatestVacancies, type VacancyListItem } from "@/lib/repo/vacancies";
+import { listingUnitWhere, publishedWhere } from "@/lib/vacancy/listing-where";
 import { TELEGRAM_DIALOGS, TELEGRAM_LATEST_COUNT, TELEGRAM_MAX_PER_HOUR } from "@/lib/telegram/constants";
 import { deliveryGroupKey } from "@/lib/telegram/match";
 import { isTelegramLinkCode } from "@/lib/seeker/link-code";
@@ -35,18 +36,6 @@ const subscriberSelect = {
   createdAt: true,
 } satisfies Prisma.TelegramUserSelect;
 
-function listingUnitWhere(): Prisma.VacancyWhereInput {
-  return {
-    OR: [{ groupId: null }, { primaryOfGroups: { some: {} } }],
-  };
-}
-
-function publishedWhere(): Prisma.VacancyWhereInput {
-  return {
-    isActive: true,
-    moderationStatus: { in: [ModerationStatus.AUTO_OK, ModerationStatus.APPROVED] },
-  };
-}
 
 function resolveCitySlug(slug: string | null | undefined): string {
   if (slug && isActiveCity(slug)) {

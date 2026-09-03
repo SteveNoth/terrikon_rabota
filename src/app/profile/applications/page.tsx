@@ -1,4 +1,5 @@
 import { AuthNotice } from "@/components/auth/AuthNotice";
+import { SupportThanksNote } from "@/components/support/SupportThanksNote";
 import { ProfileNav } from "@/components/seeker/ProfileNav";
 import { SeekerCityFilter } from "@/components/seeker/SeekerCityFilter";
 import { getUser } from "@/lib/adapters/auth";
@@ -30,6 +31,10 @@ export default async function ApplicationsPage({
   const requested = firstQuery(query.city);
   const filterCity = requested && isListedSeekerCity(requested) ? requested : null;
   const rows = await listSeekerApplications(user.id, filterCity);
+  const notice = firstQuery(query.notice);
+  const thanksNext = notice
+    ? `/profile/applications?notice=${encodeURIComponent(notice)}`
+    : "/profile/applications";
 
   return (
     <>
@@ -38,6 +43,7 @@ export default async function ApplicationsPage({
         <ProfileNav current="/profile/applications" />
       </header>
       <AuthNotice query={query} />
+      {notice ? <SupportThanksNote nextPath={thanksNext} /> : null}
       <SeekerCityFilter action="/profile/applications" current={filterCity} />
       {rows.length === 0 ? (
         <p className="text-md text-muted">Пока нет откликов в выбранном городе.</p>

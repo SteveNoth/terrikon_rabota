@@ -36,6 +36,8 @@ export type AdminVacancyListItem = {
   employerInn: string | null;
 };
 
+export const ADMIN_VACANCY_PAGE_SIZE = 40;
+
 export type AdminVacancyFilters = {
   city?: string;
   status?: string;
@@ -47,6 +49,43 @@ export type AdminVacancyFilters = {
   hasReports?: boolean;
   page?: number;
 };
+
+/** Ссылки пагинации сохраняют фильтры. Первую страницу в query не пишем. */
+export function adminVacanciesPath(filters: AdminVacancyFilters, page = 1): string {
+  const params = new URLSearchParams();
+  if (filters.city) params.set("city", filters.city);
+  if (filters.status) params.set("status", filters.status);
+  if (filters.source) params.set("source", filters.source);
+  if (filters.sphere) params.set("sphere", filters.sphere);
+  if (filters.q?.trim()) params.set("q", filters.q.trim());
+  if (filters.from) params.set("from", filters.from);
+  if (filters.to) params.set("to", filters.to);
+  if (filters.hasReports) params.set("hasReports", "1");
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return qs ? `/admin/vacancies?${qs}` : "/admin/vacancies";
+}
+
+export function adminPageWindow(page: number, pageCount: number): (number | "gap")[] {
+  if (pageCount <= 7) {
+    return Array.from({ length: pageCount }, (_, index) => index + 1);
+  }
+  const marks = new Set([1, pageCount]);
+  for (let cursor = page - 2; cursor <= page + 2; cursor += 1) {
+    if (cursor >= 1 && cursor <= pageCount) {
+      marks.add(cursor);
+    }
+  }
+  const sorted = [...marks].sort((a, b) => a - b);
+  const items: (number | "gap")[] = [];
+  for (let index = 0; index < sorted.length; index += 1) {
+    if (index > 0 && sorted[index] - sorted[index - 1] > 1) {
+      items.push("gap");
+    }
+    items.push(sorted[index]);
+  }
+  return items;
+}
 
 function parseEnum<T extends string>(value: string | undefined, allowed: readonly T[]): T | undefined {
   if (!value) {
@@ -88,16 +127,25 @@ export async function listAdminVacancies(filters: AdminVacancyFilters): Promise<
   total: number;
   page: number;
   pages: number;
+  pageSize: number;
   soonEmpty: boolean;
   soonName: string | null;
 }> {
-  const page = Math.max(1, filters.page ?? 1);
-  const pageSize = 40;
+  const requested = Math.max(1, filters.page ?? 1);
+  const pageSize = ADMIN_VACANCY_PAGE_SIZE;
   const city = filters.city?.trim();
   if (city) {
     const geo = getCity(city);
     if (geo?.status === "soon") {
-      return { items: [], total: 0, page: 1, pages: 1, soonEmpty: true, soonName: geo.name.nom };
+      return {
+        items: [],
+        total: 0,
+        page: 1,
+        pages: 1,
+        pageSize,
+        soonEmpty: true,
+        soonName: geo.name.nom,
+      };
     }
   }
 
@@ -130,6 +178,8 @@ export async function listAdminVacancies(filters: AdminVacancyFilters): Promise<
   if (filters.q?.trim()) {
     const q = filters.q.trim();
     where.OR = [
+      { id: q },
+      { slug: { contains: q, mode: "insensitive" } },
       { title: { contains: q, mode: "insensitive" } },
       { contactPhone: { contains: q } },
       { employerInn: { contains: q } },
@@ -137,30 +187,30 @@ export async function listAdminVacancies(filters: AdminVacancyFilters): Promise<
     ];
   }
 
-  const [total, rows] = await Promise.all([
-    prisma.vacancy.count({ where }),
-    prisma.vacancy.findMany({
-      where,
-      orderBy: { publishedAt: "desc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        citySlug: true,
-        sphere: true,
-        source: true,
-        sourceName: true,
-        moderationStatus: true,
-        isActive: true,
-        publishedAt: true,
-        salaryIsGross: true,
-        employerInn: true,
-        _count: { select: { reports: true } },
-      },
-    }),
-  ]);
+  const total = await prisma.vacancy.count({ where });
+  const pages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(requested, pages);
+  const rows = await prisma.vacancy.findMany({
+    where,
+    orderBy: { publishedAt: "desc" },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      citySlug: true,
+      sphere: true,
+      source: true,
+      sourceName: true,
+      moderationStatus: true,
+      isActive: true,
+      publishedAt: true,
+      salaryIsGross: true,
+      employerInn: true,
+      _count: { select: { reports: true } },
+    },
+  });
 
   return {
     items: rows.map((row) => ({
@@ -181,7 +231,8 @@ export async function listAdminVacancies(filters: AdminVacancyFilters): Promise<
     })),
     total,
     page,
-    pages: Math.max(1, Math.ceil(total / pageSize)),
+    pages,
+    pageSize,
     soonEmpty: false,
     soonName: null,
   };

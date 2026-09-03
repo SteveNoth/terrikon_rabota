@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { authorizeParserRequest, unauthorizedResponse } from "@/lib/parser/auth";
 import { ingestVacancies } from "@/lib/parser/ingest";
+import { touchCities } from "@/lib/admin/touch";
 import {
   allowRequest,
   clientKey,
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
       startedAt: envelope.data.startedAt,
       items: envelope.data.items,
     });
+    await touchCities(stats.citySlugs);
     return json({
       добавлено: stats.added,
       обновлено: stats.updated,

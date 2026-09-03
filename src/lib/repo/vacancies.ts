@@ -13,6 +13,7 @@ import { prisma } from "@/lib/adapters/db";
 import { getExternalDestination } from "@/lib/geo";
 import { readStoredCityCount, readStoredSphereCounts } from "@/lib/hygiene/counters";
 import { repoError } from "@/lib/repo/errors";
+import { listingUnitWhere, publishedWhere, approvedWhere } from "@/lib/vacancy/listing-where";
 
 /** Сколько карточек на страницу, если в адресе ничего нет. Как в режиме Full/Lite. */
 export const DEFAULT_PAGE_SIZE = 20;
@@ -223,28 +224,7 @@ const detailSelect = {
   },
 } satisfies Prisma.VacancySelect;
 
-function approvedWhere(): Prisma.VacancyWhereInput {
-  return {
-    moderationStatus: { in: [ModerationStatus.AUTO_OK, ModerationStatus.APPROVED] },
-  };
-}
-
-function publishedWhere(): Prisma.VacancyWhereInput {
-  return {
-    isActive: true,
-    ...approvedWhere(),
-  };
-}
-
-/**
- * Единица выдачи: группа дублей считается один раз, одиночная вакансия — сама за себя
- * (раздел 11.17). Главная запись группы или вакансия без группы.
- */
-function listingUnitWhere(): Prisma.VacancyWhereInput {
-  return {
-    OR: [{ groupId: null }, { primaryOfGroups: { some: {} } }],
-  };
-}
+export { listingUnitWhere, publishedWhere, approvedWhere } from "@/lib/vacancy/listing-where";
 
 function destinationWhere(slug: string): Prisma.VacancyWhereInput | null {
   const dest = getExternalDestination(slug);

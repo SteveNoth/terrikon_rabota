@@ -5,6 +5,7 @@ import { addFraudPhrase, addStopWord } from "@/lib/admin/dictionaries";
 import { parseTrustFlags } from "@/lib/admin/flags";
 import { touchSite } from "@/lib/admin/touch";
 import { contactKey } from "@/lib/parser/contact";
+import { isPublishedStatus } from "@/lib/vacancy/listing-where";
 
 export type DecisionCode =
   | "PUBLISH"
@@ -17,6 +18,7 @@ export type DecisionCode =
   | "DISABLE_PUBLISH"
   | "RESTORE_PENDING"
   | "MERGE_DUPLICATE"
+  | "DUPLICATE"
   | "APPROVE_GROUP"
   | "UNBLOCK_TO_QUEUE"
   | "HIDE"
@@ -67,6 +69,7 @@ export async function loadVacancy(id: string) {
       contactPhone: true,
       contactTelegram: true,
       groupId: true,
+      duplicateOfId: true,
       moderationStatus: true,
       isActive: true,
       source: true,
@@ -78,15 +81,20 @@ export async function loadVacancy(id: string) {
 
 async function publishOne(id: string) {
   const now = new Date();
+  const data = {
+    moderationStatus: ModerationStatus.APPROVED,
+    isActive: true,
+    needsHumanReview: false,
+    reviewedAt: now,
+    reviewedBy: REVIEWED_BY,
+  };
   await prisma.vacancy.update({
     where: { id },
-    data: {
-      moderationStatus: ModerationStatus.APPROVED,
-      isActive: true,
-      needsHumanReview: false,
-      reviewedAt: now,
-      reviewedBy: REVIEWED_BY,
-    },
+    data,
+  });
+  await prisma.vacancy.updateMany({
+    where: { duplicateOfId: id, moderationStatus: { notIn: [ModerationStatus.BLOCKED, ModerationStatus.REJECTED] } },
+    data,
   });
   await prisma.report.updateMany({
     where: { vacancyId: id, status: ReportStatus.NEW, reason: "fraud" },
@@ -159,6 +167,16 @@ export async function markFraud(id: string, phrase?: string): Promise<DecisionRe
       reviewedBy: REVIEWED_BY,
     },
   });
+  await prisma.vacancy.updateMany({
+    where: { duplicateOfId: id, moderationStatus: { not: ModerationStatus.REJECTED } },
+    data: {
+      moderationStatus: ModerationStatus.BLOCKED,
+      isActive: false,
+      needsHumanReview: false,
+      reviewedAt: now,
+      reviewedBy: REVIEWED_BY,
+    },
+  });
   const key = contactKey(row.contactPhone, row.contactTelegram);
   if (key) {
     await upsertContact(key, ContactVerdictKind.BLOCKED, "ручная пометка: мошенничество");
@@ -191,6 +209,16 @@ export async function markNotVacancy(id: string, stopWord?: string): Promise<Dec
   }
   await prisma.vacancy.update({
     where: { id },
+    data: {
+      moderationStatus: ModerationStatus.REJECTED,
+      isActive: false,
+      needsHumanReview: false,
+      reviewedAt: new Date(),
+      reviewedBy: REVIEWED_BY,
+    },
+  });
+  await prisma.vacancy.updateMany({
+    where: { duplicateOfId: id, moderationStatus: { not: ModerationStatus.BLOCKED } },
     data: {
       moderationStatus: ModerationStatus.REJECTED,
       isActive: false,
@@ -250,12 +278,14 @@ export async function mergeDuplicate(id: string, targetId: string): Promise<Deci
   if (!row || !target) {
     return { ok: false, error: "Одно из объявлений не найдено." };
   }
-  let groupId = target.groupId;
+  const canonicalId = target.duplicateOfId || target.id;
+  const canonical = canonicalId === target.id ? target : ((await loadVacancy(canonicalId)) ?? target);
+  let groupId = canonical.groupId;
   if (!groupId) {
     const created = await prisma.vacancyGroup.create({
       data: {
-        signature: `manual-${target.id}`,
-        primaryVacancyId: target.id,
+        signature: `manual-${canonical.id}`,
+        primaryVacancyId: canonical.id,
         postingsCount: 2,
         sourcesCount: 1,
         distinctPhonesCount: 1,
@@ -264,14 +294,20 @@ export async function mergeDuplicate(id: string, targetId: string): Promise<Deci
       },
     });
     groupId = created.id;
-    await prisma.vacancy.update({ where: { id: target.id }, data: { groupId } });
+    await prisma.vacancy.update({ where: { id: canonical.id }, data: { groupId } });
   }
+  const published = isPublishedStatus(canonical.moderationStatus);
   await prisma.vacancy.update({
     where: { id },
     data: {
-      duplicateOfId: target.id,
+      duplicateOfId: canonical.id,
       groupId,
-      moderationStatus: ModerationStatus.APPROVED,
+      moderationStatus: published
+        ? ModerationStatus.APPROVED
+        : canonical.moderationStatus === ModerationStatus.BLOCKED
+          ? ModerationStatus.BLOCKED
+          : ModerationStatus.PENDING,
+      isActive: published ? canonical.isActive : false,
       needsHumanReview: false,
       reviewedAt: new Date(),
       reviewedBy: REVIEWED_BY,
@@ -292,12 +328,17 @@ export async function mergeDuplicate(id: string, targetId: string): Promise<Deci
   });
   await recordDecision({
     vacancyId: id,
-    decision: "MERGE_DUPLICATE",
+    decision: "DUPLICATE",
     flags: row.trustFlags,
-    comment: targetId,
+    comment: canonical.id,
   });
   await touchSite(row.citySlug, row.slug);
-  return { ok: true, message: `Это дубль вакансии «${target.title}».` };
+  return {
+    ok: true,
+    message: published
+      ? `Это дубль «${canonical.title}». Отдельной карточкой на сайте не будет.`
+      : `Это дубль «${canonical.title}». Из очереди убрали, оригинал ещё на проверке.`,
+  };
 }
 
 export async function unblockToQueue(id: string): Promise<DecisionResult> {

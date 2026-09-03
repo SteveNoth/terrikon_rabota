@@ -29,6 +29,7 @@ ok("фраза APPLY без слова мошенник", !/мошенник/i.t
 
 const parser = parserQueueWhere();
 ok("очередь постов не берёт EMPLOYER", JSON.stringify(parser.source) === JSON.stringify({ not: Source.EMPLOYER }));
+ok("очередь постов не берёт привязанные дубли", parser.duplicateOfId === null);
 
 const cabinet = employerQueueWhere();
 ok("очередь кабинета только EMPLOYER", cabinet.source === Source.EMPLOYER);

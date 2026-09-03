@@ -20,6 +20,7 @@ export const ROBOTS_DISALLOW = [
   "/*?*report=",
   "/*?*notified=",
   "/*?*q=",
+  "/*?*qr=",
 ] as const;
 
 export function robotsTxt(): string {

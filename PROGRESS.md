@@ -3,10 +3,10 @@
 Последнее обновление: 2026-09-02
 
 ## Где я сейчас
-- Текущий этап: **25 код готов** (гигиена данных). Миграция накатана, `--dry-run` и пересчёт счётчиков прогнаны 2026-09-02. Расписание и restore бэкапа — после merge в `master` (GitHub Actions)
-- Последний завершённый этап: **24** (логгер, ловушки ошибок, `/api/health`, keep-alive, watchdog, RUM, `/admin/health`, `check:budget`)
-- Последний коммит: Этап 24 на ветке `stage-24-observability`
-- Ветка: `stage-25-data-hygiene`
+- Текущий этап: **27 код готов** (поддержка проекта, выключатель `false`)
+- Последний завершённый этап: **25** (гигиена данных). Расписание и restore бэкапа — после merge в `master` (GitHub Actions)
+- Последний коммит: Этап 25 на ветке `stage-25-data-hygiene` (этап 27 — ветка `stage-27-donations`, коммит по вашей команде)
+- Ветка: `stage-27-donations`
 - Порядок дальше: этап 26 (рост: новый город и переход на платное). Код этапа 26 не писать, пока не откроют этап.
 
 ## Что уже работает
@@ -21,7 +21,7 @@
 - Адреса `/gorlovka`, `/gorlovka/jobs`; `/` уводит на город по cookie `tr_city` или город по умолчанию
 - `/donetsk` показывает заглушку с падежами; `/lugansk` — 404 со списком доступных городов
 - Селектор города — форма GET (без JavaScript) и мгновенный переход с JavaScript
-- Шапка, футер, нижнее меню; слот под кнопку поддержки проекта пока пустой
+- Шапка, футер, нижнее меню; слот поддержки занят компонентами Этапа 27 и при `NEXT_PUBLIC_DONATIONS_ENABLED=false` ничего не рендерит
 - Prisma 6.19.3: схема по разделу 10, миграция `init` накатана на Supabase, сиды 12 местных + 3 вахты, клиент `src/lib/adapters/db.ts`
 - Слой данных `src/lib/repo/`: страницы просят функции, а не пишут Prisma-запросы. Список вакансий без `description`, всегда `take`. Вахты по умолчанию не смешиваются с местными (Закон 17)
 - Адаптеры: кэш (память, задел под Redis), storage / search / notify / maps — шов по переменным окружения
@@ -81,10 +81,11 @@
 - Этап 23: SEO. Заголовки с падежами из geo (`loc`/`gen`) и сфер (`loc` в `professions.json`). `JobPosting` JSON-LD на карточке: зарплата, адрес, занятость, источник, publisher = Террикон, hiringOrganization ≠ сайт. `sitemap.xml` (города active/soon, сферы, активные вакансии, `/[city]/company/[slug]`), нарезка после 5000. `robots.txt` закрывает `/admin` `/api` `/profile` `/employer` и служебные параметры. Канон без `page`/`sort`/`mode`. Open Graph + `opengraph-image` из текста. Страницы `/about` `#plans`, `/help`, `/contacts`, `/terms`. Тесты `npm run test:seo`. Инструкция Вебмастер/GSC: `docs/SETUP-LOG.md`.
 - Этап 24: наблюдаемость. Логгер `src/lib/log.ts` (JSON, без ПД и секретов). `error.tsx` / `global-error.tsx` / `not-found.tsx` с кнопкой «Вернуться». Ошибки API: `{ ok: false, code, message }`. `/api/health` — база, миграции, размер, активные вакансии, последние запуски парсеров; 200 или 503. Keep-alive `.github/workflows/keep-alive.yml` раз в 3 дня. Watchdog `.github/workflows/parser-watch.yml` каждый час → Telegram, если парсер затих или принял 0 два раза подряд. RUM: таблица `RumSample` (LCP/CLS/INP + режим, без сессии). `/admin/health`. `npm run check:budget` + git hook pre-commit. Тесты `npm run test:ops`. Миграция `20260902180000_observability`.
 - Этап 25: гигиена. `npx tsx scripts/cleanup.ts --dry-run` на живой базе 2026-09-02: будет удалено 0, GeocodeCache 10 не трогаем. Счётчики записаны (10 городов, 4 пары город+сфера). Отчёт размера `--dry-run`: 14.4 МБ из 500 (2.9 %), прогноз после второго замера. Главная `/gorlovka` показывает счётчики сфер из `SphereStat` (производство 4, медицина 1, строительство 1). `docs/MIGRATION.md` — шаги по всем порогам 5.3. Бэкап: `npm run db:backup`; на этой машине нет `pg_dump` и Docker — restore проверяет GitHub Actions `hygiene-backup`. Тесты `npm run test:hygiene` (55). Миграция `20260902210000_data_hygiene` накатана.
+- Этап 27: модуль поддержки написан и выключен. `shared/support.json` (условные реквизиты), `isSupportEnabled()` — единственное чтение `NEXT_PUBLIC_DONATIONS_ENABLED`. Кнопка в шапке/футере/меню, карточка в конце списка, строка после отклика и избранного, страница `/support`, Ultra без QR и без JS. Частота просьбы: раз за посещение и раз в 7 дней, закрытие cookie `tr_support_dismissed` на 30 дней без JavaScript. При `false` HTML без «Поддерж»/«донат»/«support», `/support` — 404, в sitemap нет. Включение — `docs/ADD-DONATIONS.md`. Тесты `npm run test:support`. На живом сайте визуально ничего не меняется, пока переменная `false`.
 - 2026-08-30 в промты добавлены Этапы **14A**, **14B** и **18A**. Этап 14 закрыт тремя частями. Этап 15 — приём пачки. Этап 18A — после 18, до админки: `opendata.trudvsem.ru`, не HTML m-czn.ru.
 - 2026-08-31 в промты добавлен Этап **20A** (после 20, до 21): кабинетный контур политики, очередь `/admin/employers/queue`, блок PUBLISH/APPLY/LOGIN. **Часть 1 и часть 2 на ветке `stage-20a-cabinet-policy`:** политика + дверь; очередь кабинета; `AccountBlock`. Нумерацию 21–32 не сдвигаем.
 - Внешние картинки только с allowlist в `src/lib/images/remote.ts` / `next.config.ts` (ВК, Telegram, hhcdn, Wikimedia для сидов)
-- Спрайт `public/icons/sprite.svg?v=4`: ВК, сайт, карта, предупреждение, поделиться, флажок. Ultra по-прежнему отдаёт текстовый символ и спрайт не качает
+- Спрайт `public/icons/sprite.svg?v=5`: ВК, сайт, карта, предупреждение, поделиться, флажок, сердце поддержки. Ultra по-прежнему отдаёт текстовый символ и спрайт не качает
 - Логотип «Террикон Работа» — inline SVG (террикон + название), цвет из токена, без файла-картинки
 - Favicon в шапке Full/Lite — `public/icons/app.svg`; PNG 192/512 остаются в манифесте для установки
 - `npm run build` проходит (MapLibre не в графе Turbopack)
@@ -121,6 +122,7 @@
 - Этап 23: `src/lib/seo/` (заголовки, канон, JobPosting, sitemap, robots, origin). Маршруты `/robots.txt`, `/sitemap.xml`, `/sitemaps/[id]`, превью `src/app/[city]/job/[slug]/opengraph-image.tsx`. Страницы `/help` `/contacts` `/terms`, публичный работодатель `/[city]/company/[slug]`. Env: `NEXT_PUBLIC_YANDEX_VERIFICATION`, `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`. Тесты `npm run test:seo`. `X-Robots-Tag: noindex` на `/admin` `/api` `/profile` `/employer` `/auth`.
 - Этап 24: `src/lib/log.ts`, `src/lib/health/`, `src/lib/rum/`, `src/lib/api/response.ts`. Маршруты `/api/health`, `/api/rum`, `/api/ops/watch`, страница `/admin/health`. Env: `TELEGRAM_ADMIN_CHAT_ID`. Workflows `keep-alive.yml` (cron `17 6 */3 * *`), `parser-watch.yml` (каждый час `:20`). Скрипты `npm run check:budget`, `npm run test:ops`, git hook через `scripts/install-git-hooks.mjs`. Миграция `prisma/migrations/20260902180000_observability/`. Service worker `CACHE_VERSION` = `tr-offline-v5`, не кэширует `/api/health` `/api/rum` `/api/ops`.
 - Этап 25: `src/lib/hygiene/`, `shared/hygiene.json`. Скрипты `scripts/cleanup.ts`, `scripts/recompute-counts.ts`, `scripts/db-size-report.ts`, `scripts/backup-db.mjs`. API `/api/ops/counts`, `/api/ops/size`. Workflows `hygiene-cleanup.yml` (сутки `40 3 * * *`), `hygiene-counts.yml` (час `:10`), `hygiene-backup.yml` (воскресенье `10 4 * * 0`), `hygiene-size.yml` (понедельник `20 4 * * 1`). Команды `npm run hygiene:cleanup`, `hygiene:counts`, `hygiene:size`, `db:backup`, `test:hygiene`. Env: `BACKUP_PASSPHRASE` (иначе шифруем `CRON_SECRET`). Дампы в `backups/` (gitignore). План переезда `docs/MIGRATION.md`. Миграция `prisma/migrations/20260902210000_data_hygiene/`.
+- Этап 27: `shared/support.json`, `src/lib/support/`, `src/components/support/`, `src/app/hosting/page.tsx` (адрес `/support` через middleware), `src/app/api/hosting/dismiss` и `shown`. Env: `NEXT_PUBLIC_DONATIONS_ENABLED` (в `.env.local` оставить `false`). QR в `public/hosting/`. Тесты `npm run test:support`. Cookie `tr_support_dismissed` (30 дней), `tr_support_ask` (7 дней), `tr_support_ask_visit` (сессия). Service worker `CACHE_VERSION` = `tr-offline-v6`, не кэширует `/api/hosting`.
 - Нарезка Этапа 14A часть 1: `scripts/split.py`, `extract_professions` в `extract.py`; правила `shared/split.json`; тесты `scripts/tests/split/`; отчёт `python scripts/tests/split_report.py`. Идентичность: неразрезанный `externalId` как в источнике, разрезанный `{id}` / `{id}#2` / `{id}#3`; `rawText` у всех детей полный.
 - Отсев СВО Этапа 14A часть 2: `scripts/svo.py` (`explicit_svo`, `hidden_svo`, `apply_svo_gate`); блок `svo` в `shared/keywords.json`; тесты `scripts/tests/svo/`; отчёт `python scripts/tests/svo_report.py`. Не вызывает `is_vacancy` и не вызывает `trust_score`. Четвёртого `workFormat` нет.
 - OCR Этапа 14B: `scripts/ocr.py` (`collect_analysis_text`, `assemble_post`), адаптер `scripts/ocr_provider.py`; правила `shared/ocr.json`; тесты `scripts/tests/ocr/`; живые фото `scripts/tests/fixtures/ocr/live/`; отчёт `python scripts/tests/ocr_report.py`. `rawText` = подпись, `ocrText` рядом. `OCR_PROVIDER=tesseract` на этой машине.
@@ -140,6 +142,7 @@
 - Заголовок тонкого пути: `x-ultra-path` (`ULTRA_PATH_HEADER`) — публичный путь при внутреннем rewrite на `/u/...`
 - Замер Ultra: `npm run measure:ultra` (`scripts/measure-ultra.mjs`); дым: `node scripts/ultra-smoke.mjs`
 - Cookie сессии аналитики: `tr_sid` (32 hex), 24 часа, httpOnly. Middleware кладёт то же значение в заголовок `x-session-hash`, чтобы Ultra успел записать событие в `after()` на первом заходе
+- Cookie просьбы о поддержке (Этап 27, только если модуль включён): `tr_support_dismissed` (30 дней, закрыл карточку), `tr_support_ask` (7 дней, уже показывали), `tr_support_ask_visit` (сессия)
 - Cookie замера: `tr_res` (`full` / `lite` / `ultra`), 7 дней, пишет клиент при `tr_mode=auto`
 - Заголовки запроса после middleware: `x-quality-mode`, `x-quality-preference`, `x-session-hash`, при ultra ещё `x-ultra-path`
 - Источник городов: `shared/geo.json` (читают и TypeScript, и Python)
@@ -154,10 +157,10 @@
 - Кэш списков выдачи: нет (адрес — источник правды). На главной кэшируются свежие 6 карточек, счётчики сфер/профессий и справочники — 10 минут. Счётчики «местные / вахта» на вкладках — 10 минут
 - Бюджет `/api/vacancies`: ≤ 400 мс при 12 и ≤ 600 мс при 5000, когда функция и база в одном регионе (`fra1`). С домашнего ПК до Франкфурта Prisma RTT ~1.5–2 с, HTTP `/api/vacancies` ~2.7–3.5 с — это дорога. Сам SQL: `node scripts/bench-vacancies.mjs` (EXPLAIN ANALYZE + `--load` на 5000 с автоочисткой)
 - Как смотреть план: `node scripts/bench-vacancies.mjs` или в SQL Editor Supabase `EXPLAIN (ANALYZE, BUFFERS)` того же SELECT. В плане должен быть `Vacancy_citySlug_isActive_workFormat_publishedAt_idx` — он режет вахты и местные (Закон 17)
-- Service worker: `public/sw.js`, константа `CACHE_VERSION` (`tr-offline-v5`). Регистрация: `src/components/offline/ServiceWorkerRegistrar.tsx`, только `NODE_ENV=production`. На `/admin`, `/auth`, `/employer`, `/profile` регистратор не ставится. `NEVER_CACHE_PREFIXES` включает `/admin`, `/auth`, `/employer`, `/profile`, `/login`, `/api/telegram`, `/api/health`, `/api/rum`, `/api/ops`. `sw.js` не кэшируется (`Cache-Control: max-age=0, must-revalidate`)
+- Service worker: `public/sw.js`, константа `CACHE_VERSION` (`tr-offline-v6`). Регистрация: `src/components/offline/ServiceWorkerRegistrar.tsx`, только `NODE_ENV=production`. На `/admin`, `/auth`, `/employer`, `/profile` регистратор не ставится. `NEVER_CACHE_PREFIXES` включает `/admin`, `/auth`, `/employer`, `/profile`, `/login`, `/api/telegram`, `/api/health`, `/api/rum`, `/api/ops`, `/api/hosting`. `sw.js` не кэшируется (`Cache-Control: max-age=0, must-revalidate`)
 - Офлайн-хранилище: IndexedDB `terrikon-offline`, лимит 5 МБ. Очередь шлёт на `/api/offline/actions` (не кэшируется)
 - Иконки PWA: источник `public/icons/app.svg`, пересборка `npm run icons:pwa` (`scripts/generate-pwa-icons.mjs`)
-- Картинки: `src/lib/images/remote.ts` — allowlist доменов для `next/image`; `SmartImage` в `src/components/ui/SmartImage.tsx`; спрайт `/icons/sprite.svg?v=4`
+- Картинки: `src/lib/images/remote.ts` — allowlist доменов для `next/image`; `SmartImage` в `src/components/ui/SmartImage.tsx`; спрайт `/icons/sprite.svg?v=5`
 - Логотип шапки: inline SVG `src/components/brand/TerriconLogo.tsx` / `logo-svg.ts` (531 байт)
 - Карты: `MAPS_PROVIDER` = `maplibre` | `yandex` | `static` | `none`. Адаптер `src/lib/adapters/maps.ts`. Геокодер: `src/lib/geo/geocode.ts`, дым `npx tsx scripts/geocode-smoke.ts`. Копия MapLibre: `node scripts/copy-maplibre-worker.mjs` (уже в `dev`/`build`/`postinstall`)
 - OCR: `OCR_PROVIDER` = `none` | `tesseract`. Адаптер `scripts/ocr_provider.py`. Когда гоняем — `shared/ocr.json`. Tesseract не pip: Windows — установщик UB Mannheim + `TESSDATA_PREFIX`; CI на Этапе 16 — `apt-get install tesseract-ocr tesseract-ocr-rus`
@@ -174,6 +177,7 @@
 - Один пост может дать несколько вакансий; картинки постов — OCR по ссылкам, не файлы в базе; наборы на СВО отбрасываются, четвёртого `workFormat` нет (см. docs/DECISIONS.md, раздел 11.15 ядра)
 - ВКонтакте — только официальный `wall.get`; Telegram — Telethon + StringSession в Secrets, не файл `*.session` и не HTML t.me; сайты предприятий — HTML по `robots.txt`, Playwright только если без JS страница пустая; ЦЗН / «Мой ЦЗН» — открытые данные `opendata.trudvsem.ru` (Этап 18A), не HTML посредника (см. docs/DECISIONS.md, docs/SOURCES-LEGAL.md)
 - Кабинет работодателя — те же словари и пороги, что парсер, но свой контур (без `process_post`); сомнительное из формы — `/admin/employers/queue`, не очередь постов; `isVerified` не запирает форму (см. docs/DECISIONS.md, раздел 11.22 ядра)
+- Чистый донат на Vercel Hobby разрешён; выключатель `NEXT_PUBLIC_DONATIONS_ENABLED` — про реквизиты, не про запрет хостинга (см. docs/DECISIONS.md, раздел 5.4 ядра)
 
 ## Открытые вопросы / долги
 - GitHub ещё не подключён к проекту Vercel: `git push` пока сам сайт не обновляет. 2026-08-29 сайт обновили через CLI; шаги привязки репозитория — в docs/SETUP-LOG.md. После связи регион `fra1` из `vercel.json` применится сам.
@@ -197,3 +201,4 @@
 - Для Этапа 14B: 38 живых макетов из `C:\Users\Max\Desktop\ПОСТЫ ФОТО` лежат в `scripts/tests/fixtures/ocr/live/` (латинские имена, уменьшенные JPEG). Метки: вакансия 11, вахта 6, мусор 10, не вакансия 4, СВО 7. Tesseract с `rus` установлен, `OCR_PROVIDER=tesseract`. Скрытых наборов на СВО в парсерных группах пока нет — скрытый слой проверяется синтетикой.
 - Для части 3 этапа 14 взяты живые примеры: 2 обманки из «ПОСТЫ ОБМАН» и честные вахты из «ПОСТЫ ВАХТА»; местный руководитель и машинист — синтетика. Если появятся ещё живые обманки, их кладём в `scripts/tests/fraud/samples.json`.
 - `npx prisma generate` на Windows может дать EPERM, если крутится старый `next start` и держит `query_engine-windows.dll.node`. Сборка сайта при уже сгенерированном клиенте проходит и без повторного generate.
+- Этап 27: на живом сайте модуль не включать, пока нет настоящих реквизитов и ответа на 12.8. Чек-лист — `docs/ADD-DONATIONS.md`. В `.env.local` оставить `NEXT_PUBLIC_DONATIONS_ENABLED=false`.

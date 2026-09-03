@@ -130,13 +130,18 @@ h3{font-size:var(--t-text-lg)}
 main{flex:1}
 .header,.footer,.bottom{background:var(--t-color-surface);border:solid var(--t-color-border);border-width:0}
 .header{position:sticky;top:0;z-index:2;border-bottom-width:var(--t-border-width)}
-.header-inner,.footer-inner{display:flex;flex-wrap:wrap;align-items:center;gap:var(--t-space-3);padding:var(--t-space-2) var(--t-space-4);max-width:var(--t-container-max);margin:0 auto;width:100%}
-.brand{display:flex;align-items:center;gap:var(--t-space-2);color:var(--t-color-brand);font-family:var(--t-font-display);font-size:var(--t-text-xl);font-weight:600;text-decoration:none}
+.header-inner{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:var(--t-space-3);row-gap:var(--t-space-2);padding:var(--t-space-2) var(--t-space-4);max-width:var(--t-container-max);margin:0 auto;width:100%}
+.footer-inner{display:flex;flex-wrap:wrap;align-items:center;gap:var(--t-space-3);padding:var(--t-space-2) var(--t-space-4);max-width:var(--t-container-max);margin:0 auto;width:100%}
+.brand{display:flex;align-items:center;gap:var(--t-space-2);color:var(--t-color-brand);font-family:var(--t-font-display);font-size:var(--t-text-xl);font-weight:600;text-decoration:none;min-width:0}
 .brand svg{height:2rem;width:auto}
+.header .brand{grid-column:1;grid-row:1}
+.header .tr-support-flame{grid-column:2;grid-row:1;justify-self:end}
 .mark-sun{fill:var(--t-color-accent)}
 .city-form,.tools{display:flex;flex:1;min-width:0;gap:var(--t-space-2);align-items:center}
-.tools{flex:1 1 100%;flex-wrap:nowrap}
-.qform{display:flex;flex:0 1 auto;align-items:center;gap:var(--t-space-2)}
+.header .tools{grid-column:1;grid-row:2;flex:1 1 auto;flex-wrap:nowrap}
+.qform{display:flex;flex:0 1 auto;min-width:0;align-items:center;gap:var(--t-space-2)}
+.header .qform{flex:1 1 8rem}
+.header .tg{grid-column:2;grid-row:2;justify-self:end;width:var(--t-tap-min);min-width:var(--t-tap-min);padding:0;justify-content:center}
 .tg{color:var(--t-color-accent-text);background:var(--t-color-accent);border-radius:var(--t-radius-pill);padding:var(--t-space-2) var(--t-space-3);font-size:var(--t-text-sm);text-decoration:none;min-height:var(--t-tap-min);display:inline-flex;align-items:center}
 .footer{border-top-width:var(--t-border-width);margin-top:var(--t-space-6)}
 .footer-inner{flex-direction:column;align-items:flex-start;padding:var(--t-space-5) var(--t-space-4);gap:var(--t-space-3)}
@@ -194,18 +199,31 @@ main{flex:1}
 .pages a,.pages span{min-width:var(--t-tap-min);padding:0 var(--t-space-2)}
 .list{padding-left:1em}
 .plain{list-style:none;padding:0}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:var(--t-space-2) var(--t-space-3) var(--t-space-2) 0;border-bottom:var(--t-border-width) solid var(--t-color-border);vertical-align:top}
+.btn-ghost{background:transparent;border-color:transparent}
+.tr-support-flame{color:var(--t-color-danger)}
 .chips{gap:var(--t-space-2);margin-top:var(--t-space-5)}
 summary{cursor:pointer;font-weight:500}
 pre.orig{margin-top:var(--t-space-3);white-space:pre-wrap;font:inherit}
 .bottom{display:grid;grid-template-columns:1fr 1fr 1fr;position:fixed;bottom:0;left:0;right:0;z-index:2;border-top-width:var(--t-border-width)}
+.bottom.bottom-4{grid-template-columns:1fr 1fr 1fr 1fr}
 .bottom a{display:flex;align-items:center;justify-content:center;min-height:var(--t-bottomnav-height);font-size:var(--t-text-sm);color:var(--t-color-text-muted);text-decoration:none}
 .bottom a[aria-current="page"]{color:var(--t-color-brand)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
 .phone-obf{unicode-bidi:bidi-override;direction:rtl;white-space:nowrap}
 :focus-visible{outline:2px solid var(--t-color-focus);outline-offset:2px}
+@media (max-width:767px){
+.header .city-form button,.header .qform button{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.header .tools > a.btn{display:none}
+}
 @media (min-width:768px){
 .site{padding-bottom:0}
 .bottom{display:none}
+.header-inner{display:flex;flex-wrap:wrap}
+.header .brand,.header .tr-support-flame,.header .tools,.header .tg{grid-column:auto;grid-row:auto}
+.header .tools{flex:1}
+.header .tg{width:auto;min-width:0;padding:var(--t-space-2) var(--t-space-3)}
 .cards{grid-template-columns:1fr 1fr 1fr}
 .spheres{grid-template-columns:repeat(4,1fr)}
 .jobs{flex-direction:row;align-items:flex-start}

@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/auth";
-import { listAdminVacancies, type AdminVacancyFilters } from "@/lib/admin/vacancies";
+import {
+  adminPageWindow,
+  adminVacanciesPath,
+  listAdminVacancies,
+  type AdminVacancyFilters,
+} from "@/lib/admin/vacancies";
 import { bulkVacanciesAction } from "@/app/admin/actions";
 import { AdminNotice, firstParam } from "@/app/admin/notice";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -9,6 +14,7 @@ import { listSpheres } from "@/lib/professions";
 import { SOURCE_LABEL } from "@/lib/format/source";
 import { SOURCE_OPTIONS } from "@/lib/admin/constants";
 import { formatDate } from "@/lib/format/date";
+import { foundVacancies } from "@/lib/format/plural";
 
 export default async function VacanciesAdminPage({
   searchParams,
@@ -31,6 +37,8 @@ export default async function VacanciesAdminPage({
   const data = await listAdminVacancies(filters);
   const cities = getAllCities();
   const spheres = listSpheres();
+  const rangeFrom = data.total === 0 ? 0 : (data.page - 1) * data.pageSize + 1;
+  const rangeTo = Math.min(data.page * data.pageSize, data.total);
 
   return (
     <>
@@ -41,7 +49,7 @@ export default async function VacanciesAdminPage({
           Добавить вручную
         </Link>
       </div>
-      <form method="get" className="admin-filters">
+      <form method="get" action="/admin/vacancies" className="admin-filters">
         <label className="admin-field">
           Город
           <select name="city" defaultValue={filters.city ?? ""}>
@@ -96,7 +104,11 @@ export default async function VacanciesAdminPage({
         </label>
         <label className="admin-field admin-filters-wide">
           Поиск
-          <input name="q" defaultValue={filters.q ?? ""} />
+          <input
+            name="q"
+            defaultValue={filters.q ?? ""}
+            placeholder="название, slug, телефон, ИНН"
+          />
         </label>
         <label className="admin-field">
           Жалобы
@@ -128,43 +140,94 @@ export default async function VacanciesAdminPage({
               Удалить
             </button>
           </div>
-          <p className="admin-kicker mt-2">Всего {data.total}</p>
-          <table className="admin-table mt-3">
-            <thead>
-              <tr>
-                <th />
-                <th>Название</th>
-                <th>Город</th>
-                <th>Источник</th>
-                <th>Статус</th>
-                <th>Дата</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.items.map((row) => (
-                <tr key={row.id}>
-                  <td>
-                    <input type="checkbox" name="ids" value={row.id} />
-                  </td>
-                  <td>
-                    <Link href={`/admin/vacancies/${row.id}`}>{row.title}</Link>
-                    {row.reportCount ? ` · жалоб ${row.reportCount}` : ""}
-                    {row.employerInn ? ` · ИНН ${row.employerInn}` : ""}
-                    {row.salaryIsGross ? " · до вычета" : ""}
-                  </td>
-                  <td>{row.cityName}</td>
-                  <td>{row.sourceName || SOURCE_LABEL[row.source]}</td>
-                  <td>
-                    {row.moderationStatus}
-                    {row.isActive ? "" : " · выкл"}
-                  </td>
-                  <td>{formatDate(row.publishedAt)}</td>
+          <div className="admin-list-meta">
+            <p className="admin-kicker">
+              {data.total === 0
+                ? "Ничего не нашлось."
+                : `${foundVacancies(data.total)} · показаны ${rangeFrom}–${rangeTo} · стр. ${data.page} из ${data.pages}`}
+            </p>
+            <VacancyPager page={data.page} pages={data.pages} filters={filters} />
+          </div>
+          <div className="admin-table-wrap">
+            <table className="admin-table mt-3">
+              <thead>
+                <tr>
+                  <th />
+                  <th>Название</th>
+                  <th>Город</th>
+                  <th>Источник</th>
+                  <th>Статус</th>
+                  <th>Дата</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {data.items.length === 0 ? (
+                  <tr>
+                    <td colSpan={6}>Ничего не нашлось.</td>
+                  </tr>
+                ) : (
+                  data.items.map((row) => (
+                    <tr key={row.id}>
+                      <td>
+                        <input type="checkbox" name="ids" value={row.id} />
+                      </td>
+                      <td>
+                        <Link href={`/admin/vacancies/${row.id}`}>{row.title}</Link>
+                        {row.reportCount ? ` · жалоб ${row.reportCount}` : ""}
+                        {row.employerInn ? ` · ИНН ${row.employerInn}` : ""}
+                        {row.salaryIsGross ? " · до вычета" : ""}
+                      </td>
+                      <td>{row.cityName}</td>
+                      <td>{row.sourceName || SOURCE_LABEL[row.source]}</td>
+                      <td>
+                        {row.moderationStatus}
+                        {row.isActive ? "" : " · выкл"}
+                      </td>
+                      <td>{formatDate(row.publishedAt)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <VacancyPager page={data.page} pages={data.pages} filters={filters} />
         </form>
       )}
     </>
+  );
+}
+
+function VacancyPager({
+  page,
+  pages,
+  filters,
+}: {
+  page: number;
+  pages: number;
+  filters: AdminVacancyFilters;
+}) {
+  if (pages <= 1) {
+    return null;
+  }
+  return (
+    <nav className="admin-tabs" aria-label="Страницы списка">
+      {page > 1 ? <Link href={adminVacanciesPath(filters, page - 1)}>Назад</Link> : null}
+      {adminPageWindow(page, pages).map((item, index) =>
+        item === "gap" ? (
+          <span key={`gap-${index}`} className="admin-kicker">
+            …
+          </span>
+        ) : (
+          <Link
+            key={item}
+            href={adminVacanciesPath(filters, item)}
+            aria-current={item === page ? "page" : undefined}
+          >
+            {item}
+          </Link>
+        ),
+      )}
+      {page < pages ? <Link href={adminVacanciesPath(filters, page + 1)}>Вперёд</Link> : null}
+    </nav>
   );
 }

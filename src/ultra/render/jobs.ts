@@ -39,6 +39,8 @@ import { jobsDescription, jobsHeading, jobsTitle, vahtaDescription, vahtaTitle }
 import { renderVacancyList } from "@/ultra/card";
 import { renderCityStub } from "@/ultra/render/stub";
 import { attr, esc } from "@/ultra/html";
+import { renderSupportAskCard } from "@/ultra/support";
+import type { CookieReader } from "@/lib/support/ask";
 
 function pageWindow(page: number, pageCount: number): (number | "gap")[] {
   if (pageCount <= 7) {
@@ -113,11 +115,13 @@ export async function renderJobsPage({
   section,
   searchParams,
   searchCookie,
+  readCookie,
 }: {
   citySlug: CitySlug;
   section: JobsSection;
   searchParams: URLSearchParams;
   searchCookie: string | undefined;
+  readCookie: CookieReader;
 }): Promise<{ title: string; description: string; body: string }> {
   const pageSize = FEATURES.ultra.perPage;
   const workFormat = section === "vahta" ? WorkFormat.VAHTA : WorkFormat.LOCAL;
@@ -365,6 +369,7 @@ ${showContinue && continueHref ? `<p class="small"><a href="${attr(continueHref)
 ${cityInDevelopment ? "" : `<p>${esc(foundVacancies(list.total))}</p>${sortNav}`}
 ${listing}
 ${pages}
+${!cityInDevelopment && list.total > 0 ? renderSupportAskCard(jobsHref(citySlug, section, query), readCookie) : ""}
 </div>
 ${filters}
 </div>

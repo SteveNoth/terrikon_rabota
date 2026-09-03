@@ -129,10 +129,11 @@ const queueSelect = {
 
 type QueueRow = Prisma.VacancyGetPayload<{ select: typeof queueSelect }>;
 
-/** Очередь постов. Карточки кабинета сюда не попадают. */
+/** Очередь постов. Карточки кабинета сюда не попадают. Дубли чужой карточки — не отдельный пункт. */
 export function parserQueueWhere(): Prisma.VacancyWhereInput {
   return {
     source: { not: Source.EMPLOYER },
+    duplicateOfId: null,
     moderationStatus: { notIn: [ModerationStatus.BLOCKED, ModerationStatus.REJECTED] },
     OR: [
       { moderationStatus: ModerationStatus.PENDING },
@@ -390,4 +391,73 @@ export async function getQueueItem(id: string): Promise<QueueItem | null> {
 
 export function parseQueueTab(value: string | null | undefined): QueueTab {
   return isQueueTab(value) ? value : "all";
+}
+
+export async function listDuplicateCandidates(item: QueueItem): Promise<QueueMember[]> {
+  const or: Prisma.VacancyWhereInput[] = [];
+  if (item.rawText.trim().length >= 40) {
+    or.push({ rawText: item.rawText });
+  }
+  if (item.contactPhone) {
+    or.push({ contactPhone: item.contactPhone, citySlug: item.citySlug });
+  }
+  if (item.groupId) {
+    or.push({ groupId: item.groupId });
+  }
+  const extra =
+    or.length === 0
+      ? []
+      : await prisma.vacancy.findMany({
+          where: {
+            id: { not: item.id },
+            source: { not: Source.EMPLOYER },
+            moderationStatus: { not: ModerationStatus.BLOCKED },
+            OR: or,
+          },
+          take: 25,
+          orderBy: { publishedAt: "desc" },
+          select: {
+            id: true,
+            title: true,
+            source: true,
+            sourceName: true,
+            sourceUrl: true,
+            contactPhone: true,
+            rawText: true,
+          },
+        });
+  const seen = new Set<string>([item.id]);
+  const out: QueueMember[] = [];
+  for (const row of extra) {
+    if (seen.has(row.id)) {
+      continue;
+    }
+    seen.add(row.id);
+    out.push({
+      id: row.id,
+      title: row.title,
+      source: row.source,
+      sourceName: row.sourceName,
+      sourceUrl: row.sourceUrl,
+      contactPhone: row.contactPhone,
+      similarity: jaccardPercent(item.rawText, row.rawText ?? ""),
+    });
+  }
+  for (const member of item.members) {
+    if (seen.has(member.id)) {
+      continue;
+    }
+    seen.add(member.id);
+    out.push(member);
+  }
+  return out.sort((a, b) => b.similarity - a.similarity || a.title.localeCompare(b.title, "ru"));
+}
+
+export function queuePath(tab: QueueTab, id?: string | null): string {
+  const params = new URLSearchParams();
+  params.set("tab", tab);
+  if (id) {
+    params.set("id", id);
+  }
+  return `/admin/queue?${params.toString()}`;
 }

@@ -40,6 +40,7 @@ export async function handleUltraGet(request: NextRequest): Promise<Response> {
     search: request.nextUrl.searchParams,
     cityCookie,
     searchCookie: request.cookies.get(SEARCH_COOKIE)?.value,
+    readCookie: (name) => request.cookies.get(name)?.value,
   });
 
   const css = criticalCss();

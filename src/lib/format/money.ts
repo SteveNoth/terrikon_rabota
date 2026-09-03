@@ -31,6 +31,11 @@ function unit(period: SalaryPeriodCode | null | undefined): string {
   }
 }
 
+/** Сумма из конфига, не зарплата вакансии: «2 000 ₽». */
+export function formatRubles(value: number): string {
+  return `${groupThousands(value)} ₽`;
+}
+
 export function formatMoney(input: MoneyInput): string {
   const from = input.salaryFrom ?? null;
   const to = input.salaryTo ?? null;

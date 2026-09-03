@@ -80,7 +80,7 @@ export function JobsFilters({
       className={cn(
         "flex min-w-0 flex-col gap-5 bg-surface",
         open
-          ? "fixed inset-0 z-30 overflow-y-auto p-4 pb-bottomnav-plus"
+          ? "fixed inset-0 z-30 overflow-y-auto p-4 pb-bottomnav"
           : "hidden",
         "md:static md:z-0 md:flex md:w-96 md:shrink-0 md:overflow-visible md:rounded-lg md:border md:border-border md:p-6 md:pb-6 md:shadow-1",
       )}

@@ -1,4 +1,5 @@
 import { AuthNotice } from "@/components/auth/AuthNotice";
+import { SupportThanksNote } from "@/components/support/SupportThanksNote";
 import { ProfileNav } from "@/components/seeker/ProfileNav";
 import { SeekerCityFilter } from "@/components/seeker/SeekerCityFilter";
 import { getUser } from "@/lib/adapters/auth";
@@ -39,6 +40,7 @@ export default async function FavoritesPage({
         <ProfileNav current="/profile/favorites" />
       </header>
       <AuthNotice query={query} />
+      {rows.length > 0 ? <SupportThanksNote nextPath="/profile/favorites" /> : null}
       <p className="max-w-xl text-sm text-muted">{FAVORITE_GUEST_WHY}</p>
       <SeekerCityFilter action="/profile/favorites" current={filterCity} />
       {rows.length === 0 ? (

@@ -1,5 +1,44 @@
 import { createHash } from "node:crypto";
+import { WorkFormat } from "@prisma/client";
 import { DEDUPE_WINDOW_DAYS } from "@/lib/parser/limits";
+
+/** Нормализация для сравнения «текст тот же»: пробелы, регистр, первые 500. */
+export function normalizeHashBody(text: string): string {
+  return text.replace(/\s+/g, " ").trim().toLocaleLowerCase("ru-RU").slice(0, 500);
+}
+
+/**
+ * Отпечаток текста без телефона. Один пост с разных номеров вербовщиков
+ * даёт один ключ — в отличие от contentHash.
+ */
+export function textHash(text: string): string {
+  return createHash("sha1").update(normalizeHashBody(text)).digest("hex");
+}
+
+/** Короткие обрывки не склеиваем: иначе пустые подписи свалятся в одну кучу. */
+export const MIN_TEXT_DUP_CHARS = 40;
+
+export function isTextDupEligible(text: string): boolean {
+  return normalizeHashBody(text).length >= MIN_TEXT_DUP_CHARS;
+}
+
+/** Корзина точного текста: вахты по всем городам, местные — внутри города. */
+export function textDupBucket(hash: string, workFormat: WorkFormat | string, citySlug: string): string {
+  const format = String(workFormat || "LOCAL").toUpperCase();
+  if (format === "VAHTA") {
+    return `vahta:${hash}`;
+  }
+  return `local:${citySlug}:${hash}`;
+}
+
+export function bodyForFingerprint(input: {
+  rawText?: string | null;
+  ocrText?: string | null;
+  description?: string | null;
+  unitText?: string | null;
+}): string {
+  return input.rawText || input.ocrText || input.description || input.unitText || "";
+}
 
 /** sha1(первые 500 символов + телефон) — уровень 2 из 11.5. */
 export function contentHash(text: string, phone: string | null | undefined): string {

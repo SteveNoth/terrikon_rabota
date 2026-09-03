@@ -8,15 +8,17 @@ export function AccountLinks({
   citySlug,
   user,
   compact = false,
+  className,
 }: {
   citySlug: string;
   user: AuthUser | null;
   compact?: boolean;
+  className?: string;
 }) {
   const size = compact ? "sm" : "sm";
   if (!user) {
     return (
-      <div className="flex shrink-0 flex-wrap items-center gap-2">
+      <div className={cn("flex shrink-0 flex-wrap items-center gap-2", className)}>
         <Link href="/auth/login" className={cn(buttonVariants({ variant: "ghost", size }))}>
           Войти
         </Link>
@@ -33,7 +35,7 @@ export function AccountLinks({
   const cabinetHref = user.role === "EMPLOYER" ? "/employer/dashboard" : "/profile";
 
   return (
-    <div className="flex shrink-0 flex-wrap items-center gap-2">
+    <div className={cn("flex shrink-0 flex-wrap items-center gap-2", className)}>
       <Link href={cabinetHref} className={cn(buttonVariants({ variant: "ghost", size }))}>
         Кабинет
       </Link>

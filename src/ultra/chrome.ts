@@ -6,6 +6,7 @@ import {
 } from "@/lib/quality/types";
 import { TERRICON_LOGO_SVG } from "@/components/brand/logo-svg";
 import { attr, esc } from "@/ultra/html";
+import { supportFooterLine, supportHeaderLink, supportNavClass, supportNavLink } from "@/ultra/support";
 
 const QUALITY_OPTIONS: { value: QualityPreference; label: string }[] = [
   { value: "auto", label: "Авто" },
@@ -87,12 +88,13 @@ export function renderChrome({
 <header class="header">
 <div class="header-inner">
 <a class="brand" href="${attr(homeHref)}" aria-label="Террикон Работа">${TERRICON_LOGO_SVG}</a>
-<a class="tg" href="${attr(TELEGRAM_CHANNEL_URL)}" rel="noopener noreferrer">${esc(telegramChannelTitle())}</a>
+${supportHeaderLink()}
 <div class="tools">
 ${cityForm("u-city-header", citySlug, active, soon)}
 ${qualityForm("u-quality-header", formAction, selected, true)}
 <a class="btn btn-outline" href="/auth/login">Войти</a>
 </div>
+<a class="tg" href="${attr(TELEGRAM_CHANNEL_URL)}" rel="noopener noreferrer" aria-label="${attr(telegramChannelTitle())}">TG</a>
 </div>
 </header>
 <main>${body}</main>
@@ -111,16 +113,18 @@ ${cityForm("u-city-footer", citySlug, active, soon)}
 <a href="/about/lite">Почему сайт лёгкий</a>
 <a href="${attr(mapHref)}">Карта вакансий</a>
 </div>
+${supportFooterLine()}
 ${qualityForm("u-quality-footer", formAction, selected)}
 <p class="muted small">Сейчас: Только текст · 2G · эта страница весит ≈ 25 КБ</p>
 <p><a href="?mode=full">Полная версия</a> <span class="muted">— картинки и удобства, когда связь позволяет</span></p>
 <p class="muted small">Региональный агрегатор вакансий</p>
 </div>
 </footer>
-<nav class="bottom" aria-label="Основное меню">
+<nav class="bottom${supportNavClass()}" aria-label="Основное меню">
 <a href="${attr(homeHref)}"${homeCurrent ? ' aria-current="page"' : ""}>Главная</a>
 <a href="${attr(jobsHref)}"${jobsCurrent ? ' aria-current="page"' : ""}>Вакансии</a>
 <a href="${attr(mapHref)}"${mapCurrent ? ' aria-current="page"' : ""}>Карта</a>
+${supportNavLink(currentPath)}
 </nav>
 </div>`;
 }

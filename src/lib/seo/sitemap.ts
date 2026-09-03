@@ -13,9 +13,17 @@ import {
   listSitemapVacancies,
 } from "@/lib/repo/sitemap";
 import { companyPath, vacancyPath } from "@/lib/vacancy/path";
+import { isSupportEnabled } from "@/lib/support";
 import { log } from "@/lib/log";
 
 const STATIC_PATHS = ["/about", "/help", "/contacts", "/terms", "/safety", "/about/lite"];
+
+export function staticSitemapPaths(): string[] {
+  if (isSupportEnabled()) {
+    return [...STATIC_PATHS, "/support"];
+  }
+  return [...STATIC_PATHS];
+}
 
 function cityPaths(slug: CitySlug, active: boolean): string[] {
   if (!active) {
@@ -26,7 +34,7 @@ function cityPaths(slug: CitySlug, active: boolean): string[] {
 
 export async function collectSitemapEntries(): Promise<SitemapEntry[]> {
   const cities = getSelectableCities();
-  const entries: SitemapEntry[] = STATIC_PATHS.map((path) => ({ loc: absoluteUrl(path) }));
+  const entries: SitemapEntry[] = staticSitemapPaths().map((path) => ({ loc: absoluteUrl(path) }));
 
   for (const city of cities) {
     for (const path of cityPaths(city.slug, city.status === "active")) {

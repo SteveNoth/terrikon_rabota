@@ -1,18 +1,16 @@
-import { ModerationStatus, Prisma, WorkFormat } from "@prisma/client";
+import { Prisma, WorkFormat } from "@prisma/client";
 import { prisma } from "@/lib/adapters/db";
 import { clearMemoryCache } from "@/lib/adapters/cache";
 import { getAllCities } from "@/lib/geo";
 import { log } from "@/lib/log";
+import { listingUnitWhere, publishedWhere } from "@/lib/vacancy/listing-where";
+import { storedSphereSnapshot, type SphereCountRow } from "@/lib/hygiene/sphere-snapshot";
+
+export type { SphereCountRow } from "@/lib/hygiene/sphere-snapshot";
 
 const publishedListingWhere: Prisma.VacancyWhereInput = {
-  isActive: true,
-  moderationStatus: { in: [ModerationStatus.AUTO_OK, ModerationStatus.APPROVED] },
-  OR: [{ groupId: null }, { primaryOfGroups: { some: {} } }],
-};
-
-export type SphereCountRow = {
-  sphere: string;
-  count: number;
+  ...publishedWhere(),
+  ...listingUnitWhere(),
 };
 
 export type CountRecompute = {
@@ -136,14 +134,16 @@ export async function readStoredSphereCounts(citySlug: string): Promise<SphereCo
     where: { citySlug },
     select: { citySlug: true },
   });
-  if (!city) {
-    return null;
-  }
-  const rows = await prisma.sphereStat.findMany({
-    where: { citySlug },
-    select: { sphere: true, vacancyCount: true },
-  });
-  return rows
-    .map((row) => ({ sphere: row.sphere, count: row.vacancyCount }))
-    .sort((a, b) => b.count - a.count || a.sphere.localeCompare(b.sphere));
+  const rows = city
+    ? await prisma.sphereStat.findMany({
+        where: { citySlug },
+        select: { sphere: true, vacancyCount: true },
+      })
+    : [];
+  return storedSphereSnapshot(
+    Boolean(city),
+    rows
+      .map((row) => ({ sphere: row.sphere, count: row.vacancyCount }))
+      .sort((a, b) => b.count - a.count || a.sphere.localeCompare(b.sphere)),
+  );
 }

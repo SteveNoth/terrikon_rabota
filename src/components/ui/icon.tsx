@@ -5,7 +5,7 @@ import { cn } from "@/lib/format/cn";
 import { useQuality } from "@/lib/quality/QualityProvider";
 import { usesIconSprite } from "@/lib/quality/features";
 
-export const ICON_SPRITE_HREF = "/icons/sprite.svg?v=4";
+export const ICON_SPRITE_HREF = "/icons/sprite.svg?v=6";
 
 export const ICON_NAMES = [
   "search",
@@ -17,6 +17,7 @@ export const ICON_NAMES = [
   "chevron-up",
   "chevron-down",
   "star",
+  "heart",
   "phone",
   "location",
   "clock",
@@ -55,6 +56,7 @@ export const ICON_LABELS: Record<IconName, string> = {
   "chevron-up": "Вверх",
   "chevron-down": "Вниз",
   star: "Избранное",
+  heart: "Сердце",
   phone: "Телефон",
   location: "Адрес",
   clock: "Время",
@@ -91,6 +93,7 @@ export const ICON_GLYPHS: Record<IconName, string> = {
   "chevron-up": "˄",
   "chevron-down": "˅",
   star: "★",
+  heart: "♥",
   phone: "☎",
   location: "⌖",
   clock: "◷",

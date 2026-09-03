@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { LayoutSlot } from "@/components/layout/LayoutSlot";
-import { QualitySwitcher } from "@/components/quality/QualitySwitcher";
 import { cn } from "@/lib/format/cn";
 
 type NavItem = {
@@ -18,10 +17,14 @@ export function BottomNav({
   citySlug,
   accountHref,
   favoritesHref,
+  extraHref,
+  extraLabel,
 }: {
   citySlug: string;
   accountHref: string;
   favoritesHref: string;
+  extraHref?: string | null;
+  extraLabel?: string | null;
 }) {
   const pathname = usePathname();
 
@@ -38,9 +41,6 @@ export function BottomNav({
       className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-surface md:hidden"
       aria-label="Основное меню"
     >
-      <div className="border-b border-border px-3 py-2">
-        <QualitySwitcher id="tr-quality-nav" compact />
-      </div>
       <ul className="grid h-bottomnav grid-cols-6">
         {items.map((item) => {
           const hrefPath = item.href ? item.href.split("#")[0] : undefined;
@@ -88,8 +88,28 @@ export function BottomNav({
             </li>
           );
         })}
-        <li className="min-w-0" aria-hidden="true">
-          <LayoutSlot />
+        <li className="min-w-0">
+          {extraHref && extraLabel ? (
+            <Link
+              href={extraHref}
+              className={cn(
+                "flex h-full min-h-tap flex-col items-center justify-center gap-1 px-1 text-xs",
+                pathname === extraHref || pathname.startsWith(`${extraHref}/`)
+                  ? "text-brand"
+                  : "text-muted",
+              )}
+              aria-current={
+                pathname === extraHref || pathname.startsWith(`${extraHref}/`) ? "page" : undefined
+              }
+            >
+              <Icon name="heart" size="sm" decorative />
+              <span className="truncate">{extraLabel}</span>
+            </Link>
+          ) : (
+            <span className="flex h-full min-h-tap flex-col items-center justify-center" aria-hidden="true">
+              <LayoutSlot />
+            </span>
+          )}
         </li>
       </ul>
     </nav>

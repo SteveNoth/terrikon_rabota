@@ -75,6 +75,9 @@
   --t-color-accent: var(--p-amber-400);
   --t-color-accent-hover: var(--p-amber-500);
   --t-color-accent-text: var(--p-navy-900);
+  /* Поддержка проекта: красное «горящее» сердце. Цвета из палитры, не новые HEX. */
+  --t-color-support: var(--t-color-danger);
+  --t-color-support-flame: var(--t-color-accent);
 
   /* Состояния */
   --t-color-success: var(--p-green-500);

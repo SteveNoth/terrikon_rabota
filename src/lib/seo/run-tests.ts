@@ -11,6 +11,7 @@ import { canonicalPath } from "@/lib/seo/canonical";
 import { buildJobPosting } from "@/lib/seo/job-posting";
 import { ROBOTS_DISALLOW, robotsTxt } from "@/lib/seo/robots";
 import { chunkEntries, sitemapDocument, urlsetXml } from "@/lib/seo/sitemap-xml";
+import { staticSitemapPaths } from "@/lib/seo/sitemap";
 import {
   cityHomeTitle,
   jobsTitle,
@@ -163,6 +164,17 @@ ok("robots закрывает /profile", robots.includes("Disallow: /profile"));
 ok("robots закрывает /employer", robots.includes("Disallow: /employer"));
 ok("robots указывает sitemap", robots.includes("Sitemap:") && robots.includes("/sitemap.xml"));
 ok("robots закрывает page=", robots.includes("Disallow: /*?*page="));
+ok("robots закрывает qr=", robots.includes("Disallow: /*?*qr="));
+{
+  const prev = process.env.NEXT_PUBLIC_DONATIONS_ENABLED;
+  process.env.NEXT_PUBLIC_DONATIONS_ENABLED = "false";
+  ok("sitemap без донатов не содержит /support", !staticSitemapPaths().includes("/support"));
+  if (prev === undefined) {
+    delete process.env.NEXT_PUBLIC_DONATIONS_ENABLED;
+  } else {
+    process.env.NEXT_PUBLIC_DONATIONS_ENABLED = prev;
+  }
+}
 
 const many = Array.from({ length: 5001 }, (_, index) => ({ loc: `https://example.test/${index}` }));
 const split = sitemapDocument(many);

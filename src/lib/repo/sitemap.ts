@@ -1,25 +1,7 @@
-import { ModerationStatus, Prisma, WorkFormat } from "@prisma/client";
+import { Prisma, WorkFormat } from "@prisma/client";
 import { prisma } from "@/lib/adapters/db";
 import { repoError } from "@/lib/repo/errors";
-
-function approvedWhere(): Prisma.VacancyWhereInput {
-  return {
-    moderationStatus: { in: [ModerationStatus.AUTO_OK, ModerationStatus.APPROVED] },
-  };
-}
-
-function publishedWhere(): Prisma.VacancyWhereInput {
-  return {
-    isActive: true,
-    ...approvedWhere(),
-  };
-}
-
-function listingUnitWhere(): Prisma.VacancyWhereInput {
-  return {
-    OR: [{ groupId: null }, { primaryOfGroups: { some: {} } }],
-  };
-}
+import { listingUnitWhere, publishedWhere } from "@/lib/vacancy/listing-where";
 
 export type SitemapVacancyRow = {
   slug: string;

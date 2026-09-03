@@ -39,7 +39,7 @@ export function CitySelect({
         onChange={onChange}
         size="sm"
         autoComplete="off"
-        className="min-w-0"
+        className="min-w-0 flex-1"
       >
         {activeCities.map((city) => (
           <option key={city.slug} value={city.slug}>

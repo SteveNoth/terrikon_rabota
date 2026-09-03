@@ -5,6 +5,7 @@ import { JobsSort } from "@/components/jobs/JobsSort";
 import { JobsTabs } from "@/components/jobs/JobsTabs";
 import { VacanciesFeed } from "@/components/jobs/VacanciesFeed";
 import { VacancyList } from "@/components/jobs/VacancyList";
+import { SupportInlineCard } from "@/components/support/SupportInlineCard";
 import { OfflineCapture } from "@/components/offline/OfflineCapture";
 import { VahtaWarning } from "@/components/jobs/VahtaWarning";
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -299,6 +300,10 @@ export async function JobsListing({
               )}
             />
           )}
+
+          {!cityInDevelopment && list.total > 0 ? (
+            <SupportInlineCard nextPath={jobsHref(citySlug, section, query)} />
+          ) : null}
         </div>
       </div>
     </div>

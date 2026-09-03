@@ -6,6 +6,7 @@ import { AccountLinks } from "@/components/auth/AccountLinks";
 import { CitySelect } from "@/components/layout/CitySelect";
 import { LayoutSlot } from "@/components/layout/LayoutSlot";
 import { QualitySwitcher } from "@/components/quality/QualitySwitcher";
+import { SupportFooterLink } from "@/components/support/SupportFooterLink";
 import { TELEGRAM_CHANNEL_URL, telegramChannelTitle } from "@/lib/site";
 import type { AuthUser } from "@/lib/adapters/auth";
 import type { CityOption } from "@/lib/geo";
@@ -35,7 +36,6 @@ export function Footer({
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <LayoutSlot />
             <AccountLinks citySlug={citySlug} user={user} compact />
           </div>
         </div>
@@ -76,6 +76,9 @@ export function Footer({
             {telegramChannelTitle()}
           </a>
         </div>
+        <LayoutSlot>
+          <SupportFooterLink />
+        </LayoutSlot>
         <div className="max-w-md min-w-0">
           <QualitySwitcher id="tr-quality-footer" />
         </div>

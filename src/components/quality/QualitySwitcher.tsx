@@ -8,11 +8,11 @@ import { useQuality } from "@/lib/quality/QualityProvider";
 import type { QualityMode, QualityPreference } from "@/lib/quality/types";
 import { cn } from "@/lib/format/cn";
 
-const OPTIONS: { value: QualityPreference; label: string }[] = [
-  { value: "auto", label: "Авто (рекомендуется)" },
-  { value: "full", label: "Полное — красиво, больше трафика" },
-  { value: "lite", label: "Экономное — быстро, мало трафика" },
-  { value: "ultra", label: "Только текст — работает даже на 2G" },
+const OPTIONS: { value: QualityPreference; label: string; short: string }[] = [
+  { value: "auto", label: "Авто (рекомендуется)", short: "Авто" },
+  { value: "full", label: "Полное — красиво, больше трафика", short: "Полное" },
+  { value: "lite", label: "Экономное — быстро, мало трафика", short: "Экономное" },
+  { value: "ultra", label: "Только текст — работает даже на 2G", short: "Текст" },
 ];
 
 const NOW_LABEL: Record<QualityMode, string> = {
@@ -50,8 +50,8 @@ export function QualitySwitcher({
       action={pathname}
       className={cn("flex min-w-0 flex-col gap-1", compact && "gap-0", className)}
     >
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <label htmlFor={id} className="shrink-0 text-sm text-muted">
+      <div className="flex min-w-0 items-center gap-2">
+        <label htmlFor={id} className={cn("shrink-0 text-sm text-muted", compact && "sr-only")}>
           Качество
         </label>
         <Select
@@ -67,24 +67,17 @@ export function QualitySwitcher({
         >
           {OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {compact ? option.short : option.label}
             </option>
           ))}
         </Select>
         <Button type="submit" variant="outline" size="sm">
-          Применить
+          {compact ? "Ок" : "Применить"}
         </Button>
-        {compact ? (
-          <p id={`${id}-now`} className="max-w-xs shrink-0 truncate text-sm text-muted">
-            {NOW_LABEL[mode]}
-          </p>
-        ) : null}
       </div>
-      {compact ? null : (
-        <p id={`${id}-now`} className="text-sm text-muted">
-          Сейчас: {NOW_LABEL[mode]} · эта страница весит {WEIGHT_HINT[mode]}
-        </p>
-      )}
+      <p id={`${id}-now`} className={cn("text-sm text-muted", compact && "sr-only")}>
+        {compact ? NOW_LABEL[mode] : `Сейчас: ${NOW_LABEL[mode]} · эта страница весит ${WEIGHT_HINT[mode]}`}
+      </p>
     </form>
   );
 }

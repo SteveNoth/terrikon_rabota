@@ -53,7 +53,11 @@ html[data-theme="dark"] {
   }
 
   .tr-tg-pulse,
-  .tr-tg-pulse::after {
+  .tr-tg-pulse::after,
+  .tr-support-flame,
+  .tr-support-flame::before,
+  .tr-support-flame::after,
+  .tr-support-flame svg {
     animation: none;
   }
 }
@@ -64,6 +68,10 @@ html[data-mode="ultra"] .animate-pulse,
 html[data-mode="ultra"] .tr-spin,
 html[data-mode="ultra"] .tr-tg-pulse,
 html[data-mode="ultra"] .tr-tg-pulse::after,
+html[data-mode="ultra"] .tr-support-flame,
+html[data-mode="ultra"] .tr-support-flame::before,
+html[data-mode="ultra"] .tr-support-flame::after,
+html[data-mode="ultra"] .tr-support-flame svg,
 html[data-mode="lite"] .tr-tg-pulse,
 html[data-mode="lite"] .tr-tg-pulse::after {
   animation: none;
@@ -73,7 +81,11 @@ html[data-mode="lite"] .tr-tg-pulse::after {
   .animate-pulse,
   .tr-spin,
   .tr-tg-pulse,
-  .tr-tg-pulse::after {
+  .tr-tg-pulse::after,
+  .tr-support-flame,
+  .tr-support-flame::before,
+  .tr-support-flame::after,
+  .tr-support-flame svg {
     animation: none;
   }
 }

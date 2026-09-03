@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 /**
  * Горячие клавиши очереди. Поля ввода не перехватываем.
- * P опубликовать · T доверять · F мошенничество · N не вакансия · G всю группу
+ * P опубликовать · T доверять · F мошенничество · N не вакансия · G всю группу · D дубль
  */
 export function QueueHotkeys() {
   useEffect(() => {
@@ -19,15 +19,20 @@ export function QueueHotkeys() {
         f: "queue-fraud",
         n: "queue-not-vacancy",
         g: "queue-group",
-        d: "queue-duplicate-of",
+        d: "queue-duplicate",
       };
       const id = map[event.key.toLowerCase()];
       if (!id) {
         return;
       }
       event.preventDefault();
-      if (id === "queue-duplicate-of") {
-        document.getElementById(id)?.focus();
+      if (id === "queue-duplicate") {
+        const select = document.getElementById("queue-duplicate-of") as HTMLSelectElement | HTMLInputElement | null;
+        if (select && "value" in select && select.value) {
+          (document.getElementById(id) as HTMLButtonElement | null)?.click();
+          return;
+        }
+        select?.focus();
         return;
       }
       (document.getElementById(id) as HTMLButtonElement | null)?.click();

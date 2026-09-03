@@ -158,6 +158,7 @@ ok("MIGRATION: порог 400 МБ", migrationDoc.includes("400 МБ"));
 ok("MIGRATION: пауза Supabase", migrationDoc.includes("Paused") || migrationDoc.includes("засыпа"));
 ok("MIGRATION: коммерция Hobby", migrationDoc.includes("Hobby") && migrationDoc.includes("коммерц"));
 ok("MIGRATION: донаты", migrationDoc.includes("донат"));
+ok("MIGRATION: донат на Hobby не коммерция", migrationDoc.includes("does not fall under commercial usage"));
 ok("MIGRATION: 100 ГБ", migrationDoc.includes("100 ГБ"));
 ok("MIGRATION: 1800 минут", migrationDoc.includes("1800"));
 ok("MIGRATION: 8 минут парсера", migrationDoc.includes("8 минут"));
@@ -168,6 +169,15 @@ ok("дашборд гигиены", read("src/app/admin/health/page.tsx").includ
 ok("команда бэкапа есть", exists("scripts/backup-db.mjs"));
 ok("API счётчиков", exists("src/app/api/ops/counts/route.ts"));
 ok("API отчёта размера", exists("src/app/api/ops/size/route.ts"));
+ok(
+  "пустой SphereStat не считается снимком",
+  read("src/lib/hygiene/counters.ts").includes("storedSphereSnapshot") &&
+    read("src/lib/hygiene/sphere-snapshot.ts").includes("rows.length === 0"),
+);
+ok(
+  "touchSite пересчитывает счётчики",
+  read("src/lib/admin/touch.ts").includes("recomputeVacancyCounts"),
+);
 
 if (failed) {
   console.error(`\nПровалено: ${failed}, прошло: ${passed}`);

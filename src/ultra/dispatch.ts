@@ -16,8 +16,10 @@ import { renderSafety } from "@/ultra/render/safety";
 import { renderCityStub } from "@/ultra/render/stub";
 import { renderVacancyPage } from "@/ultra/render/vacancy";
 import { renderMapPage } from "@/ultra/render/map";
+import { renderSupportPage } from "@/ultra/support";
 import type { VacancyView } from "@/lib/vacancy/view";
 import { log } from "@/lib/log";
+import type { CookieReader } from "@/lib/support/ask";
 
 export type UltraResult = {
   title: string;
@@ -57,9 +59,11 @@ export async function dispatchUltra(input: {
   search: URLSearchParams;
   cityCookie?: string;
   searchCookie?: string;
+  readCookie?: CookieReader;
 }): Promise<UltraResult> {
   const citySlug = citySlugFromRequest(input.pathname, input.cityCookie);
   const parts = input.pathname.split("/").filter(Boolean);
+  const readCookie: CookieReader = input.readCookie ?? (() => undefined);
 
   try {
     if (parts[0] === "about" && parts[1] === "lite" && parts.length === 2) {
@@ -82,6 +86,13 @@ export async function dispatchUltra(input: {
     }
     if (parts[0] === "offline" && parts.length === 1) {
       return { ...renderOffline(citySlug), citySlug, status: 200, cache: "page" };
+    }
+    if (parts[0] === "support" && parts.length === 1) {
+      const page = renderSupportPage();
+      if (!page) {
+        return { ...renderGenericMissing(citySlug), citySlug, status: 404, cache: "none" };
+      }
+      return { ...page, citySlug, status: 200, cache: "page" };
     }
     if (parts[0] === "login" && parts.length === 1) {
       return {
@@ -125,6 +136,7 @@ export async function dispatchUltra(input: {
         section: "jobs",
         searchParams: input.search,
         searchCookie: input.searchCookie,
+        readCookie,
       });
       return { ...page, citySlug: city, status: 200, cache: "page" };
     }
@@ -135,6 +147,7 @@ export async function dispatchUltra(input: {
         section: "vahta",
         searchParams: input.search,
         searchCookie: input.searchCookie,
+        readCookie,
       });
       return { ...page, citySlug: city, status: 200, cache: "page" };
     }

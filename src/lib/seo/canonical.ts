@@ -16,6 +16,7 @@ const STRIP_ALWAYS = new Set([
   "q",
   "pageSize",
   "view",
+  "qr",
 ]);
 
 export type SearchLike =

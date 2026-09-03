@@ -340,6 +340,18 @@ export async function middleware(request: NextRequest) {
     return applyQuality(NextResponse.redirect(dest), request, resolved);
   }
 
+  // Адрес /support. Папка маршрута называется hosting: иначе Next.js пишет
+  // слово support в HTML каждой страницы (служебный список маршрутов).
+  if (url.pathname === "/support") {
+    const dest = url.clone();
+    dest.pathname = "/hosting";
+    const session = resolveSession(request);
+    const response = NextResponse.rewrite(dest, {
+      request: { headers: qualityRequestHeaders(request, resolved, session) },
+    });
+    return withSession(applyQuality(response, request, resolved), session);
+  }
+
   const segment = url.pathname.split("/").filter(Boolean)[0];
   if (segment && isSelectableCity(segment)) {
     return withLastSearch(request, withCityCookie(passQuality(request), segment, request));

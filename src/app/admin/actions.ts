@@ -12,6 +12,7 @@ import {
   mergeDuplicate,
   publishVacancy,
   unblockToQueue,
+  type DecisionResult,
 } from "@/lib/admin/decisions";
 import {
   disableEmployerPublish,
@@ -26,17 +27,39 @@ import { bulkVacancies, saveVacancyFromForm } from "@/lib/admin/vacancies";
 import { approvePostAsVacancy, rejectPost } from "@/lib/admin/posts";
 import { acceptQuality, exportLearnedSamples } from "@/lib/admin/quality";
 import { dismissReport, hideVacancyFromReport } from "@/lib/admin/reports";
+import { listQueue, parseQueueTab, queuePath } from "@/lib/admin/queue";
 import { setEmployerVerified } from "@/lib/admin/employers";
 
+function withQuery(path: string, extra: Record<string, string | undefined>): string {
+  const url = new URL(path, "http://local.invalid");
+  for (const [key, value] of Object.entries(extra)) {
+    if (value) {
+      url.searchParams.set(key, value);
+    }
+  }
+  return `${url.pathname}${url.search}`;
+}
+
 function redirectNotice(path: string, notice: string, extra?: string): never {
-  const url = extra
-    ? `${path}?notice=${encodeURIComponent(notice)}&warn=${encodeURIComponent(extra)}`
-    : `${path}?notice=${encodeURIComponent(notice)}`;
-  redirect(url);
+  redirect(withQuery(path, { notice, warn: extra }));
 }
 
 function failNotice(path: string, error: string): never {
-  redirect(`${path}?error=${encodeURIComponent(error)}`);
+  redirect(withQuery(path, { error }));
+}
+
+function queueTabFrom(formData: FormData) {
+  return parseQueueTab(String(formData.get("tab") ?? "all"));
+}
+
+async function redirectQueue(formData: FormData, result: Extract<DecisionResult, { ok: true }>): Promise<never> {
+  const tab = queueTabFrom(formData);
+  const items = await listQueue(tab);
+  redirectNotice(queuePath(tab, items[0]?.id), result.message, result.dictWarning);
+}
+
+function failQueue(formData: FormData, error: string): never {
+  failNotice(queuePath(queueTabFrom(formData)), error);
 }
 
 async function guard() {
@@ -82,9 +105,9 @@ export async function queuePublishAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const result = await publishVacancy(id, false);
   if (!result.ok) {
-    failNotice("/admin/queue", result.error);
+    failQueue(formData, result.error);
   }
-  redirectNotice("/admin/queue", result.message);
+  await redirectQueue(formData, result);
 }
 
 export async function queuePublishTrustAction(formData: FormData) {
@@ -92,9 +115,9 @@ export async function queuePublishTrustAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const result = await publishVacancy(id, true);
   if (!result.ok) {
-    failNotice("/admin/queue", result.error);
+    failQueue(formData, result.error);
   }
-  redirectNotice("/admin/queue", result.message);
+  await redirectQueue(formData, result);
 }
 
 export async function queueFraudAction(formData: FormData) {
@@ -103,9 +126,9 @@ export async function queueFraudAction(formData: FormData) {
   const phrase = String(formData.get("phrase") ?? "");
   const result = await markFraud(id, phrase);
   if (!result.ok) {
-    failNotice("/admin/queue", result.error);
+    failQueue(formData, result.error);
   }
-  redirectNotice("/admin/queue", result.message, result.dictWarning);
+  await redirectQueue(formData, result);
 }
 
 export async function queueNotVacancyAction(formData: FormData) {
@@ -114,9 +137,9 @@ export async function queueNotVacancyAction(formData: FormData) {
   const stop = String(formData.get("stopWord") ?? "");
   const result = await markNotVacancy(id, stop);
   if (!result.ok) {
-    failNotice("/admin/queue", result.error);
+    failQueue(formData, result.error);
   }
-  redirectNotice("/admin/queue", result.message, result.dictWarning);
+  await redirectQueue(formData, result);
 }
 
 export async function queueApproveGroupAction(formData: FormData) {
@@ -124,23 +147,23 @@ export async function queueApproveGroupAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const result = await approveGroup(id);
   if (!result.ok) {
-    failNotice("/admin/queue", result.error);
+    failQueue(formData, result.error);
   }
-  redirectNotice("/admin/queue", result.message);
+  await redirectQueue(formData, result);
 }
 
 export async function queueMergeAction(formData: FormData) {
   await guard();
   const id = String(formData.get("id") ?? "");
-  const targetId = String(formData.get("duplicateOfId") ?? "");
+  const targetId = String(formData.get("duplicateOfId") ?? "").trim();
   if (!targetId) {
-    failNotice("/admin/queue", "Выберите вакансию, дублем которой это является.");
+    failQueue(formData, "Выберите вакансию, дублем которой это является.");
   }
   const result = await mergeDuplicate(id, targetId);
   if (!result.ok) {
-    failNotice("/admin/queue", result.error);
+    failQueue(formData, result.error);
   }
-  redirectNotice("/admin/queue", result.message);
+  await redirectQueue(formData, result);
 }
 
 export async function unblockAction(formData: FormData) {
