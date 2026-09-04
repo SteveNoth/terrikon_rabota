@@ -1,12 +1,20 @@
 # Парсер открытых стен ВКонтакте (Этап 16).
 # Только официальный API. Токен — секрет VK_TOKEN, не файл репозитория.
+#
+# Два cron: каждые 3 часа GitHub на бесплатных runner'ах часто пропускает.
+# Суточный 05:10 UTC — страховка. Окно постов парсер сам берёт из /api/health.
 
 name: parser-vk
 
 on:
   schedule:
     - cron: "0 */3 * * *"
+    - cron: "10 5 * * *"
   workflow_dispatch:
+
+concurrency:
+  group: parser-vk
+  cancel-in-progress: false
 
 jobs:
   parse:

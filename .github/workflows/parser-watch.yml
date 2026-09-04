@@ -1,17 +1,28 @@
 # Мониторинг парсеров (Этап 24).
-# Если парсер затих или принял 0 вакансий два раза подряд — сайт шлёт в Telegram.
+# Если парсер затих — сайт пишет в Telegram и этот job сам запускает
+# затихший workflow (workflow_dispatch через GITHUB_TOKEN).
+# Частый cron GitHub пропускает так же, как парсеры; суточный 08:25 UTC
+# и Vercel cron /api/ops/watch — запасной контур.
 
 name: parser-watch
 
 on:
   schedule:
     - cron: "20 * * * *"
+    - cron: "25 8 * * *"
   workflow_dispatch:
+
+concurrency:
+  group: parser-watch
+  cancel-in-progress: true
 
 jobs:
   watch:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
     steps:
       - name: Checkout scripts
         uses: actions/checkout@v4
@@ -20,4 +31,7 @@ jobs:
         env:
           SITE_URL: ${{ secrets.SITE_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: bash scripts/ci/parser-watch.sh

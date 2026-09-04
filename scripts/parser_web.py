@@ -30,6 +30,7 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from parser_env import load_env
+from parser_lookback import assert_ci_site_url
 from process import run_process_post
 from shared_config import active_cities
 
@@ -1251,8 +1252,11 @@ def main(argv: list[str] | None = None) -> int:
     limit = args.limit if args.limit is None or args.limit > 0 else None
     if args.site_url:
         os.environ["SITE_URL"] = str(args.site_url).rstrip("/")
+    target = site_url()
+    if not args.dry_run:
+        assert_ci_site_url(target)
     print(f"User-Agent: {user_agent()}")
-    print(f"Режим: {'dry-run' if args.dry_run else 'отправка'}  SITE_URL={site_url() if not args.dry_run else '—'}")
+    print(f"Режим: {'dry-run' if args.dry_run else 'отправка'}  SITE_URL={target if not args.dry_run else '—'}")
     try:
         run_parser(dry_run=args.dry_run, limit=limit)
     except SystemExit as exc:

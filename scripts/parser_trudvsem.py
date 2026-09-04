@@ -28,6 +28,7 @@ if str(_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS))
 
 from parser_env import load_env
+from parser_lookback import assert_ci_site_url
 from process import run_process_post
 from shared_config import active_cities
 
@@ -772,6 +773,7 @@ def run_parser(
     rejected_svo = 0
     remaining = limit
     default_city = next((item["citySlug"] for item in cities if item["citySlug"] in active), "gorlovka")
+    partial_error: str | None = None
 
     try:
         for region in regions:
@@ -899,11 +901,13 @@ def run_parser(
                     break
                 sleeper(pause_sec(float(configured_pause) if configured_pause is not None else None))
     except TrudvsemApiError as exc:
-        stats = empty_stats(f"{exc} Запуск с ошибкой — ничего не снимаем.", dry_run=dry_run)
-        stats["fetched"] = fetched
-        stats["skipped_city"] = skipped_city
-        write_summary(stats)
-        return stats
+        if not to_upload:
+            stats = empty_stats(f"{exc} Запуск с ошибкой — ничего не снимаем.", dry_run=dry_run)
+            stats["fetched"] = fetched
+            stats["skipped_city"] = skipped_city
+            write_summary(stats)
+            return stats
+        partial_error = str(exc)
 
     stats: dict[str, Any] = {
         "fetched": fetched,
@@ -919,12 +923,18 @@ def run_parser(
         "pending": 0,
         "errors": 0,
         "dry_run": dry_run,
-        "run_ok": True,
+        "run_ok": partial_error is None,
         "seen_ids": list(seen_ids),
     }
+    if partial_error:
+        stats["note"] = (
+            f"{partial_error} Отправляю {len(to_upload)} записей, которые успел прочитать. "
+            "Снятие исчезнувших пропускаю: снимок источника неполный."
+        )
 
     if dry_run:
-        stats["note"] = "dry-run: пачку на сайт не отправляли, исчезнувшие не снимали."
+        extra = stats.get("note") or ""
+        stats["note"] = f"{extra} dry-run: пачку на сайт не отправляли, исчезнувшие не снимали.".strip()
         print_summary(stats)
         write_summary(stats)
         return stats
@@ -975,11 +985,12 @@ def run_parser(
     else:
         stats["note"] = "Нечего отправлять: конвейер не принял ни одной единицы."
 
-    if limit is not None:
-        stats["note"] = (
-            (stats.get("note") or "")
-            + " --limit: полный снимок источника не собран, исчезнувшие не снимаем."
-        ).strip()
+    if limit is not None or not stats.get("run_ok", True):
+        if limit is not None:
+            stats["note"] = (
+                (stats.get("note") or "")
+                + " --limit: полный снимок источника не собран, исчезнувшие не снимаем."
+            ).strip()
         print_summary(stats)
         write_summary(stats)
         return stats
@@ -1027,8 +1038,11 @@ def main(argv: list[str] | None = None) -> int:
     limit = args.limit if args.limit is None or args.limit > 0 else None
     if args.site_url:
         os.environ["SITE_URL"] = str(args.site_url).rstrip("/")
+    target = site_url()
+    if not args.dry_run:
+        assert_ci_site_url(target)
     print(f"OCR_PROVIDER={os.environ.get('OCR_PROVIDER') or 'none'}  (для ЦЗН всегда none)")
-    print(f"Режим: {'dry-run' if args.dry_run else 'отправка'}  SITE_URL={site_url() if not args.dry_run else '—'}")
+    print(f"Режим: {'dry-run' if args.dry_run else 'отправка'}  SITE_URL={target if not args.dry_run else '—'}")
     try:
         run_parser(dry_run=args.dry_run, limit=limit)
     except SystemExit as exc:

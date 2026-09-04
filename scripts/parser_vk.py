@@ -25,6 +25,7 @@ if str(_SCRIPTS) not in sys.path:
 
 from ocr import image_url_allowed
 from parser_env import load_env
+from parser_lookback import assert_ci_site_url, resolve_since_hours
 from process import run_process_post
 from shared_config import active_cities
 
@@ -1005,12 +1006,15 @@ def main(argv: list[str] | None = None) -> int:
     limit = args.limit if args.limit is None or args.limit > 0 else None
     if args.site_url:
         os.environ["SITE_URL"] = str(args.site_url).rstrip("/")
+    target = site_url()
+    if not args.dry_run:
+        assert_ci_site_url(target)
+    window = resolve_since_hours("parser_vk", args.since_hours, site=target)
     print(f"API v={api_version()}  OCR_PROVIDER={os.environ.get('OCR_PROVIDER') or 'none'}")
-    print(f"Режим: {'dry-run' if args.dry_run else 'отправка'}  SITE_URL={site_url() if not args.dry_run else '—'}")
-    if args.since_hours:
-        print(f"Окно: последние {args.since_hours} ч")
+    print(f"Режим: {'dry-run' if args.dry_run else 'отправка'}  SITE_URL={target if not args.dry_run else '—'}")
+    print(f"Окно: последние {window:g} ч")
     try:
-        run_parser(dry_run=args.dry_run, limit=limit, since_hours=args.since_hours)
+        run_parser(dry_run=args.dry_run, limit=limit, since_hours=window)
     except SystemExit as exc:
         write_summary(
             {
