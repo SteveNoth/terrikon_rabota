@@ -322,6 +322,50 @@ def test_timeout_falls_back_to_small_page():
     assert stats["fetched"] == 5
 
 
+def test_timeout_after_full_page_uploads_partial(tmp_path, monkeypatch):
+    monkeypatch.setenv("CRON_SECRET", "a" * 32)
+    monkeypatch.setenv("SITE_URL", "http://127.0.0.1:3999")
+    page = fixture_page()
+    payload = load_sources()
+    payload["defaults"]["limit"] = 5
+    posted: list[str] = []
+    hits = {"n": 0}
+
+    def http_get(url, **kwargs):
+        hits["n"] += 1
+        if hits["n"] > 1:
+            raise requests.Timeout("Read timed out.")
+        return FakeResponse(page)
+
+    def http_post(url, **kwargs):
+        posted.append(url)
+        return FakeResponse(
+            {
+                "added": 1,
+                "updated": 0,
+                "pending": 0,
+                "errors": 0,
+                "maybe": 0,
+                "skippedCity": 0,
+                "discardedSvo": 0,
+            }
+        )
+
+    stats = run_parser(
+        dry_run=False,
+        config=payload,
+        http_get=http_get,
+        http_post=http_post,
+        sleep=lambda _s: None,
+        rejected_path=tmp_path / "rejected.jsonl",
+    )
+    assert stats["fetched"] >= 1
+    assert stats["run_ok"] is False
+    assert any("/api/parser/upload" in url for url in posted)
+    assert not any("archive-missing" in url for url in posted)
+    assert "неполный" in (stats.get("note") or "").lower()
+
+
 def test_http_5xx_does_not_archive():
     posted: list[str] = []
 

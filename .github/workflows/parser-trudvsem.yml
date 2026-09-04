@@ -16,6 +16,10 @@ on:
     - cron: "0 6 * * *"
   workflow_dispatch:
 
+concurrency:
+  group: parser-trudvsem
+  cancel-in-progress: false
+
 jobs:
   parse:
     runs-on: ubuntu-latest

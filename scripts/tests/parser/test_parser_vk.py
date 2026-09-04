@@ -454,6 +454,8 @@ def test_no_vk_token_value_in_repo():
 def test_workflow_has_cron_tesseract_and_secrets():
     text = (ROOT / ".github" / "workflows" / "parser-vk.yml").read_text(encoding="utf-8")
     assert "cron: \"0 */3 * * *\"" in text or "cron: '0 */3 * * *'" in text
+    assert "cron: \"10 5 * * *\"" in text or "cron: '10 5 * * *'" in text
+    assert "concurrency:" in text
     assert "workflow_dispatch" in text
     assert "tesseract-ocr-rus" in text
     assert "OCR_PROVIDER: tesseract" in text

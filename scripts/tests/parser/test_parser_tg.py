@@ -411,6 +411,8 @@ def test_no_session_value_in_repo():
 def test_workflow_has_cron_tesseract_and_secrets():
     text = (ROOT / ".github" / "workflows" / "parser-tg.yml").read_text(encoding="utf-8")
     assert "cron: \"30 1,4,7,10,13,16,19,22 * * *\"" in text
+    assert "cron: \"40 5 * * *\"" in text
+    assert "concurrency:" in text
     assert "workflow_dispatch" in text
     assert "tesseract-ocr-rus" in text
     assert "OCR_PROVIDER: tesseract" in text

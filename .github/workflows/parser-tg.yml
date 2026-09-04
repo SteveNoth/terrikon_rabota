@@ -1,13 +1,19 @@
 # Парсер публичных каналов Telegram (Этап 17).
 # Client API (Telethon). Строка сессии — секрет TG_SESSION, не файл в репозитории.
-# Cron сдвинут на :30 относительно parser-vk (0 */3), чтобы нагрузка не совпадала.
+# Частый cron сдвинут на :30 относительно parser-vk, чтобы нагрузка не совпадала.
+# Суточный 05:40 UTC — страховка: частые cron GitHub часто пропускает.
 
 name: parser-tg
 
 on:
   schedule:
     - cron: "30 1,4,7,10,13,16,19,22 * * *"
+    - cron: "40 5 * * *"
   workflow_dispatch:
+
+concurrency:
+  group: parser-tg
+  cancel-in-progress: false
 
 jobs:
   parse:
